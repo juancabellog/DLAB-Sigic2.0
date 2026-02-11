@@ -1,0 +1,531 @@
+// ========================================
+// LIST COMPONENTS GLOBAL STYLES
+// ========================================
+// Estilos compartidos para todos los componentes de lista
+// (Publications, Technology Transfer, IP, Thesis Students, Researchers, Projects, Catalogs)
+
+// ========================================
+// CONTAINER STYLES
+// ========================================
+.list-container {
+  padding: 20px;
+}
+
+// ========================================
+// HEADER STYLES
+// ========================================
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.list-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.list-header h1 {
+  margin: 0;
+  color: #333;
+}
+
+// ========================================
+// CARD GRID STYLES
+// ========================================
+.list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 20px;
+}
+
+.list-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+}
+
+.list-details {
+  margin-top: 16px;
+}
+
+// ========================================
+// TABLE STYLES
+// ========================================
+.list-table {
+  width: 100%;
+}
+
+.list-table th {
+  font-weight: 600;
+}
+
+// ========================================
+// LIST VIEW STYLES (Grid Layout)
+// ========================================
+.list-view {
+  // Container for scrollable content
+  max-height: calc(100vh - 300px); // Adjust based on your layout
+  overflow-y: auto;
+  overflow-x: hidden;
+  
+  .list-header-row {
+    display: grid;
+    gap: 16px;
+    padding: 16px;
+    background-color: #f5f5f5;
+    border-radius: 8px 8px 0 0;
+    font-weight: 600;
+    color: #666;
+    border-bottom: 2px solid #e0e0e0;
+    // Default grid columns - will be overridden by specific components
+    grid-template-columns: 2fr 1.5fr 0.8fr 1fr 1.2fr;
+    // Fixed header when scrolling
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 10 !important;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .list-item-row {
+    display: grid;
+    gap: 16px;
+    padding: 16px;
+    border-bottom: 1px solid #e0e0e0;
+    transition: background-color 0.2s;
+    align-items: center;
+    // Default grid columns - will be overridden by specific components
+    grid-template-columns: 2fr 1.5fr 0.8fr 1fr 1.2fr;
+
+    &:hover {
+      background-color: #f9f9f9;
+    }
+
+    &:last-child {
+      border-bottom: none;
+      border-radius: 0 0 8px 8px;
+    }
+  }
+
+  .list-cell {
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+  }
+
+  .title-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .item-icon {
+      color: #1976d2;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+
+    .title-text {
+      .title {
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 4px;
+      }
+
+      .subtitle {
+        font-size: 12px;
+        color: #666;
+      }
+    }
+  }
+
+  .actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+}
+
+// ========================================
+// FORM STYLES
+// ========================================
+.form-card {
+  margin-bottom: 20px;
+}
+
+.form-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.half-width {
+  flex: 1;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.checkbox-section {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px;
+}
+
+// ========================================
+// DIVIDER STYLES
+// ========================================
+// Estilos para separadores en formularios
+mat-divider {
+  margin: 20px 0 !important;
+}
+
+// Separación adicional para dividers en formularios
+.form-card mat-divider {
+  margin: 24px 0 !important;
+}
+
+// ========================================
+// EMPTY STATE STYLES
+// ========================================
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+
+  mat-icon {
+    font-size: 64px;
+    width: 64px;
+    height: 64px;
+    color: #ccc;
+    margin-bottom: 16px;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    color: #333;
+  }
+
+  p {
+    margin: 0 0 20px 0;
+  }
+
+  // Estilos para botones dentro del empty-state
+  button[mat-raised-button] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 0 auto;
+
+    mat-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      color: inherit;
+      vertical-align: middle;
+    }
+  }
+}
+
+// ========================================
+// RESPONSIVE DESIGN
+// ========================================
+@media (max-width: 768px) {
+  .list-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .list-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .checkbox-section {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+}
+
+// ========================================
+// UTILITY CLASSES
+// ========================================
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.detail-label {
+  font-weight: 500;
+  color: #666;
+  min-width: 120px;
+}
+
+.detail-value {
+  color: #333;
+  text-align: right;
+  flex: 1;
+}
+
+// ========================================
+// DETAIL COMPONENT STYLES
+// ========================================
+// Estilos globales para todos los componentes de detalle
+// (Publication Detail, IP Detail, Thesis Student Detail, etc.)
+
+.detail-container {
+  padding: 20px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.detail-card {
+  margin-bottom: 20px;
+}
+
+// Estilos para el título principal (mat-card-title)
+.detail-card mat-card-title {
+  margin-bottom: 8px;
+  color: #1976d2 !important;
+  font-weight: 700 !important;
+  font-size: 28px !important;
+  border-bottom: 3px solid #e3f2fd;
+  padding-bottom: 12px;
+}
+
+.detail-section {
+  margin: 20px 0;
+}
+
+// Estilos para títulos de sección (h3)
+.detail-section h3 {
+  margin-bottom: 20px;
+  margin-top: 0;
+  color: #1976d2;
+  font-weight: 600;
+  font-size: 18px;
+  border-bottom: 2px solid #e3f2fd;
+  padding-bottom: 8px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+  position: relative;
+}
+
+// Línea vertical separadora
+.detail-grid::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: #e0e0e0;
+  transform: translateX(-50%);
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  min-height: 40px;
+  padding: 8px 0;
+}
+
+.detail-label {
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.detail-value {
+  font-size: 16px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+// Alineación derecha para chips de estado
+.detail-value mat-chip {
+  margin-left: auto;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.loading-container mat-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  color: #ccc;
+  margin-bottom: 16px;
+}
+
+.loading-container h3 {
+  margin: 0 0 8px 0;
+  color: #666;
+}
+
+.loading-container p {
+  margin: 0 0 24px 0;
+  color: #999;
+}
+
+// ========================================
+// PDF LINK STYLES
+// ========================================
+.pdf-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #d32f2f;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+  
+  &:hover {
+    color: #b71c1c;
+    text-decoration: underline;
+  }
+  
+  .pdf-icon {
+    color: #d32f2f;
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+// Responsive para componentes de detalle
+@media (max-width: 768px) {
+  .header-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-grid::before {
+    display: none; // Ocultar línea vertical en móvil
+  }
+}
+
+// ========================================
+// STATUS COLORS
+// ========================================
+.status-planning {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-active {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.status-completed {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.status-suspended {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.status-cancelled {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.status-in-progress {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-defended {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.status-pending {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.status-approved {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.status-rejected {
+  background-color: #ffebee;
+  color: #d32f2f;
+}

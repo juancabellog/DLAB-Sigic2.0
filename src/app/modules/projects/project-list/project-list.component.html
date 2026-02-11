@@ -1,0 +1,138 @@
+<div class="list-container">
+  <div class="list-header">
+    <div class="list-header-left">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to Dashboard">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>Projects Management</h1>
+    </div>
+  </div>
+
+  <!-- List Controls -->
+  <app-list-controls
+    searchPlaceholder="Search projects..."
+    addButtonLabel="Add Project"
+    addRoute="/projects/new"
+    [items]="filteredProjects"
+    [readonly]="true"
+    (searchResults)="onSearchResults($event)"
+    (searchTermChange)="onSearchTermChange($event)"
+    (viewModeChange)="onViewModeChange($event)">
+  </app-list-controls>
+
+  <!-- Projects List -->
+  <mat-card>
+    <mat-card-content>
+      <div *ngIf="filteredProjects.length === 0 && !isSearching" class="empty-state">
+        <mat-icon>folder</mat-icon>
+        <h3>No projects found</h3>
+        <p>No projects are currently available.</p>
+        <!-- Add button removed for readonly mode -->
+      </div>
+
+      <div *ngIf="filteredProjects.length === 0 && isSearching" class="empty-state">
+        <mat-icon>search_off</mat-icon>
+        <h3>No results found</h3>
+        <p>Try adjusting your search terms or filters.</p>
+      </div>
+
+      <!-- Card View -->
+      <div *ngIf="filteredProjects.length > 0 && viewMode === 'card'" class="list-grid">
+        <mat-card *ngFor="let project of filteredProjects" class="list-card">
+          <mat-card-header>
+            <mat-card-title>{{ project.descripcion }}</mat-card-title>
+            <mat-card-subtitle>{{ project.codigo }} - {{ project.codigoExterno }}</mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div class="list-details">
+              <div class="detail-row">
+                <span class="detail-label">Code:</span>
+                <span class="detail-value">{{ project.codigo }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">External Code:</span>
+                <span class="detail-value">{{ project.codigoExterno || 'N/A' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Start Date:</span>
+                <span class="detail-value">{{ formatDate(project.fechaInicio) }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">End Date:</span>
+                <span class="detail-value">{{ formatDate(project.fechaTermino) }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Financing:</span>
+                <span class="detail-value">
+                  <mat-chip *ngFor="let type of getFinancingTypes(project.tipoFinanciamiento)" 
+                           [color]="getProjectTypeColor(project.tipoFinanciamiento)" 
+                           selected>
+                    {{ type }}
+                  </mat-chip>
+                </span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Collaboration:</span>
+                <span class="detail-value">
+                  <mat-chip *ngFor="let type of getCollaborationTypes(project.realizaCon)" 
+                           color="accent" selected>
+                    {{ type }}
+                  </mat-chip>
+                </span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Products:</span>
+                <span class="detail-value">{{ project.totalProductos || 0 }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+          
+          <mat-card-actions>
+            <button mat-button [routerLink]="['/projects', project.codigo]" color="primary">
+              <mat-icon>visibility</mat-icon>
+              View
+            </button>
+            <!-- Edit and Delete buttons removed for readonly mode -->
+          </mat-card-actions>
+        </mat-card>
+      </div>
+
+      <!-- List View -->
+      <div *ngIf="filteredProjects.length > 0 && viewMode === 'list'" class="list-view">
+        <div class="list-header-row">
+          <div class="list-cell">Description</div>
+          <div class="list-cell">Code</div>
+          <div class="list-cell">External Code</div>
+          <div class="list-cell">Start Date</div>
+          <div class="list-cell">End Date</div>
+          <div class="list-cell">Products</div>
+          <div class="list-cell">Actions</div>
+        </div>
+        
+        <div class="list-item-row" *ngFor="let project of filteredProjects">
+          <div class="list-cell">
+            <div class="title-content">
+              <mat-icon class="item-icon">folder</mat-icon>
+              <div class="title-text">
+                <div class="title">{{ project.descripcion }}</div>
+                <div class="subtitle">{{ project.codigo }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="list-cell">{{ project.codigo }}</div>
+          <div class="list-cell">{{ project.codigoExterno || 'N/A' }}</div>
+          <div class="list-cell">{{ formatDate(project.fechaInicio) }}</div>
+          <div class="list-cell">{{ formatDate(project.fechaTermino) }}</div>
+          <div class="list-cell">{{ project.totalProductos || 0 }}</div>
+          <div class="list-cell actions-cell">
+            <button mat-icon-button [routerLink]="['/projects', project.codigo]" matTooltip="View">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <!-- Edit and Delete buttons removed for readonly mode -->
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

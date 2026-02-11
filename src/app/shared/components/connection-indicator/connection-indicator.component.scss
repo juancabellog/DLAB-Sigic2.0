@@ -1,0 +1,36 @@
+.connection-indicator {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.connected button {
+  color: #4caf50;
+}
+
+.disconnected button {
+  color: #f44336;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+button:disabled {
+  opacity: 0.6;
+}
+
+
+
+
+
+
+
+
+

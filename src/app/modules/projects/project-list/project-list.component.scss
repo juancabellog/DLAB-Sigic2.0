@@ -1,0 +1,141 @@
+// ========================================
+// PROJECTS COMPONENT STYLES
+// ========================================
+// Estilos específicos para el componente de proyectos
+
+// ========================================
+// LIST VIEW STYLES (Grid Layout)
+// ========================================
+.list-view {
+  .list-header-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1.2fr;
+    gap: 16px;
+    padding: 16px;
+    background-color: #f5f5f5;
+    border-radius: 8px 8px 0 0;
+    font-weight: 600;
+    color: #666;
+    border-bottom: 2px solid #e0e0e0;
+  }
+
+  .list-item-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr 1fr 1fr 1.2fr;
+    gap: 16px;
+    padding: 16px;
+    border-bottom: 1px solid #e0e0e0;
+    transition: background-color 0.2s;
+    align-items: center;
+
+    &:hover {
+      background-color: #f9f9f9;
+    }
+
+    &:last-child {
+      border-bottom: none;
+      border-radius: 0 0 8px 8px;
+    }
+  }
+
+  .list-cell {
+    display: flex;
+    align-items: center;
+    min-height: 40px;
+  }
+
+  .title-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .item-icon {
+      color: #1976d2;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+
+    .title-text {
+      .title {
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 4px;
+      }
+
+      .subtitle {
+        font-size: 12px;
+        color: #666;
+      }
+    }
+  }
+
+  .actions-cell {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+  }
+}
+
+// ========================================
+// ADDITIONAL STYLES TO ENSURE PROPER ALIGNMENT
+// ========================================
+.list-view {
+  // Force grid layout
+  .list-header-row,
+  .list-item-row {
+    display: grid !important;
+  }
+  
+  // Ensure cells are properly aligned
+  .list-cell {
+    display: flex !important;
+    align-items: center !important;
+    min-height: 40px !important;
+    overflow: hidden;
+    word-wrap: break-word;
+  }
+  
+  // Specific alignment for title content
+  .title-content {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    width: 100%;
+  }
+  
+  // Ensure actions are right-aligned
+  .actions-cell {
+    display: flex !important;
+    gap: 8px !important;
+    justify-content: flex-end !important;
+  }
+}
+
+// ========================================
+// PROJECT STATUS COLORS
+// ========================================
+.status-planning {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.status-active {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+}
+
+.status-completed {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.status-suspended {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.status-cancelled {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}

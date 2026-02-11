@@ -1,0 +1,73 @@
+<h2 mat-dialog-title>Add New Researcher (RRHH)</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="createForm" (ngSubmit)="onSubmit()">
+    <mat-form-field class="full-width">
+      <mat-label>Full Name (First and Last Name)</mat-label>
+      <input matInput formControlName="fullName" required>
+      <mat-error *ngIf="createForm.get('fullName')?.hasError('required')">
+        Full name is required
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="full-width">
+      <mat-label>Email</mat-label>
+      <input matInput type="email" formControlName="email">
+      <mat-error *ngIf="createForm.get('email')?.hasError('email')">
+        Please enter a valid email
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="full-width">
+      <mat-label>ORCID</mat-label>
+      <input matInput formControlName="orcid" placeholder="XXXX-XXXX-XXXX-XXXX" 
+             (blur)="checkOrcidDuplicate()">
+      <mat-hint>Format: XXXX-XXXX-XXXX-XXXX</mat-hint>
+      <mat-error *ngIf="createForm.get('orcid')?.hasError('invalidOrcid')">
+        Invalid ORCID format. Expected: XXXX-XXXX-XXXX-XXXX
+      </mat-error>
+    </mat-form-field>
+
+    <div *ngIf="duplicateError" class="duplicate-warning">
+      <mat-icon>warning</mat-icon>
+      <div class="warning-content">
+        <p>{{ duplicateError }}</p>
+        <div *ngIf="existingResearcher" class="existing-researcher-info">
+          <p><strong>Existing researcher:</strong> {{ existingResearcher.fullname }}</p>
+          <button mat-stroked-button type="button" (click)="useExistingResearcher()" color="primary">
+            Use Existing Researcher
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <mat-form-field class="full-width">
+      <mat-label>RUT</mat-label>
+      <input matInput formControlName="rut" placeholder="Chilean ID">
+    </mat-form-field>
+
+    <mat-form-field class="full-width">
+      <mat-label>Researcher Type</mat-label>
+      <mat-select formControlName="rrhhTypeId" required>
+        <mat-option [value]="null">-- Select Type --</mat-option>
+        <mat-option *ngFor="let type of researcherTypes" [value]="type.id">
+          {{ type.descripcion || type.idDescripcion }}
+        </mat-option>
+      </mat-select>
+      <mat-spinner *ngIf="loadingTypes" diameter="20" matSuffix></mat-spinner>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="loading">Cancel</button>
+  <button mat-raised-button color="primary" (click)="onSubmit()" [disabled]="loading || createForm.invalid || (duplicateError && !existingResearcher)">
+    <mat-spinner *ngIf="loading" diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+    <span *ngIf="!loading">Create</span>
+    <span *ngIf="loading">Creating...</span>
+  </button>
+</mat-dialog-actions>
+
+
+
+

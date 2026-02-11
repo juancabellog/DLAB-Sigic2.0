@@ -1,0 +1,132 @@
+<div class="list-container">
+  <div class="list-header">
+    <div class="list-header-left">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to Dashboard">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>Researchers Management</h1>
+    </div>
+  </div>
+
+  <!-- List Controls -->
+          <app-list-controls
+            searchPlaceholder="Search researchers..."
+            addButtonLabel="Add Researcher"
+            addRoute="/researchers/new"
+            [items]="filteredResearchers"
+            [readonly]="true"
+            (searchResults)="onSearchResults($event)"
+            (searchTermChange)="onSearchTermChange($event)"
+            (viewModeChange)="onViewModeChange($event)">
+          </app-list-controls>
+
+
+        <!-- Researchers List -->
+        <mat-card>
+          <mat-card-content>
+          <div *ngIf="loading" class="loading-container">
+            <mat-spinner></mat-spinner>
+            <p>Loading researchers...</p>
+          </div>
+
+          <div *ngIf="!loading && filteredResearchers.length === 0 && !isSearching" class="empty-state">
+        <mat-icon>person</mat-icon>
+        <h3>No researchers found</h3>
+        <p>No researchers are currently available.</p>
+        <!-- Add button removed for readonly mode -->
+      </div>
+
+      <div *ngIf="!loading && filteredResearchers.length === 0 && isSearching" class="empty-state">
+        <mat-icon>search_off</mat-icon>
+        <h3>No results found</h3>
+        <p>Try adjusting your search terms or filters.</p>
+      </div>
+
+      <!-- Card View -->
+      <div *ngIf="!loading && filteredResearchers.length > 0 && viewMode === 'card'" class="list-grid">
+        <mat-card *ngFor="let researcher of filteredResearchers" class="list-card">
+          <mat-card-header>
+            <mat-card-title>{{ researcher.fullname }}</mat-card-title>
+            <mat-card-subtitle>{{ researcher.tipoRRHH?.descripcion || 'N/A' }} - {{ researcher.email || 'No email' }}</mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div class="list-details">
+              <div class="detail-row">
+                <span class="detail-label">RUT/ID:</span>
+                <span class="detail-value">{{ researcher.idRecurso }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Email:</span>
+                <span class="detail-value">{{ researcher.email }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">ORCID:</span>
+                <span class="detail-value">{{ researcher.orcid || 'Not provided' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Type:</span>
+                <span class="detail-value">{{ researcher.tipoRRHH?.descripcion || 'N/A' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Gender:</span>
+                <span class="detail-value">{{ getGenderLabel(researcher.codigoGenero) }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Phone:</span>
+                <span class="detail-value">{{ researcher.numCelular || 'Not provided' }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+          
+          <mat-card-actions>
+            <button mat-button color="primary" [routerLink]="['/researchers', researcher.id]">
+              <mat-icon>visibility</mat-icon>
+              View
+            </button>
+            <!-- Edit and Delete buttons removed for readonly mode -->
+          </mat-card-actions>
+        </mat-card>
+      </div>
+
+      <!-- List View -->
+      <div *ngIf="!loading && filteredResearchers.length > 0 && viewMode === 'list'" class="list-view">
+        <div class="list-header-row">
+          <div class="list-cell">Name</div>
+          <div class="list-cell">Type</div>
+          <div class="list-cell">Email</div>
+          <div class="list-cell">Phone</div>
+          <div class="list-cell">ORCID</div>
+          <div class="list-cell">Actions</div>
+        </div>
+        
+        <div class="list-item-row" *ngFor="let researcher of filteredResearchers">
+          <div class="list-cell">
+            <div class="title-content">
+              <mat-icon class="item-icon">person</mat-icon>
+              <div class="title-text">
+                <div class="title">{{ researcher.fullname }}</div>
+                <div class="subtitle">{{ researcher.email || 'No email' }}</div>
+              </div>
+            </div>
+          </div>
+          <div class="list-cell">{{ researcher.tipoRRHH?.descripcion || 'N/A' }}</div>
+          <div class="list-cell">{{ researcher.email || 'No email' }}</div>
+          <div class="list-cell">{{ researcher.numCelular || 'Not provided' }}</div>
+          <div class="list-cell">
+            <a *ngIf="researcher.orcid" [href]="'https://orcid.org/' + researcher.orcid" target="_blank">
+              {{ researcher.orcid }}
+            </a>
+            <span *ngIf="!researcher.orcid">-</span>
+          </div>
+          <div class="list-cell actions-cell">
+            <button mat-icon-button [routerLink]="['/researchers', researcher.id]" matTooltip="View">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <!-- Edit and Delete buttons removed for readonly mode -->
+          </div>
+        </div>
+      </div>
+        </mat-card-content>
+      </mat-card>
+</div>

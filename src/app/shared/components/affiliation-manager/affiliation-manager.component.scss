@@ -1,0 +1,650 @@
+.affiliation-manager {
+  margin-top: 16px;
+
+  .affiliations-panel {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    background-color: #fafafa;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    ::ng-deep {
+      .mat-expansion-panel-header {
+        padding: 12px 16px;
+        transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+        &:hover {
+          background-color: #e3f2fd;
+        }
+
+        &[aria-expanded="true"] {
+          background-color: #f5f5f5;
+          border-bottom: 1px solid #e0e0e0;
+        }
+
+        // Espacio entre badge y flecha de expansión
+        .mat-expansion-indicator {
+          margin-left: 8px !important;
+        }
+      }
+
+      .mat-expansion-panel-body {
+        padding: 0;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+    }
+
+    .affiliations-title-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .affiliations-title {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      line-height: 1.4;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .affiliations-subtitle {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 400;
+      color: #666;
+      line-height: 1.3;
+    }
+
+    .aff-header {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      gap: 8px;
+
+      .spacer {
+        flex: 1;
+      }
+
+      .aff-header-right {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+        margin-right: 8px; // Espacio adicional antes de la flecha
+
+        .aff-count {
+          padding: 0 8px;
+          border-radius: 999px;
+          font-size: 12px;
+          line-height: 20px;
+          background: #e3f2fd;      /* azul muy clarito */
+          color: #1565c0;           /* azul más oscuro pero no negro */
+          font-weight: 500;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 20px;
+          white-space: nowrap;
+        }
+      }
+    }
+
+    // Mantener compatibilidad con el estilo anterior si se usa en otro lugar
+    .count-chip {
+      min-width: 20px;
+      height: 20px;
+      padding: 0 6px;
+      font-size: 11px;
+      font-weight: 600;
+      // WCAG AA: #1565c0 sobre blanco tiene ratio 7.1:1 (cumple)
+      background: #1565c0;
+      color: #ffffff;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+  }
+}
+// Estilos profundos para truncar el texto en el chip de Material
+::ng-deep .affiliation-chip {
+  .mdc-evolution-chip__text-label.mat-mdc-chip-action-label {
+    display: flex !important;
+    align-items: center !important;
+    max-width: 550px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+}
+
+.chip-text.institution-name {
+  flex: 1;                 /* Ocupa todo el espacio disponible */
+  min-width: 0;            /* MUY IMPORTANTE para que ellipsis funcione */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.affiliations-content {
+  padding: 16px;
+  background-color: white;
+}
+
+.affiliations-chips {
+  margin-bottom: 16px;
+
+  .affiliations-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .affiliation-chip-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    
+    mat-chip-set {
+      display: flex;
+      flex-wrap: wrap;
+    }
+    
+    .affiliation-chip {
+      font-weight: 500;
+      padding: 8px 12px;
+      cursor: move;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      // WCAG AA: Material accent color sobre fondo claro cumple con contraste
+      // Aseguramos que el texto tenga suficiente contraste
+      color: #1976d2; // Azul más oscuro para mejor contraste
+
+      &.preview-new {
+        border: 2px solid #ff9800;
+        background-color: #fff3e0;
+      }
+      
+      .preview-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 6px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+        margin-left: 4px;
+        
+        mat-icon {
+          font-size: 14px;
+          width: 14px;
+          height: 14px;
+        }
+        
+        &.new-badge {
+          background-color: #e3f2fd;
+          color: #1976d2;
+        }
+        
+        &.error-badge {
+          background-color: #ffebee;
+          color: #c62828;
+        }
+      }
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      &.cdk-drag-preview {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        opacity: 0.9;
+      }
+
+      &.cdk-drag-placeholder {
+        opacity: 0.4;
+      }
+
+      .drag-handle {
+        font-size: 16px;
+        height: 16px;
+        width: 16px;
+        margin-right: 4px;
+        color: #9e9e9e;
+        cursor: grab;
+        flex-shrink: 0;
+
+        &:active {
+          cursor: grabbing;
+        }
+      }
+
+      > mat-icon:not(.drag-handle) {
+        font-size: 18px;
+        height: 18px;
+        width: 18px;
+        margin-right: 6px;
+      }
+
+      .chip-text {
+        flex: 1;
+        min-width: 0;
+      }
+      
+      .institution-icon {
+        padding-top: 3px;
+      }
+      
+      .edit-chip-button {
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        padding: 0;
+        margin-left: 4px;
+        margin-right: 4px;
+        color: #666;
+        opacity: 0.7;
+        transition: all 0.2s ease;
+
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+
+        &:hover:not([disabled]) {
+          opacity: 1;
+          color: #2196f3;
+          background-color: rgba(33, 150, 243, 0.1);
+        }
+
+        &[disabled] {
+          opacity: 0.3;
+        }
+      }
+    }
+    
+    // Texto completo de la afiliación (visible al hacer click)
+    .affiliation-text-subtitle {
+      margin-left: 0;
+      padding: 4px 0;
+      font-size: 11px;
+      font-weight: 400;
+      color: #757575;
+      line-height: 1.4;
+      white-space: normal;
+      word-wrap: break-word;
+      animation: fadeIn 0.2s ease-in;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.quick-add-section {
+  margin-top: 12px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: flex-start;
+
+  .quick-add-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    padding: 6px 16px;
+    // WCAG AA: #1565c0 sobre blanco tiene ratio 7.1:1 (cumple)
+    border-color: #1565c0;
+    color: #1565c0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+
+    &:hover {
+      background-color: #e3f2fd;
+      border-color: #0d47a1;
+      color: #0d47a1;
+    }
+  }
+}
+
+.affiliations-list {
+  margin-bottom: 16px;
+}
+
+.affiliation-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  background-color: #fafafa;
+  transition: all 0.2s ease;
+  border-left: 3px solid #2196f3;
+
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transform: translateX(4px);
+    background-color: #ffffff;
+  }
+}
+
+.affiliation-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.institution-chip {
+  align-self: flex-start;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  color: #1976d2;
+  font-weight: 500;
+  padding: 8px 12px;
+  border: 1px solid #90caf9;
+  
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    margin-right: 6px;
+    color: #1976d2;
+  }
+}
+
+.affiliation-text {
+  color: #666;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.no-text {
+  color: #999;
+  font-size: 12px;
+  font-style: italic;
+}
+
+.affiliation-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.no-affiliations {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  color: #666;
+  text-align: center;
+  gap: 16px;
+
+  mat-icon {
+    font-size: 64px;
+    height: 64px;
+    width: 64px;
+    opacity: 0.4;
+    color: #9e9e9e;
+  }
+
+  span {
+    font-size: 14px;
+    color: #757575;
+    max-width: 300px;
+  }
+
+  .empty-state-cta {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 24px;
+    font-weight: 500;
+    // WCAG AA: #1565c0 sobre blanco tiene ratio 7.1:1 (cumple)
+    border-color: #1565c0;
+    color: #1565c0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(21, 101, 192, 0.3);
+      border-color: #0d47a1;
+      color: #0d47a1;
+    }
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      opacity: 1;
+      color: inherit;
+    }
+  }
+}
+
+.loading-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  gap: 16px;
+  color: #666;
+}
+
+.affiliation-form {
+  margin-top: 16px;
+  margin-bottom: 16px;
+  position: relative;
+
+  .form-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 8px 0;
+
+    .back-button {
+      color: #666;
+      transition: all 0.2s ease;
+
+      &:hover:not(:disabled) {
+        color: #2196f3;
+        background-color: #e3f2fd;
+      }
+
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    .form-breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 14px;
+      color: #666;
+
+      .breadcrumb-item {
+        &.active {
+          color: #2196f3;
+          font-weight: 500;
+        }
+      }
+
+      .breadcrumb-separator {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        color: #999;
+      }
+    }
+  }
+
+      // Preview institution alert
+      .preview-institution-alert {
+        display: flex;
+        gap: 12px;
+        padding: 16px;
+        margin-bottom: 16px;
+        background-color: #fff3e0;
+        border: 1px solid #ff9800;
+        border-radius: 8px;
+        
+        .alert-icon {
+          color: #ff9800;
+          flex-shrink: 0;
+          font-size: 24px;
+          width: 24px;
+          height: 24px;
+        }
+        
+        .alert-content {
+          flex: 1;
+          
+          strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #e65100;
+            font-size: 14px;
+          }
+          
+          p {
+            margin: 8px 0;
+            font-size: 13px;
+            color: #666;
+          }
+          
+          .decision-radios {
+            margin: 12px 0;
+            
+            mat-radio-group {
+              display: flex;
+              flex-direction: column;
+              gap: 8px;
+            }
+          }
+        }
+      }
+      
+      .form-card {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-left: 3px solid #e0e0e0;
+    background-color: #fafafa;
+    transition: all 0.2s ease;
+
+    &:hover {
+      border-left-color: #2196f3;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  mat-card-content {
+    padding-top: 16px;
+  }
+
+  .full-width {
+    width: 100%;
+    margin-bottom: 16px;
+  }
+}
+
+.add-button-section {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+
+  .add-affiliation-button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 24px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+
+    &[mat-raised-button] {
+      box-shadow: 0 2px 4px rgba(244, 67, 54, 0.3);
+
+      &:hover {
+        box-shadow: 0 4px 8px rgba(244, 67, 54, 0.4);
+        transform: translateY(-2px);
+      }
+    }
+
+    &[mat-stroked-button] {
+      // WCAG AA: #1565c0 sobre blanco tiene ratio 7.1:1 (cumple)
+      border-color: #1565c0;
+      color: #1565c0;
+      box-shadow: 0 2px 4px rgba(21, 101, 192, 0.2);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+      &:hover {
+        box-shadow: 0 4px 8px rgba(21, 101, 192, 0.3);
+        transform: translateY(-2px);
+        background-color: #e3f2fd;
+        border-color: #0d47a1;
+        color: #0d47a1;
+      }
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      transition: transform 0.2s ease;
+    }
+
+    &:hover mat-icon {
+      transform: scale(1.1);
+    }
+  }
+}
+
+// Estilos para el snackbar de undo
+::ng-deep .affiliation-undo-snackbar {
+  .mat-mdc-snack-bar-container {
+    background-color: #323232;
+    color: #fff;
+  }
+
+  .mat-mdc-snack-bar-action {
+    color: #bb86fc;
+    font-weight: 500;
+  }
+}
+
+// Estilos para el spinner en el botón
+.button-spinner {
+  display: inline-block;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+

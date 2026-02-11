@@ -1,0 +1,139 @@
+<div class="detail-container" *ngIf="catalog">
+  <div class="header-actions">
+    <button mat-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to {{ getCatalogTypeName() }}
+    </button>
+    <!-- Only show Edit button for non-readonly catalog types -->
+    <button *ngIf="!isReadOnlyCatalogType()" mat-raised-button color="primary" (click)="editCatalog()">
+      <mat-icon>edit</mat-icon>
+      Edit
+    </button>
+  </div>
+
+  <mat-card class="detail-card">
+    <mat-card-header>
+      <mat-card-title>{{ catalog.nombre }}</mat-card-title>
+      <mat-card-subtitle>
+        <mat-chip color="primary" selected>
+          {{ getCatalogTypeName() }}
+        </mat-chip>
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- For Participation Types: Show only ID, Description, and Product Type -->
+      <div *ngIf="currentCatalogType === 'participation-types'" class="detail-section">
+        <h3>Basic Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <strong>ID:</strong>
+            <span class="id-value">{{ catalog.id }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Product Type:</strong>
+            <span>
+              <mat-chip color="accent" selected>
+                {{ getTipoProductoNombre(catalog) }}
+              </mat-chip>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- For Product Types: Show only ID and Description -->
+      <div *ngIf="currentCatalogType === 'product-types'" class="detail-section">
+        <h3>Basic Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <strong>ID:</strong>
+            <span class="id-value">{{ catalog.id }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- For Researcher Types: Show only ID and Description -->
+      <div *ngIf="currentCatalogType === 'researcher-types'" class="detail-section">
+        <h3>Basic Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <strong>ID:</strong>
+            <span class="id-value">{{ catalog.id }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- For Journals: Show only ID, Description, Abbreviation, ISSN -->
+      <div *ngIf="currentCatalogType === 'journals'" class="detail-section">
+        <h3>Basic Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <strong>ID:</strong>
+            <span class="id-value">{{ catalog.id }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Abbreviation:</strong>
+            <span>{{ getItemAbbreviation(catalog) }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>ISSN:</strong>
+            <span>{{ getItemIssn(catalog) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- For other catalog types: Show original fields -->
+      <div *ngIf="currentCatalogType !== 'participation-types' && currentCatalogType !== 'product-types' && currentCatalogType !== 'researcher-types' && currentCatalogType !== 'journals'" class="detail-section">
+        <h3>Basic Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item" *ngIf="hasCodigo(catalog)">
+            <strong>Code:</strong>
+            <span class="code-value">{{ getItemCodigo(catalog) }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Name:</strong>
+            <span>{{ catalog.nombre }}</span>
+          </div>
+          <div class="detail-item" *ngIf="hasAplicableProductos(catalog)">
+            <strong>Applicable Products:</strong>
+            <span>
+              <mat-chip color="primary" selected>
+                {{ getItemAplicableProductos(catalog) }}
+              </mat-chip>
+            </span>
+          </div>
+          <div class="detail-item" *ngIf="hasPuedeSerCorresponding(catalog)">
+            <strong>Can be Corresponding:</strong>
+            <span>
+              <mat-chip [color]="getItemPuedeSerCorresponding(catalog) ? 'primary' : 'warn'" selected>
+                {{ getItemPuedeSerCorresponding(catalog) ? 'Yes' : 'No' }}
+              </mat-chip>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="detail-section">
+        <h3>Description</h3>
+        <div class="description-content">
+          <p>{{ catalog.descripcion || 'No description provided' }}</p>
+        </div>
+      </div>
+    </mat-card-content>
+
+    <!-- Only show Delete button for non-readonly catalog types -->
+    <mat-card-actions *ngIf="!isReadOnlyCatalogType()">
+      <button mat-button color="warn" (click)="deleteCatalog()">
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>
+
+<div *ngIf="!catalog" class="loading-container">
+  <mat-spinner></mat-spinner>
+  <p>Loading catalog details...</p>
+</div>

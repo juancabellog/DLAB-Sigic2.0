@@ -1,0 +1,213 @@
+<div class="fellow-container">
+  <div class="header">
+    <div class="header-left">
+      <button mat-icon-button (click)="goBack()" matTooltip="Back to Postdoctoral Fellows List">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>{{ pageTitle }}</h1>
+    </div>
+  </div>
+  
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading postdoctoral fellow...</p>
+  </div>
+
+  <mat-card class="form-card" *ngIf="!loading">
+    <mat-card-header>
+      <mat-card-subtitle *ngIf="isEditMode">ID: {{ fellowId }}</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="form-section">
+        <div class="section-title">Basic Information</div>
+        
+        <mat-form-field class="full-width">
+          <mat-label>Research Topic</mat-label>
+          <input matInput [(ngModel)]="fellow.descripcion" placeholder="Enter research topic" required>
+        </mat-form-field>
+
+        <div class="form-row">
+          <div class="half-width">
+            <app-institution-search
+              label="Institution where it was inserted"
+              placeholder="Search institution by name..."
+              [selectedInstitution]="fellow.institucion || null"
+              [disabled]="loadingInstitutions"
+              (institutionSelected)="onInstitutionSelected($event)">
+            </app-institution-search>
+          </div>
+
+          <mat-form-field class="half-width">
+            <mat-label>Inserted</mat-label>
+            <mat-select
+              [(ngModel)]="fellow.tipoSector"
+              [disabled]="loadingSectorTypes"
+              [compareWith]="compareSectorTypes">
+              <mat-option [value]="null">-- Select Inserted --</mat-option>
+              <mat-option *ngFor="let sectorType of sectorTypes" [value]="sectorType">
+                {{ sectorType.idDescripcion }}
+              </mat-option>
+            </mat-select>
+            <mat-spinner *ngIf="loadingSectorTypes" matSuffix diameter="20"></mat-spinner>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field class="half-width">
+            <mat-label>Start Date</mat-label>
+            <input matInput type="date" [(ngModel)]="fellow.fechaInicio" (ngModelChange)="onFechaInicioChange()" required>
+          </mat-form-field>
+
+          <mat-form-field class="half-width">
+            <mat-label>End Date</mat-label>
+            <input matInput type="date" [(ngModel)]="fellow.fechaTermino">
+          </mat-form-field>
+        </div>
+      </div>
+      
+      <mat-divider></mat-divider>
+      
+      <div class="form-section">
+        <div class="section-title">Funding Source</div>
+        <p class="section-description">Select one or more funding sources for this postdoctoral fellow.</p>
+        
+        <div class="checkbox-group">
+          <mat-checkbox 
+            *ngFor="let fundingType of fundingTypes"
+            [checked]="isFundingTypeSelected(fundingType)"
+            (change)="onFundingTypeChange(fundingType, $event.checked)"
+            color="primary">
+            {{ fundingType.idDescripcion }}
+          </mat-checkbox>
+        </div>
+      </div>
+      
+      <mat-divider></mat-divider>
+      
+      <div class="form-section">
+        <div class="section-title">Resources</div>
+        <p class="section-description">Select one or more resources associated with this postdoctoral fellow.</p>
+        
+        <div class="checkbox-group">
+          <mat-checkbox 
+            *ngFor="let resource of resources"
+            [checked]="isResourceSelected(resource)"
+            (change)="onResourceChange(resource, $event.checked)"
+            color="primary">
+            {{ resource.idDescripcion }}
+          </mat-checkbox>
+        </div>
+      </div>
+      
+      <mat-divider></mat-divider>
+      
+      <div class="form-section">
+        <div class="section-title">Product Information</div>
+        
+        <div class="form-row">
+          <mat-form-field class="half-width">
+            <mat-label>Progress Report (Period)</mat-label>
+            <mat-select [(ngModel)]="fellow.progressReport">
+              <mat-option [value]="1">Period 1</mat-option>
+              <mat-option [value]="2">Period 2</mat-option>
+              <mat-option [value]="3">Period 3</mat-option>
+              <mat-option [value]="4">Period 4</mat-option>
+              <mat-option [value]="5">Period 5</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field class="half-width">
+            <mat-label>ANID Code</mat-label>
+            <input matInput [(ngModel)]="fellow.codigoANID" placeholder="Enter ANID code">
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-checkbox [(ngModel)]="isBasal" (change)="onBasalChange($event.checked)" color="primary">
+            Product associated with Basal funding
+          </mat-checkbox>
+        </div>
+        
+        <div class="form-row">
+          <div class="full-width pdf-upload-field">
+            <label class="pdf-upload-label">PDF Document</label>
+            <div class="file-upload-container">
+              <input 
+                type="file" 
+                #fileInput 
+                (change)="onFileSelected($event)" 
+                accept=".pdf" 
+                style="display: none"
+                id="pdf-upload">
+              <button 
+                mat-stroked-button 
+                type="button" 
+                (click)="fileInput.click()"
+                [disabled]="uploadingPdf">
+                <mat-icon>upload</mat-icon>
+                {{ selectedPdfFile ? selectedPdfFile.name : 'Select PDF File' }}
+              </button>
+              <button 
+                *ngIf="selectedPdfFile" 
+                mat-icon-button
+                type="button" 
+                (click)="clearSelectedFile()"
+                [disabled]="loading"
+                matTooltip="Clear selection">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+            <div class="pdf-hint" *ngIf="fellow.linkPDF">
+              <span>Current PDF: {{ getPdfFileName() }}</span>
+              <a 
+                *ngIf="getPdfUrl()" 
+                [href]="getPdfUrl()!" 
+                target="_blank" 
+                download 
+                [attr.download]="getFellowName() + '.pdf'" 
+                class="pdf-download-link" 
+                matTooltip="Download PDF">
+                <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+                Download
+              </a>
+            </div>
+            <div class="pdf-hint" *ngIf="!fellow.linkPDF && !selectedPdfFile">No PDF file selected</div>
+          </div>
+        </div>
+      </div>
+      
+      <mat-divider></mat-divider>
+      
+      <div class="form-section">
+        <div class="section-title">Participants</div>
+        <p class="section-description">Add participants using the researcher search component.</p>
+        <app-participant-manager 
+          [participants]="participants"
+          [productType]="'postdoctoral-fellows'"
+          (participantsChange)="onParticipantsChange($event)">
+        </app-participant-manager>
+      </div>
+
+      <mat-divider></mat-divider>
+      
+      <div class="form-section">
+        <div class="section-title">Additional Information</div>
+        
+        <mat-form-field class="full-width">
+          <mat-label>Comments</mat-label>
+          <textarea matInput [(ngModel)]="fellow.comentario" rows="3" placeholder="Enter additional comments"></textarea>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+    
+    <mat-card-actions class="action-buttons">
+      <button mat-button (click)="cancelEdit()">{{ backButtonText }}</button>
+      <button mat-raised-button color="primary" (click)="saveFellow()" [disabled]="loading">
+        <mat-spinner *ngIf="loading" diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+        {{ saveButtonText }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>
+

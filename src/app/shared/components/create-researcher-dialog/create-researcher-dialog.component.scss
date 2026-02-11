@@ -1,0 +1,70 @@
+.full-width {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+mat-dialog-content {
+  min-width: 500px;
+  max-width: 600px;
+}
+
+mat-dialog-actions {
+  padding: 16px 24px;
+  margin: 0;
+}
+
+.duplicate-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  margin-bottom: 16px;
+  background-color: #FFF3E0;
+  border-left: 4px solid #FB8C00;
+  border-radius: 4px;
+  color: #E65100;
+
+  mat-icon {
+    color: #FB8C00;
+    margin-top: 2px;
+  }
+
+  .warning-content {
+    flex: 1;
+
+    p {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+    }
+
+    .existing-researcher-info {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid #FFB08A;
+
+      p {
+        margin-bottom: 8px;
+        font-size: 13px;
+      }
+
+      button {
+        margin-top: 4px;
+      }
+    }
+  }
+}
+
+mat-spinner {
+  display: inline-block;
+}
+
+@media (max-width: 600px) {
+  mat-dialog-content {
+    min-width: auto;
+    max-width: 100%;
+  }
+}
+
+
+
+

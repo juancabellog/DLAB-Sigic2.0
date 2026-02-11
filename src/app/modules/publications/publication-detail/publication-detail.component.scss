@@ -1,0 +1,79 @@
+// ========================================
+// PUBLICATION DETAIL COMPONENT STYLES
+// ========================================
+// Estilos específicos para el componente de detalle de publicaciones
+// Los estilos comunes están en list-components.scss
+
+// ========================================
+// AUTHORS SECTION STYLES
+// ========================================
+.authors-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.author-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #1976d2;
+}
+
+.author-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.author-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 16px;
+}
+
+.author-role {
+  font-size: 14px;
+  color: #666;
+  font-style: italic;
+}
+
+// ========================================
+// PDF LINK STYLES
+// ========================================
+.pdf-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #d32f2f;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s;
+  
+  &:hover {
+    color: #b71c1c;
+    text-decoration: underline;
+  }
+  
+  .pdf-icon {
+    color: #d32f2f;
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+  }
+}
+
+// ========================================
+// RESPONSIVE DESIGN
+// ========================================
+@media (max-width: 768px) {
+  .author-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+

@@ -1,0 +1,141 @@
+<div class="detail-container" *ngIf="event">
+  <div class="header-actions">
+    <button mat-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Scientific Events
+    </button>
+    <button mat-raised-button color="primary" (click)="editEvent()">
+      <mat-icon>edit</mat-icon>
+      Edit
+    </button>
+  </div>
+
+  <mat-card class="detail-card">
+    <mat-card-header>
+      <mat-card-title>{{ getEventTitle() }}</mat-card-title>
+      <mat-card-subtitle>
+        <mat-chip [color]="getStatusColor(event.estadoProducto?.codigo || event.estadoProducto?.codigoDescripcion)" selected>
+          {{ event.estadoProducto?.codigo || event.estadoProducto?.codigoDescripcion || event.estadoProducto?.nombre || 'N/A' }}
+        </mat-chip>
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="detail-section">
+        <h3>Event Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <strong>Event Type:</strong>
+            <span>{{ getEventType() }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>City:</strong>
+            <span>{{ event.ciudad || 'N/A' }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Country:</strong>
+            <span>{{ event.pais?.idDescripcion || 'N/A' }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Location:</strong>
+            <span>{{ getEventLocation() }}</span>
+          </div>
+          <div class="detail-item" *ngIf="event.numParticipantes">
+            <strong>Number of Participants:</strong>
+            <span>{{ event.numParticipantes }}</span>
+          </div>
+          <div class="detail-item" *ngIf="event.fechaInicio">
+            <strong>Start Date:</strong>
+            <span>{{ event.fechaInicio | date:'MMM dd, yyyy' }}</span>
+          </div>
+          <div class="detail-item" *ngIf="event.fechaTermino">
+            <strong>End Date:</strong>
+            <span>{{ event.fechaTermino | date:'MMM dd, yyyy' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Product Information -->
+      <div class="detail-section">
+        <h3>Product Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item" *ngIf="event.progressReport">
+            <strong>Progress Report (Period):</strong>
+            <span>Period {{ event.progressReport }}</span>
+          </div>
+          <div class="detail-item" *ngIf="event.codigoANID">
+            <strong>ANID Code:</strong>
+            <span>{{ event.codigoANID }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Basal Funding:</strong>
+            <mat-chip [color]="isBasal() ? 'primary' : 'warn'" selected>
+              {{ getBasalStatus() }}
+            </mat-chip>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Documents -->
+      <div class="detail-section" *ngIf="event.linkPDF || event.linkVisualizacion || event.urlDocumento">
+        <h3>Documents</h3>
+        <div class="detail-grid">
+          <div class="detail-item" *ngIf="getPdfUrl()">
+            <strong>PDF Document:</strong>
+            <span>
+              <a [href]="getPdfUrl()!" target="_blank" download [attr.download]="getEventTitle() + '.pdf'" class="pdf-link" matTooltip="Download PDF">
+                <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+                Download PDF
+              </a>
+            </span>
+          </div>
+          <div class="detail-item" *ngIf="event.linkVisualizacion">
+            <strong>View Link:</strong>
+            <span>
+              <a [href]="event.linkVisualizacion" target="_blank" rel="noopener noreferrer">
+                {{ event.linkVisualizacion }}
+              </a>
+            </span>
+          </div>
+          <div class="detail-item" *ngIf="event.urlDocumento">
+            <strong>Document URL:</strong>
+            <span>
+              <a [href]="event.urlDocumento" target="_blank" rel="noopener noreferrer">
+                {{ event.urlDocumento }}
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="detail-section" *ngIf="event.comentario">
+        <h3>Comments</h3>
+        <p>{{ event.comentario }}</p>
+      </div>
+
+      <div class="detail-section" *ngIf="event.participantes && event.participantes.length > 0">
+        <h3>Participants</h3>
+        <p>{{ event.participantes.length }} participant(s)</p>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-button color="warn" (click)="deleteEvent()">
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>
+
+<div *ngIf="loading || !event" class="loading-container">
+  <mat-spinner></mat-spinner>
+  <p>Loading scientific event details...</p>
+</div>
+

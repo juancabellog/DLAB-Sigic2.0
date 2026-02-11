@@ -1,0 +1,474 @@
+<div class="participant-manager">
+  <!-- Header -->
+  <div class="header">
+    <h3>Authors Summary</h3>
+    <button 
+      mat-icon-button 
+      (click)="refreshTypes()" 
+      matTooltip="Refresh participation types"
+      aria-label="Refresh participation types">
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+  <!-- Summary Chips (Floating) -->
+  <div *ngIf="participants.length > 0 && !loadingParticipationTypes" class="summary-chips-container">
+    <div class="summary-chips">
+      <mat-chip-set>
+        <mat-chip 
+          *ngFor="let participant of participants; let i = index" 
+          class="summary-chip"
+          [class.incomplete]="isParticipantIncomplete(participant)"
+          [class.corresponding]="participant.corresponding"
+          [class.preview-new]="participant.previewStatus === 'new'"
+          [class.preview-review]="participant.previewStatus === 'review'"
+          [class.missing-affiliation]="productType === 'publications' && !hasAffiliations(participant)"
+          [class.incomplete-institutions]="productType === 'publications' && hasIncompleteInstitutions(participant)"
+          (click)="onAuthorSummaryClick(participant, i)"
+          [style.cursor]="'pointer'">
+          <span class="chip-order">#{{ participant.order || (i + 1) }}</span>
+          <span class="chip-name">
+            {{ participant.fullName }}
+            <ng-container *ngIf="productType === 'publications' && (getInstitutionIndicesForAuthor(participant) || []).length > 0">
+              <span class="author-affiliation-indices">
+                <sup
+                  class="author-affiliation-index"
+                  *ngFor="let idx of getInstitutionIndicesForAuthor(participant)"
+                >
+                  {{ idx }}
+                </sup>
+              </span>
+            </ng-container>
+          </span>
+          <mat-icon class="chip-role-icon">person</mat-icon>
+          <span class="chip-role">{{ getParticipantRoleName(participant) }}</span>
+          <span *ngIf="(participant.resolutionType === 'createNew' || participant.resolutionStatus === 'createNew') && participant.resolved" class="preview-badge new-badge">
+            <mat-icon>new_releases</mat-icon>
+            Nuevo
+          </span>
+          <span *ngIf="participant.previewStatus === 'review' && participant.resolutionStatus !== 'createNew'" class="preview-badge review-badge">
+            <mat-icon>warning</mat-icon>
+            Revisar
+          </span>
+          <!-- Badge de advertencia si no tiene afiliación -->
+          <span
+            *ngIf="productType === 'publications' && !hasAffiliations(participant)"
+            class="affiliation-warning-badge"
+          >
+            <mat-icon>warning_amber</mat-icon>
+            <span>No affiliation</span>
+          </span>
+          <!-- Badge de error si tiene afiliaciones con instituciones incompletas -->
+          <span
+            *ngIf="productType === 'publications' && hasIncompleteInstitutions(participant)"
+            class="affiliation-error-badge"
+            matTooltip="This author has affiliations with missing institutions. Please link them to existing institutions."
+          >
+            <mat-icon>error</mat-icon>
+            <span>Incomplete institutions</span>
+          </span>
+          <mat-icon *ngIf="participant.corresponding" class="chip-corresponding-icon" matTooltip="Corresponding Author">star</mat-icon>
+        </mat-chip>
+      </mat-chip-set>
+    </div>
+    
+    <!-- Institutions Summary (solo para publicaciones) -->
+    <div class="institutions-summary" *ngIf="productType === 'publications' && institutionSummary && institutionSummary.length > 0">
+      <div class="institutions-summary-title">Institutions Summary</div>
+      <div class="institutions-summary-list">
+        <div
+          class="institution-item"
+          *ngFor="let inst of institutionSummary"
+        >
+          <span class="institution-index">[{{ inst.index }}]</span>
+          <span class="institution-name">{{ inst.name }}</span>
+          <span class="institution-count" *ngIf="inst.countAuthors > 1">
+            — {{ inst.countAuthors }} authors
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Authors Container -->
+  <section class="authors-section" aria-labelledby="authors-label">
+    <mat-expansion-panel 
+      [(expanded)]="authorDetailsExpanded"
+      (opened)="onAuthorDetailsOpened()"
+      (closed)="onAuthorDetailsClosed()"
+      class="author-details-panel"
+      [hideToggle]="false">
+      <mat-expansion-panel-header>
+        <mat-panel-title>
+          <h4 id="authors-label" class="authors-title">Author Details</h4>
+        </mat-panel-title>
+        <mat-panel-description>
+          <div class="details-header">
+            <span class="panel-description-text">
+              {{ participants.length }} {{ participants.length === 1 ? 'author' : 'authors' }}
+            </span>
+            <span class="spacer"></span>
+            <div class="details-header-right">
+              <span class="separator" *ngIf="authorDetailsExpanded && participants.length > 0 && !loadingParticipationTypes">·</span>
+              <button 
+                *ngIf="authorDetailsExpanded && participants.length > 0 && !loadingParticipationTypes"
+                mat-stroked-button
+                (click)="toggleExpandAll(); $event.stopPropagation()"
+                class="expand-all-button-header"
+                [attr.aria-label]="allExpanded ? 'Collapse all authors' : 'Expand all authors'">
+                <mat-icon>{{ allExpanded ? 'unfold_less' : 'unfold_more' }}</mat-icon>
+                <span>{{ allExpanded ? 'Collapse All' : 'Expand All' }}</span>
+              </button>
+            </div>
+          </div>
+        </mat-panel-description>
+      </mat-expansion-panel-header>
+
+      <div class="author-details-content">
+
+        <!-- Search Section - Prominently placed at top (sticky) -->
+        <div class="search-section sticky-search" #searchSection>
+          <mat-card class="search-card">
+            <mat-card-content>
+              <div class="search-header">
+                <mat-icon class="search-icon">person_add</mat-icon>
+                <h4>Add Researcher</h4>
+              </div>
+              <app-researcher-search 
+                (researcherSelected)="onResearcherSelected($event)"
+                [disabled]="loadingParticipationTypes">
+              </app-researcher-search>
+            </mat-card-content>
+          </mat-card>
+        </div>
+        
+        <!-- Loading state -->
+        <div *ngIf="loadingParticipationTypes" class="loading-section">
+          <mat-spinner diameter="30"></mat-spinner>
+          <span>Loading participation types...</span>
+        </div>
+        
+        <!-- Participants list as accordion -->
+        <div *ngIf="!loadingParticipationTypes" class="participants-accordion-wrapper">
+          <mat-accordion 
+            class="participants-accordion"
+            multi="true"
+            cdkDropList 
+            (cdkDropListDropped)="moveParticipant($event)">
+            <mat-expansion-panel 
+              *ngFor="let participant of participants; let i = index; trackBy: trackByParticipant"
+              [expanded]="isParticipantExpanded(i)"
+              (opened)="onParticipantPanelOpened(i)"
+              (closed)="onParticipantPanelClosed(i)"
+              class="participant-panel"
+              [class.publication]="productType === 'publications'"
+              [@slideIn]
+              cdkDrag
+              #participantPanel>
+              <mat-expansion-panel-header class="participant-panel-header" cdkDragHandle>
+                <mat-panel-title>
+                  <div class="author-header">
+                    <div class="left">
+                      <mat-icon class="drag-handle">drag_indicator</mat-icon>
+                      <span class="order-badge">#{{ participant.order || (i + 1) }}</span>
+                      <span class="participant-name">{{ participant.fullName }}</span>
+                      <!-- ORCID de BD (si hay match) -->
+                      <span class="author-orcid" *ngIf="participant.orcid">
+                        <mat-icon class="orcid-icon">account_circle</mat-icon>
+                        <span>ORCID: {{ participant.orcid }}</span>
+                        <!-- Badge verde si match por ORCID -->
+                        <mat-chip *ngIf="participant.matchMethod === 'orcid'" class="orcid-match-badge" color="primary">
+                          <mat-icon>verified</mat-icon>
+                          ORCID match
+                        </mat-chip>
+                      </span>
+                      <!-- Warning icon si hay conflicto de ORCID -->
+                      <mat-icon 
+                        *ngIf="participant.orcidSyncStatus === 'conflict'" 
+                        class="orcid-conflict-icon"
+                        matTooltip="ORCID mismatch – review in Author Details"
+                        [style.color]="'#ff9800'">warning</mat-icon>
+                      <!-- Warning icon si hay instituciones incompletas -->
+                      <mat-icon 
+                        *ngIf="productType === 'publications' && hasIncompleteInstitutions(participant)" 
+                        class="incomplete-institution-icon"
+                        matTooltip="This author has affiliations with missing institutions. Please link them to existing institutions."
+                        [style.color]="'#c62828'">error</mat-icon>
+                    </div>
+                    <button 
+                      mat-icon-button 
+                      (click)="removeParticipant(i); $event.stopPropagation()" 
+                      matTooltip="Remove researcher from team"
+                      [attr.aria-label]="'Remove ' + participant.fullName + ' from research team'"
+                      class="delete">
+                      <mat-icon>delete</mat-icon>
+                    </button>
+                  </div>
+                </mat-panel-title>
+                <mat-panel-description>
+                  <!-- Empty description to maintain Material structure -->
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <div class="participant-panel-content">
+                <!-- ORCID Status Messages -->
+                <!-- Caso 1: ORCID missing en BD, OpenAlex tiene ORCID -->
+                <div *ngIf="participant.orcidSyncStatus === 'missing_local' && participant.orcidFromOpenAlex" 
+                     class="orcid-info-banner">
+                  <mat-icon class="info-icon">info</mat-icon>
+                  <div class="banner-content">
+                    <div class="banner-title">ORCID: {{ participant.orcidFromOpenAlex }}</div>
+                    <div class="banner-message">
+                      Will be added to <strong>{{ participant.fullName }}</strong> when you save.
+                    </div>
+                    <mat-checkbox 
+                      [(ngModel)]="participant.orcidChangeAction"
+                      [value]="'add'"
+                      [checked]="participant.orcidChangeAction === 'add'"
+                      (change)="onOrcidActionChange(i, $event.checked ? 'add' : 'none')"
+                      class="orcid-checkbox">
+                      Add ORCID from OpenAlex to this researcher
+                    </mat-checkbox>
+                  </div>
+                </div>
+                
+                <!-- Caso 2: Conflicto de ORCID -->
+                <div *ngIf="participant.orcidSyncStatus === 'conflict'" 
+                     class="orcid-conflict-banner">
+                  <mat-icon class="warning-icon">warning</mat-icon>
+                  <div class="banner-content">
+                    <div class="banner-title">⚠ ORCID mismatch</div>
+                    <div class="orcid-comparison">
+                      <div class="orcid-item">
+                        <span class="orcid-label">Internal:</span>
+                        <span class="orcid-value">{{ participant.orcidFromBD || 'No ORCID' }}</span>
+                      </div>
+                      <div class="orcid-item">
+                        <span class="orcid-label">OpenAlex:</span>
+                        <span class="orcid-value">{{ participant.orcidFromOpenAlex || 'No ORCID' }}</span>
+                      </div>
+                    </div>
+                    <div class="orcid-options">
+                      <mat-radio-group 
+                        [(ngModel)]="participant.orcidChangeAction"
+                        (change)="onOrcidActionChange(i, $event.value)">
+                        <mat-radio-button value="none">
+                          Keep internal ORCID (recommended)
+                        </mat-radio-button>
+                        <mat-radio-button value="replace">
+                          Replace with ORCID from OpenAlex
+                        </mat-radio-button>
+                        <mat-radio-button value="unlink">
+                          This is not the same person
+                        </mat-radio-button>
+                      </mat-radio-group>
+                    </div>
+                    <!-- Si elige "This is not the same person", resetear el match -->
+                    <div *ngIf="participant.orcidChangeAction === 'unlink'" class="unlink-warning">
+                      <mat-icon>info</mat-icon>
+                      <span>This will mark the author as unmatched. Please select or create a new researcher.</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Caso 3: Match por ORCID (badge verde) -->
+                <div *ngIf="participant.matchMethod === 'orcid' && participant.orcidSyncStatus === 'ok'" 
+                     class="orcid-ok-badge">
+                  <mat-icon class="verified-icon">verified</mat-icon>
+                  <span>Matched by ORCID ({{ participant.orcid }})</span>
+                </div>
+                
+                <!-- Preview Status: Matched (single match found) - Allow to change or create new -->
+                <div *ngIf="participant.previewStatus === 'matched'" 
+                     class="preview-researcher-alert matched-alert">
+                  <mat-icon class="alert-icon">check_circle</mat-icon>
+                  <div class="alert-content">
+                    <strong>Matched with: {{ participant.previewMatchedName || participant.fullName }}</strong>
+                    <p>
+                      A researcher was automatically matched. You can keep this match, change to another researcher, or create a new one.
+                    </p>
+                    
+                    <!-- Decision Radios -->
+                    <div class="decision-radios">
+                      <mat-radio-group 
+                        [(ngModel)]="participant.previewAction"
+                        (change)="onPreviewActionChange(i, $event.value)">
+                        <mat-radio-button value="matched">
+                          Keep this match
+                        </mat-radio-button>
+                        <mat-radio-button value="link">
+                          Change to another existing researcher
+                        </mat-radio-button>
+                        <mat-radio-button value="create">
+                          Create new researcher from OpenAlex data
+                        </mat-radio-button>
+                      </mat-radio-group>
+                    </div>
+                    
+                    <!-- Autocomplete para linkear a RRHH existente -->
+                    <div *ngIf="participant.previewAction === 'link'" class="link-researcher-field">
+                      <app-researcher-search
+                        (researcherSelected)="onLinkResearcherSelected(i, $event)">
+                      </app-researcher-search>
+                    </div>
+                    
+                    <!-- Info para crear nuevo -->
+                    <div *ngIf="participant.previewAction === 'create'" class="create-researcher-info">
+                      <mat-icon>info_outline</mat-icon>
+                      <span>A new researcher will be created with name: <strong>{{ participant.previewOriginalName || participant.fullName }}</strong></span>
+                      <span *ngIf="participant.orcidFromOpenAlex"> and ORCID: <strong>{{ participant.orcidFromOpenAlex }}</strong></span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Preview Status: No internal researcher found -->
+                <div *ngIf="participant.previewStatus === 'new' || participant.previewStatus === 'review'" 
+                     class="preview-researcher-alert">
+                  <mat-icon class="alert-icon">info</mat-icon>
+                  <div class="alert-content">
+                    <strong>No internal researcher found</strong>
+                    <p *ngIf="participant.previewStatus === 'new'">
+                      This researcher is not in the database. Choose an action below.
+                    </p>
+                    <p *ngIf="participant.previewStatus === 'review'">
+                      Multiple matches found. Please select one or create a new researcher.
+                    </p>
+                    
+                    <!-- Decision Radios -->
+                    <div class="decision-radios">
+                      <mat-radio-group 
+                        [(ngModel)]="participant.previewAction"
+                        (change)="onPreviewActionChange(i, $event.value)">
+                        <mat-radio-button value="link">
+                          Link to existing RRHH
+                        </mat-radio-button>
+                        <mat-radio-button value="create">
+                          Create new RRHH from this data
+                        </mat-radio-button>
+                      </mat-radio-group>
+                    </div>
+                    
+                    <!-- Autocomplete para linkear a RRHH existente -->
+                    <div *ngIf="participant.previewAction === 'link'" class="link-researcher-field">
+                      <app-researcher-search
+                        (researcherSelected)="onLinkResearcherSelected(i, $event)">
+                      </app-researcher-search>
+                    </div>
+                    
+                    <!-- Info para crear nuevo -->
+                    <div *ngIf="participant.previewAction === 'create'" class="create-researcher-info">
+                      <mat-icon>info_outline</mat-icon>
+                      <span>A new researcher will be created with name: <strong>{{ participant.previewOriginalName || participant.fullName }}</strong></span>
+                      <span *ngIf="participant.orcidFromOpenAlex || participant.orcid"> and ORCID: <strong>{{ participant.orcidFromOpenAlex || participant.orcid }}</strong></span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Role Selection -->
+                <div class="form-row">
+                  <mat-form-field class="role-field" appearance="outline">
+                    <mat-label>Role in {{ productType === 'publications' ? 'Publication' : 'Product' }}</mat-label>
+                    <mat-select 
+                      [value]="participant.participationTypeId" 
+                      (selectionChange)="onRoleChange(i, $event.value)"
+                      [compareWith]="compareParticipationTypes"
+                      [disabled]="loadingParticipationTypes"
+                      [attr.aria-label]="'Select role for ' + participant.fullName">
+                      <mat-option *ngFor="let type of participationTypes" 
+                                 [value]="type.id"
+                                 [disabled]="!isTypeApplicable(type)">
+                        {{ capitalizeText(type.descripcion || type.nombre) }}
+                      </mat-option>
+                    </mat-select>
+                    <mat-hint>Author's contribution</mat-hint>
+                    <mat-error *ngIf="loadingParticipationTypes">Loading roles...</mat-error>
+                    <mat-error *ngIf="!loadingParticipationTypes && participationTypes.length === 0">No roles available</mat-error>
+                  </mat-form-field>
+
+                  <!-- Corresponding Author - Only for publications -->
+                  <div *ngIf="productType === 'publications'" class="corresponding-field">
+                    <mat-checkbox 
+                      [checked]="participant.corresponding"
+                      (change)="onCorrespondingChange(i, $event.checked)"
+                      color="primary"
+                      [disabled]="false"
+                      [matTooltip]="getCorrespondingTooltip(participant.participationTypeId)"
+                      [attr.aria-label]="'Mark ' + participant.fullName + ' as corresponding author'">
+                      <span class="checkbox-label">Corresponding Author</span>
+                    </mat-checkbox>
+                  </div>
+                </div>
+
+                <!-- Affiliations Section - Only for publications -->
+                <div *ngIf="productType === 'publications'" 
+                     class="affiliation-section">
+                  <!-- Mini-warning si el autor no tiene afiliación -->
+                  <div
+                    class="inline-warning"
+                    *ngIf="!hasAffiliations(participant)"
+                  >
+                    <mat-icon>warning_amber</mat-icon>
+                    <span>
+                      This author has no affiliation assigned yet.
+                      You can still save, but the publication will remain
+                      <strong>Pending</strong> until all affiliations are added.
+                    </span>
+                  </div>
+                  <div class="affiliation-wrapper">
+                    <app-affiliation-manager
+                      [publicationId]="publicationId || 0"
+                      [rrhhId]="participant.rrhhId"
+                      [rrhhProductoId]="participant.idRRHHProducto || 0"
+                      [researcherName]="participant.fullName"
+                      [previewAffiliations]="getPreviewAffiliationsForParticipant(participant)"
+                      (affiliationsChange)="onAffiliationsChange(i, $event)">
+                    </app-affiliation-manager>
+                  </div>
+                </div>
+
+                <!-- Incomplete Status Chip -->
+                <div *ngIf="isParticipantIncomplete(participant)" class="incomplete-chip-container">
+                  <mat-chip color="warn" selected>
+                    <mat-icon>error_outline</mat-icon>
+                    Incomplete
+                  </mat-chip>
+                </div>
+              </div>
+            </mat-expansion-panel>
+          </mat-accordion>
+        </div>
+
+        <!-- Empty state (inside panel) -->
+        <div *ngIf="participants.length === 0 && !loadingParticipationTypes" class="no-participants">
+          <mat-card class="empty-state-card">
+            <mat-card-content>
+              <mat-icon class="empty-icon">group_add</mat-icon>
+              <h3>No researchers added yet</h3>
+              <p>Use the search bar above to add team members to this {{ productType === 'publications' ? 'publication' : 'product' }}.</p>
+            </mat-card-content>
+          </mat-card>
+        </div>
+        
+        <!-- Add more hint (inside panel) -->
+        <div *ngIf="participants.length > 0 && !loadingParticipationTypes" class="add-more-section">
+          <mat-divider></mat-divider>
+          <div class="add-more-hint" (click)="scrollToSearch()" role="button" tabindex="0" (keyup.enter)="scrollToSearch()">
+            <mat-icon>add_circle_outline</mat-icon>
+            <span>Search above to add more team members</span>
+          </div>
+        </div>
+      </div>
+    </mat-expansion-panel>
+  </section>
+  
+  <!-- Error state -->
+  <div *ngIf="participationTypesError" class="error-section">
+    <mat-card class="error-card">
+      <mat-card-content>
+        <mat-icon color="warn">error</mat-icon>
+        <span>Error loading participation types. Using default values.</span>
+        <button mat-button color="primary" (click)="loadParticipationTypes()">Retry</button>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

@@ -1,0 +1,222 @@
+<div class="list-container">
+  <div class="list-header">
+    <div class="list-header-left">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to Dashboard">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>Publications</h1>
+    </div>
+    <div class="list-header-right">
+      <button 
+        mat-raised-button 
+        color="primary" 
+        routerLink="/publications/new"
+        class="add-button">
+        <mat-icon>add</mat-icon>
+        Add Publication
+      </button>
+    </div>
+  </div>
+
+  <!-- List Controls -->
+  <app-list-controls
+    searchPlaceholder="Search publications..."
+    [items]="publications"
+    [showBasalFilter]="true"
+    [showPendingFilter]="true"
+    [readonly]="true"
+    [currentViewMode]="viewMode"
+    [finalFilteredCount]="finalFilteredCount"
+    itemType="publication"
+    listType="publications"
+    (searchResults)="onSearchResults($event)"
+    (searchTermChange)="onSearchTermChange($event)"
+    (viewModeChange)="onViewModeChange($event)"
+    (basalFilterChange)="onBasalFilterChange($event)"
+    (pendingFilterChange)="onPendingFilterChange($event)">
+  </app-list-controls>
+
+  <mat-card>
+    <mat-card-content>
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner></mat-spinner>
+        <p>Loading publications...</p>
+      </div>
+
+      <div *ngIf="!loading && filteredPublications.length === 0 && !isSearching" class="empty-state">
+        <mat-icon>article</mat-icon>
+        <h3>No publications found</h3>
+        <p>Start by adding your first scientific publication.</p>
+        <button mat-raised-button color="primary" routerLink="/publications/new">
+          <mat-icon>add</mat-icon>
+          Add Publication
+        </button>
+      </div>
+
+      <div *ngIf="!loading && filteredPublications.length === 0 && isSearching && !pendingOnly" class="empty-state">
+        <mat-icon>search_off</mat-icon>
+        <h3>No results found</h3>
+        <p>Try adjusting your search terms or filters.</p>
+      </div>
+
+      <div *ngIf="!loading && filteredPublications.length === 0 && pendingOnly" class="empty-state">
+        <mat-icon>hourglass_empty</mat-icon>
+        <h3>No pending publications found</h3>
+        <p>All publications are complete or no publications match the current filters.</p>
+      </div>
+
+      <!-- Card View -->
+      <div *ngIf="!loading && filteredPublications.length > 0 && viewMode === 'card'" class="list-grid">
+        <mat-card *ngFor="let publication of filteredPublications" 
+                  class="list-card"
+                  [class.pending-publication]="isPending(publication)">
+          <mat-card-header>
+            <mat-card-title>{{ getPublicationTitle(publication) }}</mat-card-title>
+            <mat-card-subtitle>
+              <div class="subtitle-content">
+                <span>{{ getJournalName(publication) }} ({{ publication.yearPublished }})</span>
+                <!-- Badge de estado pendiente -->
+                <mat-chip *ngIf="isPending(publication)" class="pending-badge" selected>
+                  PENDING REVIEW
+                </mat-chip>
+              </div>
+            </mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div class="list-details">
+              <div class="detail-row">
+                <span class="detail-label">DOI:</span>
+                <span class="detail-value">{{ publication.doi || 'Not available' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Citations:</span>
+                <span class="detail-value">{{ publication.numCitas || 0 }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Impact Factor:</span>
+                <span class="detail-value">{{ formatImpactFactor(publication.factorImpacto) }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Avg I.Factor 5y:</span>
+                <span class="detail-value">{{ formatImpactFactor(publication.factorImpactoPromedio) }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+          
+          <mat-card-actions>
+            <div class="card-actions-left">
+              <button mat-button color="primary" (click)="viewPublication(publication)">
+                <mat-icon>visibility</mat-icon>
+                View
+              </button>
+              <button mat-button (click)="editPublication(publication)">
+                <mat-icon>edit</mat-icon>
+                Edit
+              </button>
+              <button mat-button color="warn" (click)="deletePublication(publication)">
+                <mat-icon>delete</mat-icon>
+                Delete
+              </button>
+            </div>
+            <div class="card-actions-right">
+              <button 
+                *ngIf="getPdfUrl(publication)" 
+                mat-icon-button 
+                (click)="downloadPdf($event, publication)"
+                matTooltip="Download PDF"
+                class="pdf-icon-button">
+                <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+              </button>
+            </div>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+
+      <!-- List View -->
+      <div *ngIf="filteredPublications.length > 0 && viewMode === 'list'" class="list-view">
+        <div class="list-header-row">
+          <div class="list-cell icon-cell"></div>
+          <div class="list-cell title-cell">Title</div>
+          <div class="list-cell journal-cell">Journal</div>
+          <div class="list-cell year-cell">Year</div>
+          <div class="list-cell status-cell">Status</div>
+          <div class="list-cell actions-cell">Actions</div>
+        </div>
+        
+        <div class="list-item-row" 
+             *ngFor="let publication of filteredPublications"
+             [class.pending-row]="isPending(publication)">
+          <div class="list-cell icon-cell">
+            <div class="icon-wrapper">
+              <mat-icon class="item-icon">article</mat-icon>
+              <mat-icon *ngIf="isPending(publication)" 
+                        class="pending-icon" 
+                        color="warn"
+                        matTooltip="Pending review">
+                hourglass_empty
+              </mat-icon>
+            </div>
+          </div>
+          <div class="list-cell title-cell">
+            <div class="title-text">
+              <div class="title">{{ getPublicationTitle(publication) }}</div>
+              <div class="doi-text">{{ publication.doi || 'No DOI' }}</div>
+            </div>
+          </div>
+          <div class="list-cell journal-cell">{{ getJournalName(publication) }}</div>
+          <div class="list-cell year-cell">{{ publication.yearPublished }}</div>
+          <div class="list-cell status-cell">
+            <mat-chip *ngIf="isPending(publication)" 
+                      class="status-chip pending-chip" 
+                      selected>
+              Publication Pending
+            </mat-chip>
+            <mat-chip *ngIf="isComplete(publication)" 
+                      class="status-chip complete-chip" 
+                      selected>
+              Publication Complete
+            </mat-chip>
+            <mat-chip *ngIf="!isPending(publication) && !isComplete(publication)"
+                      [color]="getStatusColor(publication.estadoProducto?.codigo || publication.estadoProducto?.codigoDescripcion)" 
+                      selected>
+              {{ publication.estadoProducto?.codigo || publication.estadoProducto?.codigoDescripcion || publication.estadoProducto?.nombre || 'N/A' }}
+            </mat-chip>
+          </div>
+          <div class="list-cell actions-cell">
+            <button 
+              *ngIf="getPdfUrl(publication)" 
+              mat-icon-button 
+              (click)="downloadPdf($event, publication)"
+              matTooltip="Download PDF"
+              class="action-button pdf-icon-button">
+              <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+            </button>
+            <button 
+              mat-icon-button 
+              (click)="viewPublication(publication)" 
+              matTooltip="View"
+              class="action-button">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button 
+              mat-icon-button 
+              (click)="editPublication(publication)" 
+              matTooltip="Edit"
+              class="action-button">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button 
+              mat-icon-button 
+              color="warn" 
+              (click)="deletePublication(publication)" 
+              matTooltip="Delete"
+              class="action-button">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

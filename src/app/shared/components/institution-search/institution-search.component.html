@@ -1,0 +1,33 @@
+<mat-form-field class="full-width">
+  <mat-label>{{ label }}</mat-label>
+  <input 
+    matInput 
+    #searchInput
+    [(ngModel)]="inputValue"
+    (input)="onSearch($event)"
+    (focus)="onFocus()"
+    [matAutocomplete]="auto"
+    [disabled]="disabled"
+    [placeholder]="placeholder">
+  <mat-icon matSuffix>search</mat-icon>
+  <mat-spinner *ngIf="loading" matSuffix diameter="20" style="margin-left: 8px;"></mat-spinner>
+  <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayWith" (optionSelected)="onInstitutionSelected($event.option.value)">
+    <!-- Search results -->
+    <mat-option 
+      *ngFor="let institution of filteredInstitutions$ | async" 
+      [value]="institution">
+      <div class="institution-option">
+        <div class="name">{{ institution.descripcion || institution.idDescripcion }}</div>
+        <div class="details" *ngIf="institution.idDescripcion && institution.descripcion !== institution.idDescripcion">
+          {{ institution.idDescripcion }}
+        </div>
+      </div>
+    </mat-option>
+    <mat-option *ngIf="(filteredInstitutions$ | async)?.length === 0 && searchTerm.length >= 2" class="no-results-option" [value]="null" disabled>
+      <div class="no-results">
+        <mat-icon>search_off</mat-icon>
+        <span>No institutions found</span>
+      </div>
+    </mat-option>
+  </mat-autocomplete>
+</mat-form-field>

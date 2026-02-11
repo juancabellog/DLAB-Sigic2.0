@@ -1,0 +1,19 @@
+<div class="connection-indicator" [class.connected]="isConnected" [class.disconnected]="!isConnected">
+  <button mat-icon-button 
+          [matTooltip]="tooltipText"
+          (click)="onRetryConnection()"
+          [disabled]="isRetrying">
+    <mat-icon [class.spinning]="isRetrying">
+      {{ isConnected ? 'wifi' : 'wifi_off' }}
+    </mat-icon>
+  </button>
+</div>
+
+
+
+
+
+
+
+
+

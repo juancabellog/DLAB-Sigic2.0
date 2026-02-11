@@ -1,0 +1,155 @@
+<div class="list-container">
+  <div class="list-header">
+    <div class="list-header-left">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to Dashboard">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>Postdoctoral Fellows</h1>
+    </div>
+    <div class="list-header-right">
+      <button 
+        mat-raised-button 
+        color="primary" 
+        routerLink="/postdoctoral-fellows/new"
+        class="add-button">
+        <mat-icon>add</mat-icon>
+        Add Fellow
+      </button>
+    </div>
+  </div>
+
+  <!-- List Controls -->
+  <app-list-controls
+    searchPlaceholder="Search postdoctoral fellows..."
+    [items]="fellows"
+    [showBasalFilter]="true"
+    [readonly]="true"
+    [currentViewMode]="viewMode"
+    [finalFilteredCount]="finalFilteredCount"
+    itemType="fellow"
+    listType="postdoctoral-fellows"
+    (searchResults)="onSearchResults($event)"
+    (searchTermChange)="onSearchTermChange($event)"
+    (viewModeChange)="onViewModeChange($event)"
+    (basalFilterChange)="onBasalFilterChange($event)">
+  </app-list-controls>
+
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading postdoctoral fellows...</p>
+  </div>
+
+  <mat-card *ngIf="!loading">
+    <mat-card-content>
+      <div *ngIf="fellows.length === 0" class="empty-state">
+        <mat-icon>work</mat-icon>
+        <h3>No postdoctoral fellows found</h3>
+        <p>Start by adding your first postdoctoral fellow.</p>
+        <button mat-raised-button color="primary" routerLink="/postdoctoral-fellows/new">
+          <mat-icon>add</mat-icon>
+          Add Fellow
+        </button>
+      </div>
+
+      <!-- Card View -->
+      <div *ngIf="!loading && filteredFellows.length > 0 && viewMode === 'card'" class="list-grid">
+        <mat-card *ngFor="let fellow of filteredFellows" class="list-card">
+          <mat-card-header>
+            <mat-card-title>{{ getFellowTitle(fellow) }}</mat-card-title>
+            <mat-card-subtitle>{{ getInstitution(fellow) }} - {{ getSector(fellow) }}</mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div class="list-details">
+              <div class="detail-row">
+                <span class="detail-label">Inst.inserted:</span>
+                <span class="detail-value">{{ getInstitution(fellow) }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Inserted:</span>
+                <span class="detail-value">{{ getSector(fellow) }}</span>
+              </div>
+              <div class="detail-row" *ngIf="fellow.postdoctoralFellowName">
+                <span class="detail-label">Name:</span>
+                <span class="detail-value">{{ fellow.postdoctoralFellowName }}</span>
+              </div>
+              <div class="detail-row" *ngIf="fellow.fechaInicio">
+                <span class="detail-label">Start Date:</span>
+                <span class="detail-value">{{ fellow.fechaInicio | date:'MMM yyyy' }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+          
+          <mat-card-actions>
+            <button mat-button color="primary" (click)="viewFellow(fellow)">
+              <mat-icon>visibility</mat-icon>
+              View
+            </button>
+            <button mat-button (click)="editFellow(fellow)">
+              <mat-icon>edit</mat-icon>
+              Edit
+            </button>
+            <button mat-button color="warn" (click)="deleteFellow(fellow)">
+              <mat-icon>delete</mat-icon>
+              Delete
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+
+      <!-- List View -->
+      <div *ngIf="!loading && filteredFellows.length > 0 && viewMode === 'list'" class="list-view">
+        <div class="list-header-row">
+          <div class="list-cell icon-cell"></div>
+          <div class="list-cell title-cell">Research Topic</div>
+          <div class="list-cell institution-cell">Institution where it was inserted</div>
+          <div class="list-cell sector-cell">Inserted</div>
+          <div class="list-cell fellow-cell">Name of Postdoctoral Fellow</div>
+          <div class="list-cell date-cell">Start Date</div>
+          <div class="list-cell actions-cell">Actions</div>
+        </div>
+        
+        <div *ngFor="let fellow of filteredFellows" class="list-item-row">
+          <div class="list-cell icon-cell">
+            <mat-icon class="item-icon">work</mat-icon>
+          </div>
+          <div class="list-cell title-cell">
+            <div class="title-text">
+              <div class="title">{{ getFellowTitle(fellow) }}</div>
+              <div class="subtitle-text">{{ getInstitution(fellow) }}</div>
+            </div>
+          </div>
+          <div class="list-cell institution-cell">{{ getInstitution(fellow) }}</div>
+          <div class="list-cell sector-cell">{{ getSector(fellow) }}</div>
+          <div class="list-cell fellow-cell">{{ fellow.postdoctoralFellowName || 'N/A' }}</div>
+          <div class="list-cell date-cell">{{ fellow.fechaInicio | date:'MMM yyyy' }}</div>
+          <div class="list-cell actions-cell">
+            <button 
+              mat-icon-button 
+              (click)="viewFellow(fellow)" 
+              matTooltip="View"
+              class="action-button">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button 
+              mat-icon-button 
+              (click)="editFellow(fellow)" 
+              matTooltip="Edit"
+              class="action-button">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button 
+              mat-icon-button 
+              color="warn" 
+              (click)="deleteFellow(fellow)" 
+              matTooltip="Delete"
+              class="action-button">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
+

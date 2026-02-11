@@ -1,0 +1,102 @@
+// ========================================
+// PROJECT EDIT COMPONENT STYLES
+// ========================================
+// Estilos específicos para el componente de edición de proyectos
+// Los estilos comunes están en list-components.scss
+
+// ========================================
+// RESEARCH AREAS STYLES
+// ========================================
+.research-areas-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.research-area-chip {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #f5f5f5;
+  color: #666;
+  
+  &:hover {
+    background-color: #e3f2fd;
+    color: #1976d2;
+  }
+  
+  &.selected {
+    background-color: #1976d2;
+    color: white;
+  }
+}
+
+.section-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.error-message {
+  color: #f44336;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+// ========================================
+// PARTICIPANTS STYLES
+// ========================================
+.participants-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.participant-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #1976d2;
+}
+
+.add-participant-btn {
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
+// ========================================
+// RESPONSIVE DESIGN
+// ========================================
+@media (max-width: 768px) {
+  .research-areas-grid {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .research-area-chip {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  
+  .participant-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+

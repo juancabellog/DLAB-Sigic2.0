@@ -1,0 +1,145 @@
+<div class="edit-container">
+  <div class="header-actions">
+    <button mat-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Researchers
+    </button>
+    <h1>{{ getTitle() }}</h1>
+  </div>
+
+  <mat-card class="form-card">
+    <mat-card-content>
+      <form [formGroup]="researcherForm" (ngSubmit)="onSubmit()">
+        <!-- Personal Information Section -->
+        <div class="form-section">
+          <h3>Personal Information</h3>
+          <div class="form-row">
+            <mat-form-field class="half-width">
+              <mat-label>Full Name</mat-label>
+              <input matInput formControlName="fullName" placeholder="Enter full name">
+              <mat-error *ngIf="researcherForm.get('fullName')?.hasError('required')">
+                Full name is required
+              </mat-error>
+              <mat-error *ngIf="researcherForm.get('fullName')?.hasError('minlength')">
+                Full name must be at least 2 characters
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="half-width">
+              <mat-label>Email</mat-label>
+              <input matInput formControlName="email" type="email" placeholder="Enter email address">
+              <mat-error *ngIf="researcherForm.get('email')?.hasError('required')">
+                Email is required
+              </mat-error>
+              <mat-error *ngIf="researcherForm.get('email')?.hasError('email')">
+                Please enter a valid email
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field class="half-width">
+              <mat-label>Department</mat-label>
+              <mat-select formControlName="department">
+                <mat-option *ngFor="let dept of departments" [value]="dept">
+                  {{ dept }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="researcherForm.get('department')?.hasError('required')">
+                Department is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="half-width">
+              <mat-label>Position</mat-label>
+              <mat-select formControlName="position">
+                <mat-option *ngFor="let pos of positions" [value]="pos">
+                  {{ pos }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="researcherForm.get('position')?.hasError('required')">
+                Position is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field class="half-width">
+              <mat-label>Status</mat-label>
+              <mat-select formControlName="status">
+                <mat-option *ngFor="let status of statusOptions" [value]="status.value">
+                  {{ status.label }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Research Information Section -->
+        <div class="form-section">
+          <h3>Research Information</h3>
+          
+          <div class="form-row">
+            <mat-form-field class="half-width">
+              <mat-label>Publications</mat-label>
+              <input matInput formControlName="publications" type="number" min="0">
+              <mat-error *ngIf="researcherForm.get('publications')?.hasError('required')">
+                Publications count is required
+              </mat-error>
+              <mat-error *ngIf="researcherForm.get('publications')?.hasError('min')">
+                Publications count must be 0 or greater
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="half-width">
+              <mat-label>Active Projects</mat-label>
+              <input matInput formControlName="projects" type="number" min="0">
+              <mat-error *ngIf="researcherForm.get('projects')?.hasError('required')">
+                Projects count is required
+              </mat-error>
+              <mat-error *ngIf="researcherForm.get('projects')?.hasError('min')">
+                Projects count must be 0 or greater
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <div class="full-width">
+              <label class="section-label">Research Areas</label>
+              <div class="research-areas-grid">
+                <mat-chip 
+                  *ngFor="let area of researchAreas" 
+                  [class.selected]="isResearchAreaSelected(area)"
+                  (click)="toggleResearchArea(area)"
+                  class="research-area-chip">
+                  {{ area }}
+                </mat-chip>
+              </div>
+              <div *ngIf="selectedResearchAreas.length === 0" class="error-message">
+                Please select at least one research area
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions class="action-buttons">
+      <button mat-button (click)="goBack()" [disabled]="isLoading">
+        Cancel
+      </button>
+      <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="onSubmit()" 
+        [disabled]="isLoading || researcherForm.invalid || selectedResearchAreas.length === 0">
+        <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+        <mat-icon *ngIf="!isLoading">{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+        {{ isEditMode ? 'Update' : 'Add' }} Researcher
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>
+

@@ -1,0 +1,723 @@
+================================================================================
+DOCUMENTO DE ARQUITECTURA Y LÓGICA DE NEGOCIO
+Scientific Products Platform
+================================================================================
+
+Este documento describe la arquitectura, lógica de negocio y estructura del 
+sistema de gestión de productos científicos. Está diseñado para que otro 
+desarrollador o agente de IA pueda entender el código y continuar el desarrollo.
+
+================================================================================
+1. VISIÓN GENERAL DEL SISTEMA
+================================================================================
+
+1.1. Objetivo del Proyecto
+---------------------------
+El sistema es una plataforma web para gestionar productos científicos generados 
+por investigadores. Permite registrar, editar, visualizar y administrar 
+diferentes tipos de productos científicos, sus participantes, afiliaciones 
+institucionales y relaciones con proyectos.
+
+1.2. Tipos de Productos Científicos
+------------------------------------
+El sistema maneja los siguientes tipos de productos (identificados por su 
+idTipoProducto en la base de datos):
+
+- Publicaciones (idTipoProducto = 3): Artículos científicos publicados en 
+  revistas académicas
+- Proyectos (idTipoProducto = 2): Proyectos de investigación
+- Actividades de Difusión (idTipoProducto = 1): Actividades de divulgación 
+  científica
+- Colaboraciones Científicas (idTipoProducto = 14): Colaboraciones entre 
+  investigadores
+- Becarios Postdoctorales (idTipoProducto = 16): Registro de becarios 
+  postdoctorales
+- Tesis de Estudiantes (idTipoProducto = 11): Tesis de estudiantes dirigidas
+- Transferencia Tecnológica (idTipoProducto = 12): Transferencias de 
+  tecnología
+- Organización de Eventos Científicos (idTipoProducto = 17): Eventos científicos 
+  organizados
+
+1.3. Flujo General de Alto Nivel
+----------------------------------
+- Usuarios autenticados (investigadores, administradores) acceden al sistema
+- Pueden crear, editar y visualizar productos científicos
+- Cada producto puede tener múltiples participantes (investigadores)
+- Los participantes pueden tener afiliaciones institucionales (especialmente 
+  en publicaciones)
+- Los productos pueden estar asociados a proyectos
+- El sistema mantiene catálogos de referencia (revistas, instituciones, 
+  tipos de participación, etc.)
+
+================================================================================
+2. ARQUITECTURA DEL BACKEND
+================================================================================
+
+2.1. Stack Tecnológico
+-----------------------
+- Java 17
+- Spring Boot 3.2.0
+- Spring Data JPA (para acceso a datos)
+- Spring Security (para autenticación/autorización)
+- MySQL (base de datos principal)
+- JWT (JSON Web Tokens) para autenticación stateless
+- Maven (gestión de dependencias)
+
+2.2. Estructura de Paquetes
+-----------------------------
+El backend está organizado en los siguientes paquetes bajo 
+`com.sisgic`:
+
+- `entity/`: Entidades JPA que mapean las tablas de la base de datos
+- `repository/`: Interfaces de repositorios Spring Data JPA
+- `dto/`: Data Transfer Objects para comunicación con el frontend
+- `controller/`: Controladores REST que exponen los endpoints
+- `config/`: Configuraciones (seguridad, JPA, CORS, etc.)
+- `security/`: Clases relacionadas con seguridad (JWT, UserPrincipal)
+- `service/`: Servicios de negocio (TextosService, PdfFileService)
+
+2.3. Lógica de Negocio Principal
+-----------------------------------
+
+2.3.1. Modelado de Productos Científicos
+-----------------------------------------
+El sistema utiliza herencia de tablas (JOINED inheritance) para modelar los 
+productos científicos:
+
+- Clase base abstracta: `ProductoCientifico`
+  - Tabla base: `producto`
+  - Campos comunes: id, descripcion, comentario, fechaInicio, fechaTermino, 
+    tipoProducto, urlDocumento, linkVisualizacion, linkPDF, progressReport, 
+    estadoProducto, codigoANID, basal, lineasInvestigacion, createdAt, updatedAt
+  - Relaciones: participantes (OneToMany con ParticipacionProducto), 
+    proyectos (OneToMany con ProductoProyecto)
+
+- Clases hijas (todas extienden ProductoCientifico con @PrimaryKeyJoinColumn):
+  - `Publicacion`: Tabla `publicacion`
+    - Campos específicos: journal, volume, yearPublished, firstpage, lastpage, 
+      indexs (JSON), funding (JSON), doi, numCitas, impactFactor, avgImpactFactor
+  - `Tesis`: Tabla `tesis`
+    - Campos específicos: institucionOG, gradoAcademico, institucion, 
+      estadoTesis, fechaInicioPrograma, nombreCompletoTitulo, tipoSector (JSON)
+  - `BecariosPostdoctorales`: Tabla `becariospostdoctorales`
+  - `OrganizacionEventosCientificos`: Tabla `organizacion_eventos_cientificos`
+  - `Difusion`: Tabla `difusion`
+  - `Colaboracion`: Tabla `colaboracion`
+  - `TransferenciaTecnologica`: Tabla `transferencia_tecnologica`
+
+2.3.2. Participantes y Afiliaciones
+-------------------------------------
+- Participación de investigadores en productos:
+  - Entidad: `ParticipacionProducto`
+  - Tabla: `rrhh_producto`
+  - Clave primaria compuesta: (idRRHH, idProducto, id) donde `id` es un 
+    correlativo por (idRRHH, idProducto)
+  - Campos: orden, idTipoParticipacion, corresponding (solo para publicaciones)
+  - Relaciones: ManyToOne con RRHH y ProductoCientifico
+
+- Afiliaciones (solo para publicaciones):
+  - Entidad: `Afiliacion`
+  - Tabla: `afiliacion`
+  - Clave primaria compuesta: (idRRHH, idProducto, idRRHHProducto, id) donde 
+    `id` es un correlativo por (idRRHH, idProducto, idRRHHProducto)
+  - Campos: idInstitucion, texto (descripción libre)
+  - Relación: ManyToOne con ParticipacionProducto e Institucion
+
+2.3.3. Reglas de Negocio Importantes
+--------------------------------------
+- Los IDs correlativos (rrhh_producto.id y afiliacion.id) se generan 
+  manualmente usando métodos del repositorio (getNextIdForParticipacion, 
+  getNextIdForAfiliacion)
+- El campo `corresponding` solo aplica a publicaciones y solo ciertos tipos de 
+  participación pueden ser "corresponding author"
+- Las afiliaciones solo se usan en publicaciones
+- Los productos tienen estados (EstadoProducto) que controlan su ciclo de vida
+- Los textos descriptivos se almacenan en una tabla de traducciones (textos) 
+  con soporte multiidioma (código de idioma: 1=español, 2=inglés)
+- Los factores de impacto de publicaciones se calculan mediante funciones 
+  MySQL (f_getImpactFactor, f_getAvgImpactFactor) que se ejecutan en un 
+  proceso batch
+
+2.4. Modelo de Datos
+---------------------
+
+2.4.1. Entidades Principales y Relaciones
+-------------------------------------------
+- ProductoCientifico (abstracta)
+  - 1:N con ParticipacionProducto
+  - 1:N con ProductoProyecto
+  - N:1 con TipoProducto
+  - N:1 con EstadoProducto
+
+- ParticipacionProducto
+  - N:1 con RRHH
+  - N:1 con ProductoCientifico
+  - N:1 con TipoParticipacion
+  - 1:N con Afiliacion (solo para publicaciones)
+
+- Afiliacion
+  - N:1 con ParticipacionProducto
+  - N:1 con Institucion
+
+- RRHH (Recursos Humanos / Investigadores)
+  - 1:N con ParticipacionProducto
+  - N:1 con TipoRRHH
+
+- Institucion
+  - 1:N con Afiliacion
+  - 1:N con Tesis (como institucionOG e institucion)
+
+- Journal
+  - 1:N con Publicacion
+
+- Proyecto
+  - N:N con ProductoCientifico (a través de ProductoProyecto)
+
+2.4.2. Tablas y Claves Primarias
+----------------------------------
+- producto: id (PK, auto-increment)
+- publicacion: id (PK, FK a producto.id)
+- rrhh_producto: (idRRHH, idProducto, id) (PK compuesta)
+- afiliacion: (idRRHH, idProducto, idRRHHProducto, id) (PK compuesta)
+- rrhh: id (PK, auto-increment)
+- institucion: id (PK, auto-increment)
+- journal: id (PK, auto-increment)
+- proyecto: id (PK, auto-increment)
+
+2.4.3. Campos Importantes
+-------------------------
+- ProductoCientifico:
+  - idDescripcion: código de texto para traducción
+  - lineasInvestigacion: JSON string con array de líneas de investigación
+  - linkPDF: URL al archivo PDF del producto
+
+- Publicacion:
+  - impactFactor: factor de impacto del journal en el año de publicación
+  - avgImpactFactor: factor de impacto promedio del journal
+  - indexs: JSON string con índices donde está indexada (WOS, Scopus, etc.)
+  - funding: JSON string con tipos de financiamiento
+
+- ParticipacionProducto:
+  - corresponding: '1' = true, '0' = false (solo publicaciones)
+  - orden: orden del autor en la lista
+
+- RRHH:
+  - orcid: identificador ORCID del investigador (19 caracteres)
+  - idRecurso: RUT chileno del investigador
+
+2.5. API / Endpoints
+---------------------
+
+2.5.1. Controladores Principales
+---------------------------------
+Todos los endpoints están bajo `/api/`:
+
+- PublicacionController (`/api/publications`):
+  - GET /: Lista publicaciones con paginación
+  - GET /{id}: Obtiene una publicación específica
+  - POST /: Crea una nueva publicación
+  - PUT /{id}: Actualiza una publicación
+  - DELETE /{id}: Elimina una publicación
+  - GET /search/doi/{doi}: Busca por DOI
+  - GET /year/{year}: Publicaciones por año
+  - GET /researcher/{id}: Publicaciones de un investigador
+  - GET /project/{id}: Publicaciones de un proyecto
+  - GET /stats: Estadísticas de publicaciones
+  - GET /{id}/impact-factors: Obtiene factores de impacto
+
+- CatalogController (`/api/catalogs`):
+  - GET /participation-types: Lista todos los tipos de participación
+  - GET /participation-types/{id}: Obtiene un tipo por ID
+  - GET /participation-types/by-product-type/{idTipoProducto}: Tipos por tipo 
+    de producto
+  - POST /participation-types: Crea un tipo de participación
+  - PUT /participation-types/{id}: Actualiza un tipo
+  - DELETE /participation-types/{id}: Elimina un tipo
+  - GET /institutions: Lista instituciones
+  - GET /journals: Lista revistas
+  - GET /product-types: Lista tipos de producto
+  - GET /countries: Lista países
+  - (Y otros catálogos)
+
+- TesisController (`/api/thesis`):
+  - Similar estructura a PublicacionController
+
+- BecariosPostdoctoralesController (`/api/postdoctoral-fellows`):
+  - Similar estructura
+
+- OrganizacionEventosCientificosController (`/api/scientific-events`):
+  - Similar estructura
+
+- DifusionController (`/api/outreach-activities`):
+  - Similar estructura
+
+- ColaboracionController (`/api/scientific-collaborations`):
+  - Similar estructura
+
+- TransferenciaTecnologicaController (`/api/technology-transfer`):
+  - Similar estructura
+
+- RRHHController (`/api/researchers`):
+  - GET /: Lista investigadores
+  - GET /{id}: Obtiene un investigador
+  - POST /: Crea un investigador
+  - PUT /{id}: Actualiza un investigador
+  - DELETE /{id}: Elimina un investigador
+  - GET /search: Búsqueda de investigadores
+
+- ProyectoController (`/api/projects`):
+  - Similar estructura
+
+- AuthController (`/api/auth`):
+  - POST /login: Autenticación (retorna JWT)
+  - POST /register: Registro de usuario
+  - GET /validate: Valida token JWT
+
+- FileUploadController (`/api/files`):
+  - POST /upload: Sube archivos (PDFs principalmente)
+
+2.5.2. Payloads y DTOs
+-----------------------
+Los DTOs principales incluyen:
+
+- PublicacionDTO: Extiende ProductoCientificoDTO, incluye journal, volume, 
+  yearPublished, indexs, funding, doi, numCitas, impactFactor, 
+  avgImpactFactor, participantes[]
+- ParticipanteDTO: rrhhId, tipoParticipacionId, orden, corresponding, 
+  idRRHHProducto
+- AfiliacionDTO: idRRHH, idProducto, idRRHHProducto, id, idInstitucion, 
+  texto, nombreInstitucion
+- RRHHDTO: id, idRecurso, fullname, tipoRRHH, email, orcid, etc.
+- TesisDTO: Extiende ProductoCientificoDTO, incluye campos específicos de tesis
+- (Y DTOs similares para otros tipos de productos)
+
+2.6. Otros Detalles Relevantes
+-------------------------------
+
+2.6.1. Configuración de Seguridad
+----------------------------------
+- Spring Security configurado con JWT
+- Endpoints públicos: /api/auth/**, /api/health, /api/catalogs/**, 
+  /api/publications/**, etc. (actualmente la mayoría están permitidos sin 
+  autenticación)
+- CORS habilitado para todos los orígenes (*)
+- Password encoder: BCrypt
+
+2.6.2. Internacionalización
+-----------------------------
+- Sistema de traducciones mediante tabla `textos`
+- Cada texto tiene un código (codigoTexto) y se almacena por idioma 
+  (codigoIdioma: 1=español, 2=inglés)
+- TextosService maneja la obtención y creación de textos en ambos idiomas
+- Las vistas de base de datos (v_tipo_producto, v_institucion, etc.) ya 
+  incluyen la descripción traducida
+
+2.6.3. Manejo de Errores
+-------------------------
+- Los controladores retornan ResponseEntity con códigos HTTP apropiados
+- Errores 400 (Bad Request) para validaciones fallidas
+- Errores 404 (Not Found) para recursos no encontrados
+- Errores 500 para excepciones del servidor
+- No hay un manejador global de excepciones implementado actualmente
+
+================================================================================
+3. ARQUITECTURA DEL FRONTEND (ANGULAR)
+================================================================================
+
+3.1. Stack Tecnológico
+-----------------------
+- Angular 17 (standalone components)
+- Angular Material 17 (componentes UI)
+- Angular CDK 17 (drag & drop, etc.)
+- PrimeNG 17 (componentes adicionales)
+- RxJS 7.8 (programación reactiva)
+- TypeScript 5.2
+
+3.2. Estructura de Carpetas
+---------------------------
+El frontend está organizado en `src/app/`:
+
+- `core/`: Funcionalidad central compartida
+  - `guards/`: Guards de ruta (auth.guard.ts)
+  - `interceptors/`: Interceptores HTTP (auth.interceptor.ts, 
+    error.interceptor.ts)
+  - `models/`: Interfaces TypeScript (backend-dtos.ts, catalog-types.ts)
+  - `services/`: Servicios compartidos
+    - auth.service.ts: Autenticación
+    - base-http.service.ts: Servicio base para llamadas HTTP
+    - publication.service.ts: Servicio para publicaciones
+    - researcher.service.ts: Servicio para investigadores
+    - catalog.service.ts: Servicio para catálogos
+    - (Y servicios similares para otros tipos de productos)
+
+- `features/`: Funcionalidades de alto nivel
+  - `auth/`: Login y registro
+  - `dashboard/`: Dashboard principal
+
+- `modules/`: Módulos de funcionalidad por tipo de producto
+  - `publications/`: publication-list, publication-detail, publication-edit
+  - `thesis-students/`: thesis-student-list, thesis-student-view, 
+    thesis-student-edit
+  - `postdoctoral-fellows/`: pf-list, pf-view, pf-edit
+  - `scientific-events/`: scientific-events-list, scientific-events-view, 
+    scientific-events-edit
+  - `outreach-activities/`: oa-list, oa-view, oa-edit
+  - `scientific-collaborations/`: sc-list, sc-view, sc-edit
+  - `technology-transfer/`: tt-list, tt-view, tt-edit
+  - `projects/`: project-list, project-view, project-edit
+  - `researchers/`: researcher-list, researcher-view, researcher-edit
+  - `catalogs/`: catalog-list, catalog-view, catalog-edit (genérico)
+
+- `shared/`: Componentes compartidos
+  - `components/`:
+    - participant-manager/: Gestión de participantes (autores) con drag & drop
+    - affiliation-manager/: Gestión de afiliaciones institucionales
+    - researcher-search/: Búsqueda de investigadores
+    - confirm-dialog/: Diálogo de confirmación
+    - connection-indicator/: Indicador de conexión
+    - list-controls/: Controles de lista (filtros, búsqueda)
+    - search-bar/: Barra de búsqueda
+    - view-mode-selector/: Selector de modo de vista (tabla/tarjetas)
+
+3.3. Navegación y Rutas
+------------------------
+Las rutas están definidas en `app.routes.ts`:
+
+- `/`: Redirige a `/dashboard`
+- `/login`: Página de login
+- `/register`: Página de registro
+- `/dashboard`: Dashboard principal
+- `/publications`: Lista de publicaciones
+- `/publications/new`: Crear publicación
+- `/publications/:id`: Ver publicación
+- `/publications/:id/edit`: Editar publicación
+- (Rutas similares para otros tipos de productos: /thesis-students, 
+  /postdoctoral-fellows, /scientific-events, /outreach-activities, 
+  /scientific-collaborations, /technology-transfer)
+- `/projects`: Gestión de proyectos
+- `/researchers`: Gestión de investigadores
+- `/catalogs`: Gestión de catálogos
+
+Todas las rutas (excepto login/register) están protegidas por `authGuard`.
+
+3.4. Detalle de la UI para Productos Científicos
+--------------------------------------------------
+
+3.4.1. Listado de Productos
+----------------------------
+- Componentes: `*-list.component.ts`
+- Vista dual: tabla o tarjetas (selector en `view-mode-selector`)
+- Filtros: búsqueda por texto, filtros por tipo, estado, año, etc.
+- Paginación: usando Angular Material paginator
+- Acciones: Ver, Editar, Eliminar, Descargar PDF (si existe)
+
+3.4.2. Detalle de Producto
+---------------------------
+- Componentes: `*-detail.component.ts`
+- Muestra toda la información del producto
+- Incluye lista de participantes con sus roles
+- Para publicaciones: muestra afiliaciones de cada participante
+- Acciones: Editar, Eliminar, Descargar PDF
+
+3.4.3. Edición de Producto
+---------------------------
+- Componentes: `*-edit.component.ts`
+- Formularios reactivos con validación
+- Campos específicos según el tipo de producto
+- Gestión de participantes mediante `ParticipantManagerComponent`:
+  - Búsqueda de investigadores
+  - Asignación de roles (TipoParticipacion)
+  - Reordenamiento con drag & drop
+  - Marcar "corresponding author" (solo publicaciones)
+- Para publicaciones: gestión de afiliaciones mediante 
+  `AffiliationManagerComponent`:
+  - Agregar/editar/eliminar afiliaciones por participante
+  - Selección de institución desde catálogo
+  - Texto descriptivo opcional
+- Carga de PDFs mediante `FileUploadController`
+- Validación de campos requeridos
+- Indicador de participantes incompletos (sin rol o sin afiliaciones)
+
+3.4.4. Gestión de Participantes
+---------------------------------
+- Componente: `ParticipantManagerComponent`
+- Funcionalidades:
+  - Búsqueda de investigadores con autocompletado
+  - Agregar participantes con Enter o clic
+  - Drag & drop para reordenar
+  - Eliminar con confirmación (SnackBar con Undo)
+  - Asignar rol (TipoParticipacion) desde dropdown
+  - Marcar corresponding author (checkbox, solo publicaciones)
+  - Validación de duplicados (por ID o ORCID)
+  - Indicador de participantes incompletos
+  - Panel colapsable "Author Details" con lista de autores en accordion
+  - Resumen de autores como chips en "Authors Summary"
+  - Expand/Collapse all para listas largas
+
+3.4.5. Gestión de Afiliaciones
+-------------------------------
+- Componente: `AffiliationManagerComponent`
+- Funcionalidades:
+  - Panel expandible (mat-expansion-panel) con lista de afiliaciones
+  - Chips para mostrar afiliaciones existentes
+  - Agregar nueva afiliación: botón toggle que muestra formulario inline
+  - Editar afiliación: botón en cada chip que pre-llena el formulario
+  - Eliminar con SnackBar y Undo
+  - Drag & drop para reordenar afiliaciones (si hay múltiples)
+  - Validación: institución requerida
+  - Spinner en botón de guardar durante API calls
+  - Focus automático al abrir formulario
+
+3.5. Mecanismo de Gestión de Estado
+------------------------------------
+- No se usa NgRx ni librería de estado global
+- Estado local en componentes mediante propiedades
+- Servicios con BehaviorSubject para compartir estado:
+  - `AuthService`: estado de autenticación, usuario actual
+  - `ViewModeService`: modo de vista (tabla/tarjetas)
+  - `ConnectionService`: estado de conexión
+- Cache en servicios (ej: `CatalogService` cachea tipos de participación 
+  por 5 minutos)
+- RxJS Observables para comunicación asíncrona
+
+3.6. Servicios Principales
+----------------------------
+- `BaseHttpService`: Servicio base que encapsula HttpClient, maneja 
+  autenticación (JWT), errores, y proporciona métodos genéricos (get, post, 
+  put, delete, getPaginated)
+- `AuthService`: Maneja login, logout, validación de token, almacenamiento 
+  de token en localStorage
+- `PublicationService`: Métodos específicos para publicaciones (get, create, 
+  update, delete, searchByDOI, getByYear, etc.)
+- `CatalogService`: Obtiene catálogos (tipos de participación, instituciones, 
+  etc.) con cache
+- `ResearcherService`: CRUD de investigadores, búsqueda
+- (Servicios similares para otros tipos de productos)
+
+3.7. Interceptores
+-------------------
+- `AuthInterceptor`: Agrega token JWT a todas las peticiones HTTP (excepto 
+  login/register)
+- `ErrorInterceptor`: Maneja errores HTTP globalmente, muestra mensajes al 
+  usuario
+
+================================================================================
+4. CONVENCIONES Y PATRONES
+================================================================================
+
+4.1. Convenciones de Nombres
+-----------------------------
+
+4.1.1. Backend (Java)
+----------------------
+- Entidades: PascalCase, singular (Publicacion, RRHH, ParticipacionProducto)
+- Repositorios: {Entity}Repository (PublicacionRepository)
+- DTOs: {Entity}DTO (PublicacionDTO, ParticipanteDTO)
+- Controladores: {Entity}Controller (PublicacionController)
+- Servicios: {Entity}Service (TextosService)
+- Tablas: snake_case, plural o singular según convención de BD (publicacion, 
+  rrhh_producto, afiliacion)
+
+4.1.2. Frontend (TypeScript/Angular)
+------------------------------------
+- Componentes: kebab-case en archivos, PascalCase en clases 
+  (publication-edit.component.ts -> PublicationEditComponent)
+- Servicios: kebab-case en archivos, PascalCase en clases con sufijo Service 
+  (publication.service.ts -> PublicationService)
+- Interfaces/DTOs: PascalCase con sufijo DTO o Type 
+  (PublicacionDTO, TipoParticipacionDTO)
+- Rutas: kebab-case (/publications, /thesis-students)
+- Variables: camelCase (publication, participants, isEditMode)
+
+4.2. Patrones de Diseño Aplicados
+----------------------------------
+
+4.2.1. Backend
+--------------
+- Repository Pattern: Interfaces JpaRepository para acceso a datos
+- DTO Pattern: Separación entre entidades de dominio y objetos de transferencia
+- Service Layer: TextosService, PdfFileService para lógica de negocio
+- Controller-Service-Repository: Separación en capas
+- Inheritance (JOINED): Para productos científicos
+
+4.2.2. Frontend
+---------------
+- Component-Based Architecture: Componentes standalone reutilizables
+- Service Pattern: Servicios para lógica de negocio y comunicación HTTP
+- Observer Pattern: RxJS Observables para programación reactiva
+- Dependency Injection: Inyección de dependencias de Angular
+- Interceptor Pattern: Para autenticación y manejo de errores global
+
+4.3. Validaciones
+------------------
+
+4.3.1. Backend
+---------------
+- Validaciones en controladores mediante anotaciones @Valid (no implementado 
+  extensivamente actualmente)
+- Validaciones de negocio en métodos de controladores (ej: verificar que 
+  idRRHHProducto existe antes de crear afiliación)
+
+4.3.2. Frontend
+---------------
+- Validaciones en formularios reactivos con Validators de Angular
+- Validaciones custom en componentes (ej: verificar duplicados en 
+  ParticipantManagerComponent)
+- Mensajes de error inline en formularios
+- Indicadores visuales de campos requeridos
+
+================================================================================
+5. CÓMO EXTENDER EL SISTEMA
+================================================================================
+
+5.1. Agregar un Nuevo Tipo de Producto Científico
+---------------------------------------------------
+Ejemplo: Agregar "Software Científico"
+
+5.1.1. Cambios en Backend
+--------------------------
+
+1. Crear entidad:
+   - Crear `SoftwareCientifico.java` en `com.sisgic.entity`
+   - Extender `ProductoCientifico` con `@PrimaryKeyJoinColumn(name = "id")`
+   - Anotar con `@Entity` y `@Table(name = "software_cientifico")`
+   - Agregar campos específicos (ej: repositorioGit, version, lenguaje, etc.)
+
+2. Crear tabla en base de datos:
+   - Crear tabla `software_cientifico` con `id` como PK y FK a `producto.id`
+   - Agregar campos específicos
+
+3. Crear repositorio:
+   - Crear `SoftwareCientificoRepository.java` en `com.sisgic.repository`
+   - Extender `JpaRepository<SoftwareCientifico, Long>`
+   - Agregar queries custom si es necesario
+
+4. Crear DTO:
+   - Crear `SoftwareCientificoDTO.java` en `com.sisgic.dto`
+   - Extender campos de `ProductoCientificoDTO` y agregar campos específicos
+
+5. Crear controlador:
+   - Crear `SoftwareCientificoController.java` en `com.sisgic.controller`
+   - Anotar con `@RestController` y `@RequestMapping("/api/software-cientifico")`
+   - Implementar endpoints: GET (listado y detalle), POST, PUT, DELETE
+   - Seguir el patrón de `PublicacionController`:
+     - Inyectar repositorios necesarios
+     - Métodos convertToDTO y convertFromDTO
+     - Manejo de participantes (si aplica)
+     - Paginación en listado
+
+6. Actualizar catálogo de tipos de producto:
+   - Agregar registro en tabla `tipo_producto` con nuevo ID
+   - Agregar textos de traducción en tabla `textos`
+
+7. Actualizar SecurityConfig:
+   - Agregar `requestMatchers("/api/software-cientifico/**").permitAll()` 
+     (o aplicar autenticación según necesidad)
+
+5.1.2. Cambios en Frontend
+---------------------------
+
+1. Crear interfaces TypeScript:
+   - En `src/app/core/models/backend-dtos.ts`, agregar:
+     ```typescript
+     export interface SoftwareCientificoDTO extends ProductoCientificoDTO {
+       repositorioGit?: string;
+       version?: string;
+       lenguaje?: string;
+       // ... otros campos
+     }
+     ```
+
+2. Crear servicio:
+   - Crear `src/app/core/services/software-cientifico.service.ts`
+   - Seguir patrón de `PublicationService`:
+     - Inyectar `BaseHttpService`
+     - Métodos: getSoftwareCientificoList, getSoftwareCientifico, 
+       createSoftwareCientifico, updateSoftwareCientifico, deleteSoftwareCientifico
+
+3. Crear componentes:
+   - En `src/app/modules/software-cientifico/`:
+     - `software-cientifico-list/`: Lista con tabla/tarjetas
+     - `software-cientifico-detail/`: Vista detallada
+     - `software-cientifico-edit/`: Formulario de creación/edición
+   - Seguir estructura de `publications/`:
+     - Usar `ParticipantManagerComponent` si el producto tiene participantes
+     - Formularios reactivos con validación
+     - Integración con servicios
+
+4. Agregar rutas:
+   - En `src/app/app.routes.ts`:
+     ```typescript
+     {
+       path: 'software-cientifico',
+       loadComponent: () => import('./modules/software-cientifico/software-cientifico-list/...'),
+       canActivate: [authGuard]
+     },
+     // ... rutas para new, :id, :id/edit
+     ```
+
+5. Actualizar navegación:
+   - En `src/app/app.component.ts`, agregar item en el menú lateral:
+     ```html
+     <a mat-list-item routerLink="/software-cientifico" ...>
+       <mat-icon>code</mat-icon>
+       <span>Software Científico</span>
+     </a>
+     ```
+
+6. Actualizar CatalogService:
+   - En `src/app/core/services/catalog.service.ts`, agregar mapeo en 
+     `getProductTypeId()`:
+     ```typescript
+     'software-cientifico': 18, // ID del nuevo tipo de producto
+     ```
+
+5.2. Recomendaciones para Mantener Coherencia
+----------------------------------------------
+
+1. Seguir el patrón de herencia JOINED para productos:
+   - Siempre extender `ProductoCientifico`
+   - Usar `@PrimaryKeyJoinColumn(name = "id")`
+   - Tabla hija con `id` como PK y FK a `producto.id`
+
+2. Mantener estructura de controladores:
+   - Endpoints RESTful estándar (GET, POST, PUT, DELETE)
+   - Paginación en listados
+   - DTOs para entrada/salida
+   - Manejo de errores consistente
+
+3. Reutilizar componentes compartidos:
+   - `ParticipantManagerComponent` para productos con participantes
+   - `AffiliationManagerComponent` solo para publicaciones (o extender si 
+     otros productos necesitan afiliaciones)
+   - `ListControlsComponent` para filtros y búsqueda
+   - `ViewModeSelectorComponent` para tabla/tarjetas
+
+4. Seguir convenciones de nombres:
+   - Backend: PascalCase para clases, snake_case para tablas
+   - Frontend: kebab-case para archivos, PascalCase para clases
+
+5. Internacionalización:
+   - Usar `TextosService` para textos traducibles
+   - Agregar textos en ambos idiomas (español e inglés)
+
+6. Validaciones:
+   - Validar en backend y frontend
+   - Mensajes de error claros y consistentes
+
+7. Testing (no implementado actualmente, pero recomendado):
+   - Unit tests para servicios
+   - Integration tests para controladores
+   - E2E tests para flujos críticos
+
+================================================================================
+FIN DEL DOCUMENTO
+================================================================================
+
+
+
+
+
+
+
+

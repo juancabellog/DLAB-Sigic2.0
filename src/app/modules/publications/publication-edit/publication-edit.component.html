@@ -1,0 +1,504 @@
+<div class="publications-container">
+  <div class="header">
+    <div class="header-left">
+      <button mat-icon-button (click)="goBack()" matTooltip="Back to Publications List">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>{{ pageTitle }}</h1>
+    </div>
+  </div>
+  
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading publication...</p>
+  </div>
+
+  <mat-card class="form-card" *ngIf="!loading">
+    <mat-card-header>
+      <mat-card-subtitle *ngIf="isEditMode">ID: {{ publicationId }}</mat-card-subtitle>
+    </mat-card-header>
+    
+    <!-- State Bar for DOI Import Flow -->
+    <div *ngIf="isInPreviewMode" class="import-state-bar">
+      <div class="state-step" [class.active]="getImportState() === 'doi'" [class.completed]="getImportState() !== 'doi'">
+        <div class="step-circle">
+          <mat-icon *ngIf="getImportState() !== 'doi'">check</mat-icon>
+          <span *ngIf="getImportState() === 'doi'">1</span>
+        </div>
+        <span class="step-label">DOI</span>
+      </div>
+      <div class="state-connector" [class.completed]="getImportState() !== 'doi'"></div>
+      <div class="state-step" [class.active]="getImportState() === 'preview'" [class.completed]="getImportState() === 'review' || getImportState() === 'confirm'">
+        <div class="step-circle">
+          <mat-icon *ngIf="getImportState() === 'review' || getImportState() === 'confirm'">check</mat-icon>
+          <span *ngIf="getImportState() === 'preview'">2</span>
+        </div>
+        <span class="step-label">Preview</span>
+      </div>
+      <div class="state-connector" [class.completed]="getImportState() === 'review' || getImportState() === 'confirm'"></div>
+      <div class="state-step" [class.active]="getImportState() === 'review'" [class.completed]="getImportState() === 'confirm'">
+        <div class="step-circle">
+          <mat-icon *ngIf="getImportState() === 'confirm'">check</mat-icon>
+          <span *ngIf="getImportState() === 'review'">3</span>
+        </div>
+        <span class="step-label">Review</span>
+      </div>
+      <div class="state-connector" [class.completed]="getImportState() === 'confirm'"></div>
+      <div class="state-step" [class.active]="getImportState() === 'confirm'">
+        <div class="step-circle">
+          <span *ngIf="getImportState() === 'confirm'">4</span>
+        </div>
+        <span class="step-label">Confirm</span>
+      </div>
+    </div>
+    
+    <mat-card-content [class.dense-mode]="isInPreviewMode" [class.form-disabled]="isFormDisabled">
+      <div class="form-section" [class.loading-section]="isFetchingFromDoi">
+        <div class="section-title">Basic Information</div>
+        
+        <!-- Botón para reiniciar y comenzar nueva importación desde DOI -->
+        <!-- Mostrar solo cuando:
+             1. Está editando una publicación existente (isEditMode === true), O
+             2. Hay una publicación existente detectada (hasExistingPublication === true) -->
+        <div *ngIf="shouldShowResetDoiButton()" class="reset-doi-container">
+          <button 
+            mat-stroked-button 
+            color="primary"
+            (click)="resetForNewDoi()"
+            class="reset-doi-button"
+            type="button">
+            <mat-icon>restart_alt</mat-icon>
+            <span>Start a new DOI import</span>
+          </button>
+        </div>
+        
+        <!-- DOI Row - Edit Mode (Read-only) -->
+        <div *ngIf="isEditMode && !isInPreviewMode" class="doi-row">
+          <mat-form-field appearance="fill" class="doi-input">
+            <mat-label>DOI</mat-label>
+            <input 
+              matInput 
+              [(ngModel)]="publication.doi" 
+              [readonly]="true"
+              placeholder="10.1000/182">
+          </mat-form-field>
+        </div>
+        
+        <!-- DOI Row - Normal Mode (New Publication) -->
+        <div *ngIf="!isEditMode && !isInPreviewMode" class="doi-row">
+          <mat-form-field appearance="fill" class="doi-input" [class.mat-form-field-invalid]="doiError">
+            <mat-label>DOI</mat-label>
+            <input 
+              matInput 
+              [(ngModel)]="publication.doi" 
+              (input)="doiError = null"
+              placeholder="10.1000/182" 
+              [disabled]="isFetchingFromDoi || hasExistingPublication">
+            <mat-hint *ngIf="!publication.doi && !doiError">
+              Enter a DOI and click Fetch to auto-fill the publication.
+            </mat-hint>
+          </mat-form-field>
+          <button 
+            mat-flat-button 
+            color="primary"
+            (click)="fetchByDOI()" 
+            [disabled]="!publication.doi || isLoadingDoi || hasExistingPublication"
+            class="doi-fetch"
+            matTooltip="Fetch metadata from DOI"
+            matTooltipPosition="above">
+            <ng-container *ngIf="!isLoadingDoi; else loadingTpl">
+              <mat-icon>search</mat-icon>
+              <span class="button-text">Fetch</span>
+            </ng-container>
+            <ng-template #loadingTpl>
+              <mat-progress-spinner 
+                mode="indeterminate"
+                diameter="20"
+                strokeWidth="3">
+              </mat-progress-spinner>
+              <span class="button-text">Loading…</span>
+            </ng-template>
+          </button>
+        </div>
+        
+        <!-- Banner de publicación existente -->
+        <div *ngIf="hasExistingPublication && existingPublication" class="existing-publication-banner">
+          <div class="banner-content">
+            <mat-icon class="warning-icon">warning</mat-icon>
+            <div class="banner-text">
+              <div class="banner-title">This publication already exists in the system.</div>
+              
+              <!-- Mensaje de redirección -->
+              <div class="redirect-message" *ngIf="!redirectCancelled">
+                <span>Redirecting to the existing record</span>
+                <mat-spinner 
+                  *ngIf="showRedirectSpinner"
+                  diameter="16"
+                  class="redirect-spinner">
+                </mat-spinner>
+                <span *ngIf="showRedirectSpinner">…</span>
+              </div>
+              
+              <div class="banner-metadata">
+                <div class="metadata-row">
+                  <span class="metadata-label">Title:</span>
+                  <span class="metadata-value">{{ existingPublication.title }}</span>
+                </div>
+                <div class="metadata-row">
+                  <span class="metadata-label">Journal:</span>
+                  <span class="metadata-value">{{ existingPublication.journal }}</span>
+                </div>
+                <div class="metadata-row">
+                  <span class="metadata-label">Year:</span>
+                  <span class="metadata-value">{{ existingPublication.year }}</span>
+                </div>
+              </div>
+              
+              <div class="banner-actions">
+                <button 
+                  mat-raised-button 
+                  color="primary"
+                  (click)="openExistingPublication()"
+                  class="open-existing-btn">
+                  <mat-icon>open_in_new</mat-icon>
+                  <span>Open the publication now</span>
+                </button>
+                
+                <a 
+                  *ngIf="!redirectCancelled"
+                  (click)="cancelRedirect($event)"
+                  class="cancel-redirect-link"
+                  href="#"
+                  role="button">
+                  Cancel redirect
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- DOI Row - Preview Mode -->
+        <div *ngIf="isInPreviewMode" class="doi-row-preview">
+          <mat-form-field appearance="fill" class="doi-input-preview">
+            <mat-label>DOI</mat-label>
+            <input 
+              matInput 
+              [(ngModel)]="publication.doi" 
+              [disabled]="true"
+              class="doi-preview-input">
+          </mat-form-field>
+          <button 
+            mat-stroked-button 
+            color="primary"
+            (click)="changeDOI()"
+            class="change-doi-btn">
+            <mat-icon>edit</mat-icon>
+            Change DOI
+          </button>
+        </div>
+        <div *ngIf="isInPreviewMode" class="doi-preview-helper">
+          DOI locked in preview. Click "Change DOI" to edit.
+        </div>
+        
+        <!-- Error Banner for DOI -->
+        <div *ngIf="doiError && !isFetchingFromDoi" class="form-row">
+          <div class="full-width doi-error-banner">
+            <mat-icon class="error-icon">error</mat-icon>
+            <span class="error-message">{{ doiError }}</span>
+          </div>
+        </div>
+        
+        <!-- Preview Mode Separator -->
+        <div *ngIf="isInPreviewMode" class="form-row">
+          <div class="full-width preview-mode-separator">
+            <span class="separator-line"></span>
+            <span class="separator-text">Preview Mode</span>
+            <span class="separator-line"></span>
+          </div>
+        </div>
+        
+        <!-- Combined Preview Information Banner -->
+        <div *ngIf="doiAutoFilled || isInPreviewMode" class="form-row">
+          <div class="full-width preview-info-banner">
+            <div class="banner-content">
+              <div *ngIf="doiAutoFilled" class="banner-section info-section">
+                <mat-icon class="section-icon">info</mat-icon>
+                <span>Publication data has been auto-filled from DOI. Please review before saving.</span>
+              </div>
+              <div *ngIf="isInPreviewMode" class="banner-section warning-section">
+                <mat-icon class="section-icon">visibility</mat-icon>
+                <span>Preview mode: Review matching results and make decisions before confirming.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <mat-form-field class="full-width">
+            <mat-label>Title</mat-label>
+            <input matInput [(ngModel)]="publication.descripcion" placeholder="Enter publication title" required>
+          </mat-form-field>
+        </div>
+        
+        <div class="form-row">
+          <mat-form-field class="full-width" [class.pending-journal]="pendingJournalCreation">
+            <mat-label>Journal</mat-label>
+            <input 
+              matInput 
+              [(ngModel)]="journalInput"
+              (input)="onJournalInputChange()"
+              [matAutocomplete]="journalAuto"
+              [disabled]="loadingJournals || pendingJournalCreation"
+              placeholder="Type to search journals..."
+              required>
+            <mat-autocomplete 
+              #journalAuto="matAutocomplete"
+              (optionSelected)="onJournalSelected($event.option.value)"
+              (closed)="onAutocompleteClosed()">
+              <mat-option *ngFor="let journal of filteredJournals" [value]="journal">
+                <div class="journal-option">
+                  <span class="journal-name">{{ journal.descripcion }}</span>
+                  <span *ngIf="journal.abbreviation" class="journal-abbreviation">({{ journal.abbreviation }})</span>
+                  <span *ngIf="journal.issn" class="journal-issn">ISSN: {{ journal.issn }}</span>
+                </div>
+              </mat-option>
+              <mat-option *ngIf="filteredJournals.length === 0 && journalInput.trim() !== ''" disabled>
+                No journals found matching "{{ journalInput }}"
+              </mat-option>
+            </mat-autocomplete>
+            <mat-spinner *ngIf="loadingJournals" matSuffix diameter="20"></mat-spinner>
+          </mat-form-field>
+          
+          <div class="journal-new-banner" *ngIf="isInPreviewMode && pendingJournalCreation">
+            <mat-icon>auto_awesome</mat-icon>
+            <span class="text">New journal — will be created on save</span>
+          </div>
+        </div>
+        
+        <!-- Journal Preview Status (below field with spacing) -->
+        <div *ngIf="isInPreviewMode && previewData?.journal && !pendingJournalCreation" class="form-row">
+          <div class="full-width journal-preview-status">
+            <ng-container *ngIf="previewData && previewData.journal">
+              <div *ngIf="previewData.journal.status === 'matched' && previewData.journal.matchId && previewData.journal.matchId > 0" class="journal-matched-message">
+                <mat-icon>check_circle</mat-icon>
+                <span>Matched with internal journal: <strong>{{ previewData.journal.name }}</strong></span>
+              </div>
+              <div *ngIf="previewData.journal.status === 'new'" class="journal-new-alert">
+                <div class="journal-new-message">
+                  <mat-icon>info</mat-icon>
+                  <span>No internal journal found. Please select or create one.</span>
+                </div>
+                <div class="journal-action-buttons">
+                  <button mat-stroked-button color="primary" (click)="selectExistingJournal()">
+                    Select existing
+                  </button>
+                  <button mat-stroked-button color="accent" (click)="createNewJournal()">
+                    Create new
+                  </button>
+                </div>
+              </div>
+              <div *ngIf="previewData.journal.status === 'review'" class="journal-review-message">
+                <mat-icon>warning</mat-icon>
+                <span>Multiple matches found - Please review</span>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+        
+        <!-- Preview Fields Hint (moved below journal badge) -->
+        <div *ngIf="isInPreviewMode && doiAutoFilled" class="form-row">
+          <div class="full-width preview-fields-hint">
+            <mat-icon>edit_note</mat-icon>
+            <span>These fields have been filled automatically. You can edit or correct them.</span>
+          </div>
+        </div>
+        
+        <!-- Group 1: Publication Data -->
+        <div class="field-group">
+          <div class="group-title">Publication Data</div>
+          <div class="form-row">
+            <mat-form-field class="half-width">
+              <mat-label>Volume</mat-label>
+              <input matInput [(ngModel)]="publication.volume" placeholder="Volume">
+            </mat-form-field>
+            
+            <mat-form-field class="half-width">
+              <mat-label>Year Published</mat-label>
+              <input matInput type="number" [(ngModel)]="publication.yearPublished" (ngModelChange)="onYearPublishedChange()" placeholder="2024" required>
+            </mat-form-field>
+          </div>
+          
+          <div class="form-row">
+            <mat-form-field class="half-width">
+              <mat-label>First Page</mat-label>
+              <input matInput [(ngModel)]="publication.firstpage" placeholder="1">
+            </mat-form-field>
+            
+            <mat-form-field class="half-width">
+              <mat-label>Last Page</mat-label>
+              <input matInput [(ngModel)]="publication.lastpage" placeholder="10">
+            </mat-form-field>
+          </div>
+        </div>
+        
+        <!-- Group 2: Funding -->
+        <div class="field-group">
+          <div class="group-title">Funding</div>
+          <div class="form-row">
+            <mat-checkbox [(ngModel)]="isBasal" (change)="onBasalChange($event.checked)" color="primary" class="basal-checkbox">
+              Product associated with Basal funding
+            </mat-checkbox>
+          </div>
+          
+          <div class="form-row">
+            <mat-form-field class="half-width">
+              <mat-label>Progress Report (Period)</mat-label>
+              <mat-select [(ngModel)]="publication.progressReport">
+                <mat-option [value]="1">Period 1</mat-option>
+                <mat-option [value]="2">Period 2</mat-option>
+                <mat-option [value]="3">Period 3</mat-option>
+                <mat-option [value]="4">Period 4</mat-option>
+                <mat-option [value]="5">Period 5</mat-option>
+              </mat-select>
+            </mat-form-field>
+            
+            <mat-form-field class="half-width">
+              <mat-label>ANID Code</mat-label>
+              <input matInput [(ngModel)]="publication.codigoANID" placeholder="Enter ANID code">
+            </mat-form-field>
+          </div>
+        </div>
+        
+        <!-- Group 3: Indexes -->
+        <div class="field-group">
+          <div class="group-title">Indexes</div>
+          <div class="form-row">
+            <mat-form-field appearance="fill" class="half-width">
+              <mat-label>Impact Factor</mat-label>
+              <input matInput type="text" [value]="formatImpactFactor(publication.factorImpacto)" placeholder="e.g., 25,2345" disabled>
+              <mat-spinner *ngIf="loadingImpactFactors" matSuffix diameter="20"></mat-spinner>
+              <mat-icon *ngIf="!loadingImpactFactors && publication.factorImpacto" matSuffix>check_circle</mat-icon>
+            </mat-form-field>
+            
+            <mat-form-field appearance="fill" class="half-width">
+              <mat-label>Average Impact Factor 5y</mat-label>
+              <input matInput type="text" [value]="formatImpactFactor(publication.factorImpactoPromedio)" placeholder="e.g., 23,8765" disabled>
+              <mat-spinner *ngIf="loadingImpactFactors" matSuffix diameter="20"></mat-spinner>
+              <mat-icon *ngIf="!loadingImpactFactors && publication.factorImpactoPromedio" matSuffix>check_circle</mat-icon>
+            </mat-form-field>
+          </div>
+          <div *ngIf="publication.journal && publication.yearPublished && !loadingImpactFactors && (publication.factorImpacto || publication.factorImpactoPromedio)" class="form-row">
+            <div class="full-width impact-factors-info">
+              <mat-icon>info</mat-icon>
+              <span>Impact factors calculated for {{ publication.journal.descripcion }} ({{ publication.yearPublished }})</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="full-width pdf-upload-field">
+            <label class="pdf-upload-label">PDF Document</label>
+            <div class="file-upload-container">
+              <input 
+                type="file" 
+                #fileInput 
+                (change)="onFileSelected($event)" 
+                accept=".pdf" 
+                style="display: none"
+                id="pdf-upload">
+              <button 
+                mat-stroked-button 
+                type="button" 
+                (click)="fileInput.click()"
+                [disabled]="uploadingPdf">
+                <mat-icon>upload</mat-icon>
+                {{ selectedPdfFile ? selectedPdfFile.name : 'Select PDF File' }}
+              </button>
+              <button 
+                *ngIf="selectedPdfFile" 
+                mat-icon-button 
+                type="button" 
+                (click)="clearSelectedFile()"
+                [disabled]="loading"
+                matTooltip="Clear selection">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+            <div class="pdf-hint" *ngIf="publication.linkPDF">
+              <span>Current PDF: {{ getPdfFileName() }}</span>
+              <a 
+                *ngIf="getPdfUrl()" 
+                [href]="getPdfUrl()!" 
+                target="_blank" 
+                download 
+                [attr.download]="getPublicationTitle() + '.pdf'" 
+                class="pdf-download-link" 
+                matTooltip="Download PDF">
+                <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+                Download
+              </a>
+            </div>
+            <div class="pdf-hint" *ngIf="!publication.linkPDF && !selectedPdfFile">No PDF file selected</div>
+          </div>
+        </div>
+      </div>
+      
+      <mat-divider></mat-divider>
+      
+      <div class="form-section authors-section">
+        <div class="section-title">People & Affiliations</div>
+        <app-participant-manager 
+          [participants]="getParticipants()"
+          [productType]="'publications'"
+          [publicationId]="publicationId ?? undefined"
+          [previewAuthors]="previewData?.authors"
+          [doiLoading]="doiLoading"
+          (participantsChange)="onParticipantsChange($event)"
+          (hasIncompleteChange)="onHasIncompleteChange($event)">
+        </app-participant-manager>
+      </div>
+    </mat-card-content>
+    
+    <mat-card-actions class="footer-actions">
+      <div class="footer-left">
+        <button mat-button (click)="cancelEdit()">{{ backButtonText }}</button>
+        <!-- Aquí conservas tus errores rojos existentes, si los hay -->
+        <div
+          class="footer-error"
+          *ngIf="showParticipantsError"
+        >
+          <mat-icon>error</mat-icon>
+          <span>Complete all participants before saving.</span>
+        </div>
+      </div>
+      <div class="footer-right" [class.pending-warning]="!doiLoading && hasAuthorsWithMissingAffiliations">
+        <button 
+          mat-raised-button 
+          [color]="isInPreviewMode ? 'accent' : 'primary'" 
+          (click)="savePublication()"
+          [disabled]="!canConfirmPublication">
+          <mat-spinner *ngIf="loading" diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+          {{ isInPreviewMode ? 'Confirm and Create Publication' : saveButtonText }}
+        </button>
+        <!-- ⚠️ Warning no bloqueante por afiliaciones -->
+        <div
+          class="footer-warning"
+          *ngIf="!doiLoading && hasAuthorsWithMissingAffiliations"
+        >
+          <mat-icon>warning_amber</mat-icon>
+          <div class="footer-warning-text">
+            <div class="title">
+              {{ doiLoading ? 0 : missingAffiliationsCount }}
+              author{{ doiLoading ? '' : missingAffiliationsCount > 1 ? 's' : '' }}
+              don't have an affiliation.
+            </div>
+            <div class="subtitle">
+              The publication will be saved in
+              <strong>Pending</strong> status until all affiliations are assigned.
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-card-actions>
+  </mat-card>
+</div>

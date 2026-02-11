@@ -1,0 +1,46 @@
+server:
+  servlet:
+    context-path: /sigic2.0
+
+spring:
+  application:
+    name: scientific-products-platform
+  
+  datasource:
+    url: jdbc:mysql://192.168.2.220/sigicprod_2_0?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: root
+    password: Mariadb2022
+  
+  h2:
+    console:
+      enabled: false
+  
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    open-in-view: false  # Deshabilitar OpenSessionInViewFilter para evitar lazy loading durante serialización
+    properties:
+      hibernate:
+        format_sql: true
+        # Configurar para respetar nombres exactos de columnas
+        physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+  
+  security:
+    user:
+      name: admin
+      password: admin
+
+jwt:
+  secret: myVerySecretKeyForJWTTokenGenerationThatIsLongEnoughForSecurityRequirements123456789
+  expiration: 86400000 # 24 hours
+
+logging:
+  level:
+    com.sisgic: DEBUG
+    org.springframework.security: DEBUG
+
+
+

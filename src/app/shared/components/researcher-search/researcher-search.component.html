@@ -1,0 +1,44 @@
+<mat-form-field class="full-width">
+  <mat-label>Search Researchers</mat-label>
+  <input 
+    matInput 
+    #searchInput
+    [(ngModel)]="inputValue"
+    (input)="onSearch($event)"
+    (focus)="onFocus()"
+    [matAutocomplete]="auto"
+    [disabled]="disabled"
+    placeholder="Search by name, ID or ORCID...">
+  <mat-icon matSuffix>search</mat-icon>
+  <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayWith" (optionSelected)="onResearcherSelected($event.option.value)">
+    <!-- Always show "Add New Researcher" at the top -->
+    <mat-option class="add-new-option" (click)="openCreateResearcherDialog(); $event.stopPropagation()">
+      <div class="add-new-researcher">
+        <mat-icon>add</mat-icon>
+        <span>Add New Researcher (RRHH)</span>
+      </div>
+    </mat-option>
+    
+    <!-- Search results below -->
+    <mat-option 
+      *ngFor="let researcher of filteredResearchers$ | async; let first = first" 
+      [value]="researcher"
+      [class.first-result]="first">
+      <div class="researcher-option">
+        <div class="name">{{ researcher.fullname }}</div>
+        <div class="details">
+          {{ researcher.idRecurso }}
+          <span *ngIf="researcher.orcid"> • ORCID: {{ researcher.orcid }}</span>
+          <span *ngIf="researcher.tipoRRHH?.descripcion"> • {{ researcher.tipoRRHH?.descripcion }}</span>
+        </div>
+      </div>
+    </mat-option>
+    <mat-option *ngIf="(filteredResearchers$ | async)?.length === 0 && searchTerm.length >= 2" class="first-result">
+      <div class="no-results">
+        <mat-icon>person_search</mat-icon>
+        <span>No researchers found</span>
+      </div>
+    </mat-option>
+  </mat-autocomplete>
+</mat-form-field>
+

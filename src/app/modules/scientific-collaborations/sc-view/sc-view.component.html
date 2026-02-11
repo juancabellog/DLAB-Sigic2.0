@@ -1,0 +1,188 @@
+<div class="detail-container">
+  <div class="header-actions">
+    <button mat-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Scientific Collaborations List
+    </button>
+    <button mat-raised-button color="primary" (click)="editCollaboration()" *ngIf="collaboration">
+      <mat-icon>edit</mat-icon>
+      Edit
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading scientific collaboration...</p>
+  </div>
+
+  <mat-card class="detail-card" *ngIf="!loading && collaboration">
+    <mat-card-header>
+      <mat-card-title>{{ getCollaborationTitle() }}</mat-card-title>
+      <mat-card-subtitle>
+        {{ collaboration.tipoColaboracion?.idDescripcion || 'N/A' }}
+      </mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="collaboration-details">
+        <!-- Basic Information -->
+        <div class="detail-section">
+          <h3>Basic Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <strong>Name:</strong>
+              <span>{{ collaboration.descripcion || 'N/A' }}</span>
+            </div>
+            <div class="detail-item" *ngIf="collaboration.comentario">
+              <strong>Comments:</strong>
+              <span>{{ collaboration.comentario }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Collaboration Type:</strong>
+              <span>{{ collaboration.tipoColaboracion?.idDescripcion || 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Institution:</strong>
+              <span>{{ collaboration.institucion?.descripcion || collaboration.institucion?.idDescripcion || 'N/A' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Origin -->
+        <div class="detail-section">
+          <h3>Origin</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <strong>Origin Country:</strong>
+              <span>{{ collaboration.paisOrigen?.idDescripcion || 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Origin City:</strong>
+              <span>{{ collaboration.ciudadOrigen || 'N/A' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Destination -->
+        <div class="detail-section">
+          <h3>Destination</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <strong>Destination Country Code:</strong>
+              <span>{{ collaboration.codigoPaisDestino || 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Destination City:</strong>
+              <span>{{ collaboration.ciudadDestino || 'N/A' }}</span>
+            </div>
+            <div class="detail-item" *ngIf="collaboration.fechaInicio">
+              <strong>Start Date:</strong>
+              <span>{{ collaboration.fechaInicio | date:'MMM dd, yyyy' }}</span>
+            </div>
+            <div class="detail-item" *ngIf="collaboration.fechaTermino">
+              <strong>End Date:</strong>
+              <span>{{ collaboration.fechaTermino | date:'MMM dd, yyyy' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Product Information -->
+        <div class="detail-section">
+          <h3>Product Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item" *ngIf="collaboration.progressReport">
+              <strong>Progress Report (Period):</strong>
+              <span>Period {{ collaboration.progressReport }}</span>
+            </div>
+            <div class="detail-item" *ngIf="collaboration.codigoANID">
+              <strong>ANID Code:</strong>
+              <span>{{ collaboration.codigoANID }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Basal Funding:</strong>
+              <mat-chip [color]="isBasal() ? 'primary' : 'warn'" selected>
+                {{ getBasalStatus() }}
+              </mat-chip>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Documents -->
+        <div class="detail-section" *ngIf="collaboration.linkPDF || collaboration.linkVisualizacion || collaboration.urlDocumento">
+          <h3>Documents</h3>
+          <div class="detail-grid">
+            <div class="detail-item" *ngIf="getPdfUrl()">
+              <strong>PDF Document:</strong>
+              <span>
+                <a [href]="getPdfUrl()!" target="_blank" download [attr.download]="getCollaborationTitle() + '.pdf'" class="pdf-link" matTooltip="Download PDF">
+                  <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+                  Download PDF
+                </a>
+              </span>
+            </div>
+            <div class="detail-item" *ngIf="collaboration.linkVisualizacion">
+              <strong>View Link:</strong>
+              <span>
+                <a [href]="collaboration.linkVisualizacion" target="_blank" rel="noopener noreferrer">
+                  {{ collaboration.linkVisualizacion }}
+                </a>
+              </span>
+            </div>
+            <div class="detail-item" *ngIf="collaboration.urlDocumento">
+              <strong>Document URL:</strong>
+              <span>
+                <a [href]="collaboration.urlDocumento" target="_blank" rel="noopener noreferrer">
+                  {{ collaboration.urlDocumento }}
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Participants -->
+        <div class="detail-section" *ngIf="participants.length > 0">
+          <h3>Participants</h3>
+          <div class="participants-list">
+            <div *ngFor="let participant of participants" class="participant-item">
+              <mat-icon>person</mat-icon>
+              <span class="participant-name">{{ participant.name }}</span>
+              <mat-chip *ngIf="participant.corresponding" color="primary" selected>Corresponding</mat-chip>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+    
+    <mat-card-actions>
+      <button mat-button color="primary" (click)="editCollaboration()">
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+      <button mat-button color="warn" (click)="deleteCollaboration()">
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <div *ngIf="!loading && !collaboration" class="loading-container">
+    <mat-icon>handshake</mat-icon>
+    <h3>Scientific collaboration not found</h3>
+    <p>The requested scientific collaboration could not be found.</p>
+    <button mat-raised-button color="primary" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Scientific Collaborations List
+    </button>
+  </div>
+</div>
+

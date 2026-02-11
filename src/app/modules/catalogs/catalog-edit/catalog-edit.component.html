@@ -1,0 +1,119 @@
+<div class="form-container">
+  <div class="header-actions">
+    <button mat-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Catalogs
+    </button>
+  </div>
+
+  <mat-card class="form-card">
+    <mat-card-header>
+      <mat-card-title>
+        {{ isEditMode ? 'Edit ' + getCatalogTypeName() : 'Add ' + getCatalogTypeName() }}
+      </mat-card-title>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Loading...</p>
+      </div>
+
+      <form *ngIf="!loading" (ngSubmit)="saveCatalog()" #form="ngForm">
+        <div class="form-section">
+          <h3>Basic Information</h3>
+          
+          <!-- Solo mostrar campos específicos para participation-types -->
+          <div *ngIf="currentCatalogType === catalogTypeEnum.PARTICIPATION_TYPES">
+            <!-- Debug info -->
+            <div style="background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 4px; font-size: 12px;">
+              <strong>Debug Info:</strong><br>
+              Current Catalog Type: {{ currentCatalogType }}<br>
+              Product Types Count: {{ productTypes.length }}<br>
+              Product Types: {{ productTypes | json }}
+            </div>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Product Type *</mat-label>
+              <mat-select [(ngModel)]="catalogForm.idTipoProducto" name="idTipoProducto" required>
+                <mat-option *ngFor="let productType of productTypes" [value]="productType.id">
+                  {{ productType.nombre }}
+                </mat-option>
+                <mat-option *ngIf="productTypes.length === 0" disabled>
+                  No product types available
+                </mat-option>
+              </mat-select>
+              <mat-error>Product Type is required</mat-error>
+              <mat-hint *ngIf="productTypes.length === 0">Loading product types...</mat-hint>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Description *</mat-label>
+              <input matInput 
+                     [(ngModel)]="catalogForm.nombre" 
+                     name="nombre"
+                     required
+                     placeholder="Enter participation type description">
+              <mat-error>Description is required</mat-error>
+            </mat-form-field>
+          </div>
+
+          <!-- Campos genéricos para otros tipos de catálogo -->
+          <div *ngIf="currentCatalogType !== catalogTypeEnum.PARTICIPATION_TYPES">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Code *</mat-label>
+              <input matInput 
+                     [(ngModel)]="catalogForm.codigo" 
+                     name="codigo"
+                     required
+                     placeholder="e.g., AUTHOR, CO_AUTHOR">
+              <mat-error>Code is required</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Name *</mat-label>
+              <input matInput 
+                     [(ngModel)]="catalogForm.nombre" 
+                     name="nombre"
+                     required
+                     placeholder="Enter {{ getCatalogTypeName().toLowerCase() }} name">
+              <mat-error>Name is required</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Description</mat-label>
+              <textarea matInput 
+                        [(ngModel)]="catalogForm.descripcion" 
+                        name="descripcion"
+                        rows="3"
+                        placeholder="Enter description (optional)"></textarea>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Product Type</mat-label>
+              <mat-select [(ngModel)]="catalogForm.idTipoProducto" name="idTipoProducto" required>
+                <mat-option *ngFor="let productType of productTypes" [value]="productType.id">
+                  {{ productType.nombre }}
+                </mat-option>
+              </mat-select>
+              <mat-hint>Select the product type this participation applies to</mat-hint>
+            </mat-form-field>
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions *ngIf="!loading">
+      <button mat-button type="button" (click)="cancelEdit()">
+        Cancel
+      </button>
+      <button mat-raised-button 
+              color="primary" 
+              type="button"
+              (click)="saveCatalog()"
+              [disabled]="isFormInvalid()">
+        <mat-icon>save</mat-icon>
+        {{ isEditMode ? 'Update' : 'Add' }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

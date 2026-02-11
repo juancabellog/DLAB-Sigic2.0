@@ -1,0 +1,139 @@
+<div class="detail-container" *ngIf="project && !loading">
+  <div class="header-actions">
+    <button mat-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Projects
+    </button>
+    <button mat-raised-button color="primary" (click)="editProject()">
+      <mat-icon>edit</mat-icon>
+      Edit
+    </button>
+  </div>
+
+  <mat-card class="detail-card">
+    <mat-card-header>
+      <mat-card-title>{{ project.descripcion }}</mat-card-title>
+      <mat-card-subtitle>
+        <mat-chip [color]="getStatusColor(project)" selected>
+          {{ project.fechaTermino ? (getStatusColor(project) === 'primary' ? 'Active' : 'Completed') : 'Active' }}
+        </mat-chip>
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="detail-section">
+        <h3>Project Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Description:</span>
+            <span class="detail-value">{{ project.descripcion }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Code:</span>
+            <span class="detail-value">{{ project.codigo }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">External Code:</span>
+            <span class="detail-value">{{ project.codigoExterno || 'N/A' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Status:</span>
+            <span class="detail-value">
+              <mat-chip [color]="getStatusColor(project)" selected>
+                {{ project.fechaTermino ? (getStatusColor(project) === 'primary' ? 'Active' : 'Completed') : 'Active' }}
+              </mat-chip>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="detail-section">
+        <h3>Project Details</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Start Date:</span>
+            <span class="detail-value">{{ formatDate(project.fechaInicio) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">End Date:</span>
+            <span class="detail-value">{{ formatDate(project.fechaTermino) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Total Products:</span>
+            <span class="detail-value">{{ project.totalProductos || 0 }}</span>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="detail-section">
+        <h3>Financing Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Financing Types:</span>
+            <span class="detail-value">
+              <div class="financing-types">
+                <mat-chip *ngFor="let type of getFinancingTypes(project.tipoFinanciamiento)" 
+                         class="financing-chip">
+                  {{ type }}
+                </mat-chip>
+              </div>
+            </span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Collaboration:</span>
+            <span class="detail-value">
+              <div class="collaboration-types">
+                <mat-chip *ngFor="let type of getCollaborationTypes(project.realizaCon)" 
+                         class="collaboration-chip">
+                  {{ type }}
+                </mat-chip>
+              </div>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="detail-section">
+        <h3>Project Metadata</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Created:</span>
+            <span class="detail-value">{{ formatDate(project.createdAt) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Last Updated:</span>
+            <span class="detail-value">{{ formatDate(project.updatedAt) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Description ID:</span>
+            <span class="detail-value">{{ project.idDescripcion || 'N/A' }}</span>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-button color="warn" (click)="deleteProject()">
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>
+
+<div *ngIf="loading" class="loading-container">
+  <mat-spinner></mat-spinner>
+  <p>Loading project details...</p>
+</div>
+
+<div *ngIf="!project && !loading" class="error-container">
+  <mat-icon>error</mat-icon>
+  <p>Project not found</p>
+  <button mat-button (click)="goBack()">Back to Projects</button>
+</div>

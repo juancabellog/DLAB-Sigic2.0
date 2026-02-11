@@ -1,0 +1,48 @@
+<div class="list-controls-container">
+  <app-search-bar
+    [placeholder]="searchPlaceholder"
+    [items]="items"
+    [finalFilteredCount]="finalFilteredCount"
+    [itemType]="itemType"
+    [hasBasalFilter]="showBasalFilter && basalOnly"
+    [addButtonLabel]="addButtonLabel"
+    [initialSearchTerm]="initialSearchTerm"
+    (searchResults)="onSearchResults($event)"
+    (searchTermChange)="onSearchTermChange($event)"
+    class="search-bar-wrapper">
+  </app-search-bar>
+  
+  <div class="controls-filters">
+    <mat-checkbox
+      *ngIf="showBasalFilter"
+      [(ngModel)]="basalOnly"
+      (change)="onBasalFilterChange()"
+      class="basal-filter-checkbox">
+      Basal Only
+    </mat-checkbox>
+    
+    <mat-checkbox
+      *ngIf="showPendingFilter"
+      [(ngModel)]="pendingOnly"
+      (change)="onPendingFilterChange()"
+      class="pending-filter-checkbox">
+      Pending only
+    </mat-checkbox>
+    
+    <app-view-mode-selector
+      [currentMode]="currentViewMode"
+      (modeChange)="onViewModeChange($event)">
+    </app-view-mode-selector>
+    
+    <button 
+      *ngIf="!readonly && addRoute"
+      mat-raised-button 
+      color="primary" 
+      [routerLink]="addRoute"
+      class="add-button">
+      <mat-icon>add</mat-icon>
+      {{ addButtonLabel }}
+    </button>
+  </div>
+</div>
+

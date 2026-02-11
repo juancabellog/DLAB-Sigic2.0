@@ -1,0 +1,247 @@
+<section class="affiliation-manager" aria-labelledby="affiliations-label">
+  <mat-expansion-panel 
+    [(expanded)]="expanded"
+    (opened)="onPanelOpened()"
+    (closed)="onPanelClosed()"
+    class="affiliations-panel"
+    [hideToggle]="false">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        <div class="affiliations-title-wrapper">
+          <h3 id="affiliations-label" class="affiliations-title">AFFILIATIONS</h3>
+          <p *ngIf="expanded" class="affiliations-subtitle">
+            <span *ngIf="affiliations.length === 0">No affiliations yet.</span>
+            <span *ngIf="affiliations.length > 0">Add or edit the author's institutional affiliations.</span>
+          </p>
+        </div>
+      </mat-panel-title>
+      <mat-panel-description>
+        <div class="aff-header">
+          <span class="spacer"></span>
+          <div class="aff-header-right">
+            <span class="aff-count" *ngIf="affiliations.length > 0">
+              {{ affiliations.length }} affiliation{{ affiliations.length > 1 ? 's' : '' }}
+            </span>
+          </div>
+        </div>
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+
+    <div class="affiliations-content" role="region" aria-label="Affiliations list">
+      <!-- Chips list with drag & drop -->
+      <div class="affiliations-chips" *ngIf="!loading && !showForm" role="list" aria-label="Affiliation chips">
+      <div 
+        class="affiliations-list"
+        cdkDropList
+        (cdkDropListDropped)="moveAffiliation($event)"
+        [cdkDropListDisabled]="affiliations.length <= 1">
+        <div class="affiliation-chip-wrapper" 
+             *ngFor="let affiliation of affiliations; let i = index"
+             [class.text-expanded]="isAffiliationTextExpanded(i)">
+          <mat-chip-set>
+            <mat-chip 
+              color="accent" 
+              selected 
+              class="affiliation-chip"
+              [class.preview-new]="getPreviewStatusForAffiliation(affiliation) === 'new'"
+              cdkDrag
+              [cdkDragDisabled]="affiliations.length <= 1"
+              role="listitem"
+              [attr.aria-label]="'Affiliation: ' + (affiliation.nombreInstitucion || getInstitutionName(affiliation.idInstitucion))"
+              [matTooltip]="getAffiliationTooltip(affiliation)"
+              [matTooltipDisabled]="!affiliation.texto || !affiliation.texto.trim()"
+              (click)="toggleAffiliationText(i, $event)">
+              <mat-icon class="drag-handle" *ngIf="affiliations.length > 1">drag_indicator</mat-icon>
+              <mat-icon class="institution-icon">domain</mat-icon>
+              <span class="chip-text institution-name">{{ affiliation.nombreInstitucion || getInstitutionName(affiliation.idInstitucion) }}</span>
+              <span *ngIf="getPreviewStatusForAffiliation(affiliation) === 'new'" class="preview-badge new-badge">
+                <mat-icon>new_releases</mat-icon>
+                Nuevo
+              </span>
+              <span *ngIf="affiliation.nombreInstitucion && !affiliation.idInstitucion" class="preview-badge error-badge">
+                <mat-icon>error</mat-icon>
+                Institution missing
+              </span>
+              <button 
+                mat-icon-button
+                class="edit-chip-button"
+                (click)="startEdit(affiliation); $event.stopPropagation()"
+                [disabled]="loading"
+                matTooltip="Edit affiliation"
+                aria-label="Edit affiliation">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button 
+                matChipRemove 
+                (click)="deleteAffiliation(affiliation); $event.stopPropagation()"
+                [disabled]="loading"
+                aria-label="Remove affiliation">
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </mat-chip>
+          </mat-chip-set>
+          
+          <!-- Texto completo de la afiliación (visible al hacer click) -->
+          <div *ngIf="affiliation.texto && affiliation.texto.trim() && isAffiliationTextExpanded(i)" 
+               class="affiliation-text-subtitle">
+            {{ affiliation.texto }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick add button (outside chip set) -->
+    <div *ngIf="!loading && !showForm && affiliations.length > 0" class="quick-add-section">
+      <button 
+        mat-stroked-button 
+        color="primary"
+        (click)="startAdd()"
+        [disabled]="loading"
+        class="quick-add-button"
+        aria-label="Quick add affiliation">
+        <mat-icon>add</mat-icon>
+        <span>Quick Add</span>
+      </button>
+    </div>
+
+    <!-- Empty state (only if no chips and form not visible) -->
+    <div *ngIf="!loading && affiliations.length === 0 && !showForm" class="no-affiliations">
+      <mat-icon>business_center</mat-icon>
+      <span>No affiliations added yet.</span>
+      <button 
+        mat-stroked-button 
+        color="primary"
+        (click)="startAdd()"
+        [disabled]="loading"
+        class="empty-state-cta">
+        <mat-icon>add</mat-icon>
+        <span>Add Affiliation</span>
+      </button>
+    </div>
+
+    <div *ngIf="loading" class="loading-section">
+      <mat-spinner diameter="30"></mat-spinner>
+      <span>Loading affiliations...</span>
+    </div>
+
+    <!-- Formulario para agregar/editar (solo se muestra cuando showForm es true) -->
+    <div 
+      *ngIf="showForm" 
+      class="affiliation-form"
+      [@slideFadeIn]>
+      <div class="form-header">
+        <button 
+          mat-icon-button 
+          class="back-button"
+          (click)="cancelEdit()"
+          [disabled]="loading"
+          matTooltip="Back to affiliations list"
+          aria-label="Back to affiliations list">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <span class="form-breadcrumb">
+          <span class="breadcrumb-item">Affiliations</span>
+          <mat-icon class="breadcrumb-separator">chevron_right</mat-icon>
+          <span class="breadcrumb-item active">{{ editingAffiliation ? 'Edit' : 'Add new' }}</span>
+        </span>
+      </div>
+      <mat-card class="form-card" #formCard>
+        <mat-card-header>
+          <mat-card-title>
+            {{ editingAffiliation ? 'Edit Affiliation' : 'Add Affiliation' }}
+          </mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <!-- Preview Status: No internal institution found -->
+          <div *ngIf="getCurrentPreviewAffiliationStatus() === 'new' || getCurrentPreviewAffiliationStatus() === 'review'" 
+               class="preview-institution-alert">
+            <mat-icon class="alert-icon">info</mat-icon>
+            <div class="alert-content">
+              <strong>No internal institution found</strong>
+              <p *ngIf="getCurrentPreviewAffiliationStatus() === 'new'">
+                This institution is not in the database. Choose an action below.
+              </p>
+              <p *ngIf="getCurrentPreviewAffiliationStatus() === 'review'">
+                Multiple matches found. Please select one or create a new institution.
+              </p>
+              
+              <!-- Decision Radios -->
+              <div class="decision-radios">
+                <mat-radio-group 
+                  [(ngModel)]="currentPreviewAction"
+                  (change)="onPreviewInstitutionActionChange($event.value)">
+                  <mat-radio-button value="link">
+                    Link to existing institution
+                  </mat-radio-button>
+                  <mat-radio-button value="create">
+                    Create new institution from this data
+                  </mat-radio-button>
+                </mat-radio-group>
+              </div>
+            </div>
+          </div>
+          
+          <div class="full-width">
+            <app-institution-search
+              label="Institution"
+              placeholder="Search institution by name..."
+              [selectedInstitution]="selectedInstitutionForForm"
+              [disabled]="loadingInstitutions || currentPreviewAction === 'create'"
+              (institutionSelected)="onInstitutionSelected($event)">
+            </app-institution-search>
+            <div *ngIf="showInstitutionError && !formAffiliation.idInstitucion && currentPreviewAction !== 'create'" 
+                 class="mat-error" style="font-size: 12px; margin-top: -16px; margin-left: 16px;">
+              Institution is required
+            </div>
+            <div *ngIf="currentPreviewAction !== 'create'" class="mat-hint" style="font-size: 12px; margin-top: 4px; margin-left: 16px;">
+              Select the institution for this affiliation
+            </div>
+            <div *ngIf="currentPreviewAction === 'create'" class="mat-error" style="font-size: 12px; margin-top: 4px; margin-left: 16px; display: flex; align-items: center; gap: 4px;">
+              <mat-icon style="font-size: 16px; width: 16px; height: 16px;">error</mat-icon>
+              <span>Creating new institutions is not yet implemented. Please select an existing institution.</span>
+            </div>
+          </div>
+
+          <mat-form-field class="full-width">
+            <mat-label>Additional Text (Optional)</mat-label>
+            <textarea 
+              matInput 
+              [(ngModel)]="formAffiliation.texto"
+              rows="3"
+              placeholder="Additional information about this affiliation">
+            </textarea>
+            <mat-hint>Optional text to provide more details about this affiliation</mat-hint>
+          </mat-form-field>
+        </mat-card-content>
+        <mat-card-actions>
+          <button mat-button (click)="cancelEdit()" [disabled]="loading">Cancel</button>
+          <button 
+            mat-raised-button 
+            color="primary" 
+            (click)="saveAffiliation()"
+            [disabled]="loading || !formAffiliation.idInstitucion || currentPreviewAction === 'create'">
+            <mat-spinner *ngIf="loading" diameter="16" class="button-spinner" [strokeWidth]="2"></mat-spinner>
+            <span *ngIf="!loading">{{ editingAffiliation ? 'Update' : 'Add' }}</span>
+            <span *ngIf="loading">{{ editingAffiliation ? 'Updating...' : 'Adding...' }}</span>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+
+    <!-- Botón toggle para agregar nueva afiliación (solo cuando no hay formulario visible) -->
+    <div *ngIf="!loading && !showForm" class="add-button-section">
+      <button 
+        mat-stroked-button
+        color="primary"
+        (click)="startAdd()"
+        aria-label="Add new affiliation"
+        class="add-affiliation-button">
+        <mat-icon>add_circle</mat-icon>
+        <span>Add Affiliation</span>
+      </button>
+    </div>
+    </div>
+  </mat-expansion-panel>
+</section>
+
+

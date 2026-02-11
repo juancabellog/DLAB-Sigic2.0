@@ -1,0 +1,145 @@
+// ========================================
+// CATALOG VIEW SPECIFIC STYLES
+// ========================================
+// Estilos específicos para catalog-view que complementan los estilos globales
+
+.detail-container {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  background-color: #fafafa;
+  min-height: 100vh;
+}
+
+.detail-card {
+  margin: 24px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.12);
+  border-radius: 12px;
+  background-color: white;
+}
+
+.detail-section h3 {
+  margin-bottom: 20px;
+  margin-top: 0;
+  color: #1976d2;
+  font-weight: 600;
+  font-size: 18px;
+  border-bottom: 2px solid #e3f2fd;
+  padding-bottom: 8px;
+}
+
+.code-value {
+  font-family: 'Courier New', monospace;
+  background-color: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #1976d2;
+  border: 1px solid #e0e0e0;
+}
+
+.id-value {
+  font-family: 'Courier New', monospace;
+  background-color: #e8f5e8;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+
+.description-content {
+  background-color: #fafafa;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #1976d2;
+  margin-top: 8px;
+}
+
+.description-content p {
+  margin: 0;
+  line-height: 1.6;
+  color: #555;
+}
+
+// Mejorar el espaciado de los chips
+.detail-value mat-chip {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+// ========================================
+// DETAIL GRID AND ITEMS
+// ========================================
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  align-items: start;
+  position: relative;
+}
+
+// Línea vertical separadora
+.detail-grid::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: #e0e0e0;
+  transform: translateX(-50%);
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  min-height: 48px;
+  padding: 12px 0;
+  width: 100%;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-item strong {
+  color: #666;
+  font-size: 14px;
+  font-weight: 500;
+  min-width: 160px;
+  flex-shrink: 0;
+  text-align: left;
+}
+
+.detail-item span {
+  font-size: 16px;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  text-align: left;
+}
+
+// ========================================
+// RESPONSIVE DESIGN
+// ========================================
+@media (max-width: 768px) {
+  .detail-container {
+    padding: 16px;
+  }
+  
+  .detail-card {
+    margin: 16px;
+  }
+  
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .detail-grid::before {
+    display: none;
+  }
+}

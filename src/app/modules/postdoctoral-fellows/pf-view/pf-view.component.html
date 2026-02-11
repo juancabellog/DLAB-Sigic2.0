@@ -1,0 +1,183 @@
+<div class="detail-container">
+  <div class="header-actions">
+    <button mat-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Postdoctoral Fellows List
+    </button>
+    <button mat-raised-button color="primary" (click)="editFellow()" *ngIf="fellow">
+      <mat-icon>edit</mat-icon>
+      Edit
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading postdoctoral fellow...</p>
+  </div>
+
+  <mat-card class="detail-card" *ngIf="!loading && fellow">
+    <mat-card-header>
+      <mat-card-title>{{ getFellowTitle() }}</mat-card-title>
+      <mat-card-subtitle>
+        {{ fellow.institucion?.descripcion || fellow.institucion?.idDescripcion || 'N/A' }} - {{ fellow.tipoSector?.idDescripcion || 'N/A' }}
+      </mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="fellow-details">
+        <!-- Basic Information -->
+        <div class="detail-section">
+          <h3>Basic Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <strong>Research Topic:</strong>
+              <span>{{ fellow.descripcion || 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Institution where it was inserted:</strong>
+              <span>{{ fellow.institucion?.descripcion || fellow.institucion?.idDescripcion || 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Inserted:</strong>
+              <span>{{ fellow.tipoSector?.idDescripcion || 'N/A' }}</span>
+            </div>
+            <div class="detail-item" *ngIf="fellow.fechaInicio">
+              <strong>Start Date:</strong>
+              <span>{{ fellow.fechaInicio | date:'MMM dd, yyyy' }}</span>
+            </div>
+            <div class="detail-item" *ngIf="fellow.fechaTermino">
+              <strong>End Date:</strong>
+              <span>{{ fellow.fechaTermino | date:'MMM dd, yyyy' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Funding Sources -->
+        <div class="detail-section" *ngIf="fellow.fundingSource">
+          <h3>Funding Sources</h3>
+          <div class="chips-container">
+            <mat-chip *ngFor="let funding of getFundingSources()" selected>
+              {{ funding }}
+            </mat-chip>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Resources -->
+        <div class="detail-section" *ngIf="fellow.resources">
+          <h3>Resources</h3>
+          <div class="chips-container">
+            <mat-chip *ngFor="let resource of getResources()" selected>
+              {{ resource }}
+            </mat-chip>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Product Information -->
+        <div class="detail-section">
+          <h3>Product Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item" *ngIf="fellow.progressReport">
+              <strong>Progress Report (Period):</strong>
+              <span>Period {{ fellow.progressReport }}</span>
+            </div>
+            <div class="detail-item" *ngIf="fellow.codigoANID">
+              <strong>ANID Code:</strong>
+              <span>{{ fellow.codigoANID }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Basal Funding:</strong>
+              <mat-chip [color]="isBasal() ? 'primary' : 'warn'" selected>
+                {{ getBasalStatus() }}
+              </mat-chip>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Documents -->
+        <div class="detail-section" *ngIf="fellow.linkPDF || fellow.linkVisualizacion || fellow.urlDocumento">
+          <h3>Documents</h3>
+          <div class="detail-grid">
+            <div class="detail-item" *ngIf="getPdfUrl()">
+              <strong>PDF Document:</strong>
+              <span>
+                <a [href]="getPdfUrl()!" target="_blank" download [attr.download]="getFellowTitle() + '.pdf'" class="pdf-link" matTooltip="Download PDF">
+                  <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+                  Download PDF
+                </a>
+              </span>
+            </div>
+            <div class="detail-item" *ngIf="fellow.linkVisualizacion">
+              <strong>View Link:</strong>
+              <span>
+                <a [href]="fellow.linkVisualizacion" target="_blank" rel="noopener noreferrer">
+                  {{ fellow.linkVisualizacion }}
+                </a>
+              </span>
+            </div>
+            <div class="detail-item" *ngIf="fellow.urlDocumento">
+              <strong>Document URL:</strong>
+              <span>
+                <a [href]="fellow.urlDocumento" target="_blank" rel="noopener noreferrer">
+                  {{ fellow.urlDocumento }}
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Participants -->
+        <div class="detail-section" *ngIf="participants.length > 0">
+          <h3>Participants</h3>
+          <div class="participants-list">
+            <div *ngFor="let participant of participants" class="participant-item">
+              <mat-icon>person</mat-icon>
+              <span class="participant-name">{{ participant.name }}</span>
+              <mat-chip class="role-chip" selected>{{ participant.roleName }}</mat-chip>
+              <mat-chip *ngIf="participant.corresponding" color="primary" selected>Corresponding</mat-chip>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Additional Information -->
+        <div class="detail-section" *ngIf="fellow.comentario">
+          <h3>Comments</h3>
+          <p class="comments-text">{{ fellow.comentario }}</p>
+        </div>
+      </div>
+    </mat-card-content>
+    
+    <mat-card-actions>
+      <button mat-button color="primary" (click)="editFellow()">
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+      <button mat-button color="warn" (click)="deleteFellow()">
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <div *ngIf="!loading && !fellow" class="loading-container">
+    <mat-icon>work</mat-icon>
+    <h3>Postdoctoral fellow not found</h3>
+    <p>The requested postdoctoral fellow could not be found.</p>
+    <button mat-raised-button color="primary" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Postdoctoral Fellows List
+    </button>
+  </div>
+</div>
+

@@ -1,0 +1,133 @@
+<div class="detail-container" *ngIf="publication">
+  <div class="header-actions">
+    <button mat-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Publications
+    </button>
+    <button mat-raised-button color="primary" (click)="editPublication()">
+      <mat-icon>edit</mat-icon>
+      Edit
+    </button>
+  </div>
+
+  <mat-card class="detail-card">
+    <mat-card-header>
+      <mat-card-title>{{ getPublicationTitle() }}</mat-card-title>
+      <mat-card-subtitle>
+        <mat-chip [color]="getStatusColor(publication.estadoProducto?.codigo || publication.estadoProducto?.codigoDescripcion)" selected>
+          {{ publication.estadoProducto?.codigo || publication.estadoProducto?.codigoDescripcion || publication.estadoProducto?.nombre || 'N/A' }}
+        </mat-chip>
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="detail-section">
+        <h3>Publication Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <strong>Journal:</strong>
+            <span>{{ getJournalName() }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Year Published:</strong>
+            <span>{{ publication.yearPublished }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Volume:</strong>
+            <span>{{ publication.volume || 'N/A' }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Pages:</strong>
+            <span>{{ publication.firstpage || 'N/A' }} - {{ publication.lastpage || 'N/A' }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>DOI:</strong>
+            <span>{{ publication.doi || 'N/A' }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Citations:</strong>
+            <span>{{ publication.numCitas || 0 }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Impact Factor:</strong>
+            <span>{{ formatImpactFactor(publication.factorImpacto) }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Average Impact Factor 5y:</strong>
+            <span>{{ formatImpactFactor(publication.factorImpactoPromedio) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Product Information -->
+      <div class="detail-section">
+        <h3>Product Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item" *ngIf="publication.progressReport">
+            <strong>Progress Report (Period):</strong>
+            <span>Period {{ publication.progressReport }}</span>
+          </div>
+          <div class="detail-item" *ngIf="publication.codigoANID">
+            <strong>ANID Code:</strong>
+            <span>{{ publication.codigoANID }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Basal Funding:</strong>
+            <mat-chip [color]="isBasal() ? 'primary' : 'warn'" selected>
+              {{ getBasalStatus() }}
+            </mat-chip>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <!-- Documents -->
+      <div class="detail-section">
+        <h3>Documents</h3>
+        <div class="detail-grid">
+            <div class="detail-item" *ngIf="getPdfUrl()">
+              <strong>PDF Document:</strong>
+              <span>
+                <a [href]="getPdfUrl()!" target="_blank" download [attr.download]="getPublicationTitle() + '.pdf'" class="pdf-link" matTooltip="Download PDF">
+                  <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+                  Download PDF
+                </a>
+              </span>
+            </div>
+          <div class="detail-item" *ngIf="publication.linkVisualizacion">
+            <strong>View Link:</strong>
+            <span>
+              <a [href]="publication.linkVisualizacion" target="_blank" rel="noopener noreferrer">
+                {{ publication.linkVisualizacion }}
+              </a>
+            </span>
+          </div>
+          <div class="detail-item" *ngIf="publication.urlDocumento">
+            <strong>Document URL:</strong>
+            <span>
+              <a [href]="publication.urlDocumento" target="_blank" rel="noopener noreferrer">
+                {{ publication.urlDocumento }}
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-button color="warn" (click)="deletePublication()">
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>
+
+<div *ngIf="loading || !publication" class="loading-container">
+  <mat-spinner></mat-spinner>
+  <p>Loading publication details...</p>
+</div>
+

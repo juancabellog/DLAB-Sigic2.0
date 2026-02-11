@@ -1,0 +1,176 @@
+<div class="list-container">
+  <div class="list-header">
+    <div class="list-header-left">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to Dashboard">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>Outreach Activities</h1>
+    </div>
+    <div class="list-header-right">
+      <button 
+        mat-raised-button 
+        color="primary" 
+        routerLink="/outreach-activities/new"
+        class="add-button">
+        <mat-icon>add</mat-icon>
+        Add Activity
+      </button>
+    </div>
+  </div>
+
+  <!-- List Controls -->
+  <app-list-controls
+    searchPlaceholder="Search outreach activities..."
+    [items]="activities"
+    [showBasalFilter]="true"
+    [readonly]="true"
+    [currentViewMode]="viewMode"
+    [finalFilteredCount]="finalFilteredCount"
+    itemType="activity"
+    listType="outreach-activities"
+    (searchResults)="onSearchResults($event)"
+    (searchTermChange)="onSearchTermChange($event)"
+    (viewModeChange)="onViewModeChange($event)"
+    (basalFilterChange)="onBasalFilterChange($event)">
+  </app-list-controls>
+
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading outreach activities...</p>
+  </div>
+
+  <mat-card *ngIf="!loading">
+    <mat-card-content>
+      <div *ngIf="activities.length === 0" class="empty-state">
+        <mat-icon>campaign</mat-icon>
+        <h3>No outreach activities found</h3>
+        <p>Start by adding your first outreach activity.</p>
+        <button mat-raised-button color="primary" routerLink="/outreach-activities/new">
+          <mat-icon>add</mat-icon>
+          Add Activity
+        </button>
+      </div>
+
+      <!-- Card View -->
+      <div *ngIf="!loading && filteredActivities.length > 0 && viewMode === 'card'" class="list-grid">
+        <mat-card *ngFor="let activity of filteredActivities" class="list-card">
+          <mat-card-header>
+            <mat-card-title>{{ getActivityTitle(activity) }}</mat-card-title>
+            <mat-card-subtitle>{{ getActivityType(activity) }} - {{ getLocation(activity) }}</mat-card-subtitle>
+          </mat-card-header>
+          
+          <mat-card-content>
+            <div class="list-details">
+              <div class="detail-row">
+                <span class="detail-label">Type:</span>
+                <span class="detail-value">{{ getActivityType(activity) }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Location:</span>
+                <span class="detail-value">{{ getLocation(activity) }}</span>
+              </div>
+              <div class="detail-row" *ngIf="activity.numAsistentes">
+                <span class="detail-label">Attendees:</span>
+                <span class="detail-value">{{ activity.numAsistentes }}</span>
+              </div>
+              <div class="detail-row" *ngIf="activity.fechaInicio">
+                <span class="detail-label">Start Date:</span>
+                <span class="detail-value">{{ activity.fechaInicio | date:'MMM yyyy' }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+          
+          <mat-card-actions>
+            <div class="card-actions-left">
+              <button mat-button color="primary" (click)="viewActivity(activity)">
+                <mat-icon>visibility</mat-icon>
+                View
+              </button>
+              <button mat-button (click)="editActivity(activity)">
+                <mat-icon>edit</mat-icon>
+                Edit
+              </button>
+              <button mat-button color="warn" (click)="deleteActivity(activity)">
+                <mat-icon>delete</mat-icon>
+                Delete
+              </button>
+            </div>
+            <div class="card-actions-right">
+              <button 
+                *ngIf="getPdfUrl(activity)" 
+                mat-icon-button 
+                (click)="downloadPdf($event, activity)"
+                matTooltip="Download PDF"
+                class="pdf-icon-button">
+                <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+              </button>
+            </div>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+
+      <!-- List View -->
+      <div *ngIf="!loading && filteredActivities.length > 0 && viewMode === 'list'" class="list-view">
+        <div class="list-header-row">
+          <div class="list-cell icon-cell"></div>
+          <div class="list-cell title-cell">Description</div>
+          <div class="list-cell type-cell">Type</div>
+          <div class="list-cell location-cell">Location</div>
+          <div class="list-cell attendees-cell">Attendees</div>
+          <div class="list-cell date-cell">Start Date</div>
+          <div class="list-cell actions-cell">Actions</div>
+        </div>
+        
+        <div *ngFor="let activity of filteredActivities" class="list-item-row">
+          <div class="list-cell icon-cell">
+            <mat-icon class="item-icon">campaign</mat-icon>
+          </div>
+          <div class="list-cell title-cell">
+            <div class="title-text">
+              <div class="title">{{ getActivityTitle(activity) }}</div>
+              <div class="subtitle-text">{{ getLocation(activity) }}</div>
+            </div>
+          </div>
+          <div class="list-cell type-cell">{{ getActivityType(activity) }}</div>
+          <div class="list-cell location-cell">{{ getLocation(activity) }}</div>
+          <div class="list-cell attendees-cell">{{ activity.numAsistentes || 'N/A' }}</div>
+          <div class="list-cell date-cell">{{ activity.fechaInicio | date:'MMM yyyy' }}</div>
+          <div class="list-cell actions-cell">
+            <button 
+              *ngIf="getPdfUrl(activity)" 
+              mat-icon-button 
+              (click)="downloadPdf($event, activity)"
+              matTooltip="Download PDF"
+              class="action-button pdf-icon-button">
+              <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+            </button>
+            <button 
+              mat-icon-button 
+              (click)="viewActivity(activity)" 
+              matTooltip="View"
+              class="action-button">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button 
+              mat-icon-button 
+              (click)="editActivity(activity)" 
+              matTooltip="Edit"
+              class="action-button">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button 
+              mat-icon-button 
+              color="warn" 
+              (click)="deleteActivity(activity)" 
+              matTooltip="Delete"
+              class="action-button">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>
+
+

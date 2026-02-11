@@ -1,0 +1,124 @@
+<div class="detail-container" *ngIf="researcher">
+  <div class="header-actions">
+    <button mat-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Researchers
+    </button>
+    <!-- Edit and Delete buttons removed for read-only -->
+  </div>
+
+  <mat-card class="detail-card">
+    <mat-card-header>
+      <mat-card-title>{{ researcher.fullname }}</mat-card-title>
+      <mat-card-subtitle>
+        <mat-chip color="primary" selected>
+          {{ researcher.tipoRRHH?.descripcion || 'N/A' }}
+        </mat-chip>
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="detail-section">
+        <h3>Personal Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">RUT/ID:</span>
+            <span class="detail-value">{{ researcher.idRecurso }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Full Name:</span>
+            <span class="detail-value">{{ researcher.fullname }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Initials:</span>
+            <span class="detail-value">{{ researcher.iniciales || 'N/A' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Gender:</span>
+            <span class="detail-value">{{ getGenderLabel(researcher.codigoGenero) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="detail-section">
+        <h3>Contact Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Email:</span>
+            <span class="detail-value">{{ researcher.email || 'Not provided' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Phone:</span>
+            <span class="detail-value">{{ researcher.numCelular || 'Not provided' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">ORCID:</span>
+            <span class="detail-value">
+              <a *ngIf="researcher.orcid" [href]="'https://orcid.org/' + researcher.orcid" target="_blank">
+                {{ researcher.orcid }}
+              </a>
+              <span *ngIf="!researcher.orcid">Not provided</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="detail-section">
+        <h3>Professional Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">Type:</span>
+            <span class="detail-value">{{ researcher.tipoRRHH?.descripcion || 'N/A' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">ID Description:</span>
+            <span class="detail-value">{{ researcher.tipoRRHH?.idDescripcion || 'N/A' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="detail-section">
+        <h3>Metadata</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="detail-label">ID:</span>
+            <span class="detail-value">{{ researcher.id }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Created At:</span>
+            <span class="detail-value">{{ researcher.createdAt || 'N/A' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">Updated At:</span>
+            <span class="detail-value">{{ researcher.updatedAt || 'N/A' }}</span>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <!-- Edit and Delete buttons removed for read-only -->
+    </mat-card-actions>
+  </mat-card>
+</div>
+
+<div *ngIf="!researcher && !loading" class="empty-state">
+  <mat-icon>person_off</mat-icon>
+  <h3>Researcher not found</h3>
+  <p>The researcher you are looking for does not exist or you do not have permission to view it.</p>
+  <button mat-raised-button color="primary" (click)="goBack()">
+    <mat-icon>arrow_back</mat-icon>
+    Back to Researchers
+  </button>
+</div>
+
+<div *ngIf="loading" class="loading-container">
+  <mat-spinner></mat-spinner>
+  <p>Loading researcher details...</p>
+</div>

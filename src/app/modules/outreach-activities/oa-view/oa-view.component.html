@@ -1,0 +1,187 @@
+<div class="detail-container">
+  <div class="header-actions">
+    <button mat-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Outreach Activities List
+    </button>
+    <button mat-raised-button color="primary" (click)="editActivity()" *ngIf="activity">
+      <mat-icon>edit</mat-icon>
+      Edit
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading outreach activity...</p>
+  </div>
+
+  <mat-card class="detail-card" *ngIf="!loading && activity">
+    <mat-card-header>
+      <mat-card-title>{{ getActivityTitle() }}</mat-card-title>
+      <mat-card-subtitle>
+        {{ activity.tipoDifusion?.idDescripcion || 'N/A' }} - {{ getLocation() }}
+      </mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="activity-details">
+        <!-- Basic Information -->
+        <div class="detail-section">
+          <h3>Basic Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <strong>Name:</strong>
+              <span>{{ activity.descripcion || 'N/A' }}</span>
+            </div>
+            <div class="detail-item" *ngIf="activity.comentario">
+              <strong>Description:</strong>
+              <span>{{ activity.comentario }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Diffusion Type:</strong>
+              <span>{{ activity.tipoDifusion?.idDescripcion || 'N/A' }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Country:</strong>
+              <span>{{ activity.pais?.idDescripcion || 'N/A' }}</span>
+            </div>
+            <div class="detail-item" *ngIf="activity.lugar">
+              <strong>Place:</strong>
+              <span>{{ activity.lugar }}</span>
+            </div>
+            <div class="detail-item" *ngIf="activity.ciudad">
+              <strong>City:</strong>
+              <span>{{ activity.ciudad }}</span>
+            </div>
+            <div class="detail-item" *ngIf="activity.numAsistentes">
+              <strong>Number of Attendees:</strong>
+              <span>{{ activity.numAsistentes }}</span>
+            </div>
+            <div class="detail-item" *ngIf="activity.duracion">
+              <strong>Duration (days):</strong>
+              <span>{{ activity.duracion }}</span>
+            </div>
+            <div class="detail-item" *ngIf="activity.link">
+              <strong>Link:</strong>
+              <a [href]="activity.link" target="_blank" rel="noopener noreferrer">{{ activity.link }}</a>
+            </div>
+            <div class="detail-item" *ngIf="activity.fechaInicio">
+              <strong>Start Date:</strong>
+              <span>{{ activity.fechaInicio | date:'MMM dd, yyyy' }}</span>
+            </div>
+            <div class="detail-item" *ngIf="activity.fechaTermino">
+              <strong>End Date:</strong>
+              <span>{{ activity.fechaTermino | date:'MMM dd, yyyy' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Target Audiences -->
+        <div class="detail-section" *ngIf="activity.publicoObjetivo">
+          <h3>Target Audiences</h3>
+          <div class="chips-container">
+            <mat-chip *ngFor="let audience of getTargetAudiences()" selected>
+              {{ audience }}
+            </mat-chip>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Product Information -->
+        <div class="detail-section">
+          <h3>Product Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item" *ngIf="activity.progressReport">
+              <strong>Progress Report (Period):</strong>
+              <span>Period {{ activity.progressReport }}</span>
+            </div>
+            <div class="detail-item" *ngIf="activity.codigoANID">
+              <strong>ANID Code:</strong>
+              <span>{{ activity.codigoANID }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Basal Funding:</strong>
+              <mat-chip [color]="isBasal() ? 'primary' : 'warn'" selected>
+                {{ getBasalStatus() }}
+              </mat-chip>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Documents -->
+        <div class="detail-section" *ngIf="activity.linkPDF || activity.linkVisualizacion || activity.urlDocumento">
+          <h3>Documents</h3>
+          <div class="detail-grid">
+            <div class="detail-item" *ngIf="getPdfUrl()">
+              <strong>PDF Document:</strong>
+              <span>
+                <a [href]="getPdfUrl()!" target="_blank" download [attr.download]="getActivityTitle() + '.pdf'" class="pdf-link" matTooltip="Download PDF">
+                  <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+                  Download PDF
+                </a>
+              </span>
+            </div>
+            <div class="detail-item" *ngIf="activity.linkVisualizacion">
+              <strong>View Link:</strong>
+              <span>
+                <a [href]="activity.linkVisualizacion" target="_blank" rel="noopener noreferrer">
+                  {{ activity.linkVisualizacion }}
+                </a>
+              </span>
+            </div>
+            <div class="detail-item" *ngIf="activity.urlDocumento">
+              <strong>Document URL:</strong>
+              <span>
+                <a [href]="activity.urlDocumento" target="_blank" rel="noopener noreferrer">
+                  {{ activity.urlDocumento }}
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Participants -->
+        <div class="detail-section" *ngIf="participants.length > 0">
+          <h3>Participants</h3>
+          <div class="participants-list">
+            <div *ngFor="let participant of participants" class="participant-item">
+              <mat-icon>person</mat-icon>
+              <span class="participant-name">{{ participant.name }}</span>
+              <mat-chip *ngIf="participant.corresponding" color="primary" selected>Corresponding</mat-chip>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </mat-card-content>
+    
+    <mat-card-actions>
+      <button mat-button color="primary" (click)="editActivity()">
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+      <button mat-button color="warn" (click)="deleteActivity()">
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </mat-card-actions>
+  </mat-card>
+
+  <div *ngIf="!loading && !activity" class="loading-container">
+    <mat-icon>campaign</mat-icon>
+    <h3>Outreach activity not found</h3>
+    <p>The requested outreach activity could not be found.</p>
+    <button mat-raised-button color="primary" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Outreach Activities List
+    </button>
+  </div>
+</div>
+

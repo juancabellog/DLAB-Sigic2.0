@@ -1,0 +1,15 @@
+{
+  "defaultModel": "gpt-5.1-codex",
+  "inlineModel": "gpt-5.1-codex-mini",
+  "rules": [
+    {
+      "pattern": "src/app/**",
+      "model": "gpt-5.1-codex"
+    },
+    {
+      "pattern": "src/main/java/**",
+      "model": "gpt-5.1-codex"
+    }
+  ]
+}
+

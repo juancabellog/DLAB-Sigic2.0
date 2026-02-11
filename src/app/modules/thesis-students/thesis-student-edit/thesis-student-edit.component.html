@@ -1,0 +1,235 @@
+<div class="thesis-container">
+  <div class="header">
+    <div class="header-left">
+      <button mat-icon-button (click)="goBack()" matTooltip="Back to Thesis List">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>{{ pageTitle }}</h1>
+    </div>
+  </div>
+  
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading thesis...</p>
+  </div>
+
+  <mat-card class="form-card" *ngIf="!loading">
+    <mat-card-header>
+      <mat-card-subtitle *ngIf="isEditMode">ID: {{ thesisId }}</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <div class="form-section">
+        <div class="section-title">Basic Information</div>
+        
+        <mat-form-field class="full-width">
+          <mat-label>Description</mat-label>
+          <input matInput [(ngModel)]="thesis.descripcion" placeholder="Enter thesis description">
+        </mat-form-field>
+
+        <mat-form-field class="full-width">
+          <mat-label>Thesis Title (Full Name)</mat-label>
+          <textarea matInput [(ngModel)]="thesis.nombreCompletoTitulo" 
+                    placeholder="Enter complete thesis title" 
+                    rows="3"
+                    required></textarea>
+        </mat-form-field>
+
+        <div class="form-row">
+          <div class="half-width">
+            <app-institution-search
+              label="Degree Granting Institution"
+              placeholder="Search institution by name..."
+              [selectedInstitution]="thesis.institucionOG || null"
+              [disabled]="loadingInstitutions"
+              (institutionSelected)="onDegreeGrantingInstitutionSelected($event)">
+            </app-institution-search>
+          </div>
+
+          <mat-form-field class="half-width">
+            <mat-label>Academic Degree</mat-label>
+            <mat-select
+              [(ngModel)]="thesis.gradoAcademico"
+              [disabled]="loadingAcademicDegrees"
+              [compareWith]="compareAcademicDegrees">
+              <mat-option [value]="null">-- Select Degree --</mat-option>
+              <mat-option *ngFor="let degree of academicDegrees" [value]="degree">
+                {{ degree.descripcion || degree.idDescripcion }}
+              </mat-option>
+            </mat-select>
+            <mat-spinner *ngIf="loadingAcademicDegrees" matSuffix diameter="20"></mat-spinner>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <div class="half-width">
+            <app-institution-search
+              label="Student Institution"
+              placeholder="Search institution by name..."
+              [selectedInstitution]="thesis.institucion || null"
+              [disabled]="loadingInstitutions"
+              (institutionSelected)="onStudentInstitutionSelected($event)">
+            </app-institution-search>
+          </div>
+
+          <mat-form-field class="half-width">
+            <mat-label>Thesis Status</mat-label>
+            <mat-select
+              [(ngModel)]="thesis.estadoTesis"
+              [disabled]="loadingThesisStatuses"
+              [compareWith]="compareThesisStatuses">
+              <mat-option [value]="null">-- Select Status --</mat-option>
+              <mat-option *ngFor="let status of thesisStatuses" [value]="status">
+                {{ status.descripcion || status.idDescripcion }}
+              </mat-option>
+            </mat-select>
+            <mat-spinner *ngIf="loadingThesisStatuses" matSuffix diameter="20"></mat-spinner>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field class="half-width">
+            <mat-label>Program Start Date</mat-label>
+            <input matInput type="date" [(ngModel)]="thesis.fechaInicioPrograma">
+          </mat-form-field>
+
+          <mat-form-field class="half-width">
+            <mat-label>Start Date</mat-label>
+            <input matInput type="date" [(ngModel)]="thesis.fechaInicio" (ngModelChange)="onFechaInicioChange()" required>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field class="half-width">
+            <mat-label>End Date</mat-label>
+            <input matInput type="date" [(ngModel)]="thesis.fechaTermino">
+          </mat-form-field>
+        </div>
+      </div>
+      
+      <mat-divider></mat-divider>
+      
+      <div class="form-section">
+        <div class="section-title">Sector Types</div>
+        
+        <div class="checkbox-group">
+          <mat-checkbox 
+            *ngFor="let sectorType of sectorTypes"
+            [checked]="isSectorTypeSelected(sectorType)"
+            (change)="onSectorTypeChange(sectorType, $event.checked)"
+            color="primary">
+            {{ sectorType.idDescripcion }}
+          </mat-checkbox>
+        </div>
+      </div>
+      
+      <mat-divider></mat-divider>
+      
+      <div class="form-section">
+        <div class="section-title">Product Information</div>
+        
+        <div class="form-row">
+          <mat-form-field class="half-width">
+            <mat-label>Progress Report (Period)</mat-label>
+            <mat-select [(ngModel)]="thesis.progressReport">
+              <mat-option [value]="1">Period 1</mat-option>
+              <mat-option [value]="2">Period 2</mat-option>
+              <mat-option [value]="3">Period 3</mat-option>
+              <mat-option [value]="4">Period 4</mat-option>
+              <mat-option [value]="5">Period 5</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field class="half-width">
+            <mat-label>ANID Code</mat-label>
+            <input matInput [(ngModel)]="thesis.codigoANID" placeholder="Enter ANID code">
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-checkbox [(ngModel)]="isBasal" (change)="onBasalChange($event.checked)" color="primary">
+            Product associated with Basal funding
+          </mat-checkbox>
+        </div>
+        
+        <div class="form-row">
+          <div class="full-width pdf-upload-field">
+            <label class="pdf-upload-label">PDF Document</label>
+            <div class="file-upload-container">
+              <input 
+                type="file" 
+                #fileInput 
+                (change)="onFileSelected($event)" 
+                accept=".pdf" 
+                style="display: none"
+                id="pdf-upload">
+              <button 
+                mat-stroked-button 
+                type="button" 
+                (click)="fileInput.click()"
+                [disabled]="uploadingPdf">
+                <mat-icon>upload</mat-icon>
+                {{ selectedPdfFile ? selectedPdfFile.name : 'Select PDF File' }}
+              </button>
+              <button 
+                *ngIf="selectedPdfFile" 
+                mat-icon-button 
+                type="button" 
+                (click)="clearSelectedFile()"
+                [disabled]="loading"
+                matTooltip="Clear selection">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+            <div class="pdf-hint" *ngIf="thesis.linkPDF">
+              <span>Current PDF: {{ getPdfFileName() }}</span>
+              <a 
+                *ngIf="getPdfUrl()" 
+                [href]="getPdfUrl()!" 
+                target="_blank" 
+                download 
+                [attr.download]="getThesisName() + '.pdf'" 
+                class="pdf-download-link" 
+                matTooltip="Download PDF">
+                <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+                Download
+              </a>
+            </div>
+            <div class="pdf-hint" *ngIf="!thesis.linkPDF && !selectedPdfFile">No PDF file selected</div>
+          </div>
+        </div>
+      </div>
+      
+      <mat-divider></mat-divider>
+      
+      <div class="form-section">
+        <div class="section-title">Students and Supervisors</div>
+        <p class="section-description">Add students and supervisors using the researcher search component. These will be saved in the participation table.</p>
+        <app-participant-manager 
+          [participants]="participants"
+          [productType]="'thesis-students'"
+          (participantsChange)="onParticipantsChange($event)">
+        </app-participant-manager>
+      </div>
+
+      <mat-divider></mat-divider>
+      
+      <div class="form-section">
+        <div class="section-title">Additional Information</div>
+        
+        <mat-form-field class="full-width">
+          <mat-label>Comments</mat-label>
+          <textarea matInput [(ngModel)]="thesis.comentario" rows="3" placeholder="Enter additional comments"></textarea>
+        </mat-form-field>
+      </div>
+    </mat-card-content>
+    
+    <mat-card-actions class="action-buttons">
+      <button mat-button (click)="cancelEdit()">{{ backButtonText }}</button>
+      <button mat-raised-button color="primary" (click)="saveThesis()" [disabled]="loading">
+        <mat-spinner *ngIf="loading" diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+        {{ saveButtonText }}
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

@@ -1,0 +1,1240 @@
+.publications-container {
+  padding: 20px;
+}
+
+.form-card {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+// Import State Bar
+.import-state-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 40px;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+  
+  .state-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 1;
+    
+    .step-circle {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background-color: #e0e0e0;
+      border: 2px solid #bdbdbd;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #757575;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        color: #fff;
+      }
+    }
+    
+    .step-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #757575;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: color 0.3s ease;
+    }
+    
+    &.active {
+      .step-circle {
+        background-color: #2196f3;
+        border-color: #2196f3;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(33, 150, 243, 0.3);
+      }
+      
+      .step-label {
+        color: #2196f3;
+        font-weight: 600;
+      }
+    }
+    
+    &.completed {
+      .step-circle {
+        background-color: #4caf50;
+        border-color: #4caf50;
+        color: #fff;
+      }
+      
+      .step-label {
+        color: #4caf50;
+      }
+    }
+  }
+  
+  .state-connector {
+    flex: 1;
+    height: 2px;
+    background-color: #e0e0e0;
+    margin: 0 8px;
+    margin-top: -18px; // Alinear con el centro del círculo
+    max-width: 120px;
+    transition: background-color 0.3s ease;
+    
+    &.completed {
+      background-color: #4caf50;
+    }
+  }
+}
+
+// Dense mode for DOI-loaded forms (preview mode)
+.dense-mode {
+  // Reduce padding in mat-form-field
+  ::ng-deep {
+    .mat-mdc-form-field {
+      // Reduce vertical padding
+      .mat-mdc-text-field-wrapper {
+        padding-bottom: 0;
+      }
+      
+      .mat-mdc-form-field-subscript-wrapper {
+        margin-top: 0;
+        min-height: 0;
+      }
+      
+      // Compact input padding
+      .mat-mdc-form-field-input-control {
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+      
+      // Reduce label spacing
+      .mat-mdc-floating-label {
+        top: 20px;
+      }
+      
+      // Compact select padding
+      .mat-mdc-select-value {
+        padding-top: 8px;
+        padding-bottom: 8px;
+      }
+    }
+    .pending-journal.mat-form-field-disabled{
+      margin-bottom: -37px !important;
+    }
+    // Reduce spacing between form fields
+    .mat-mdc-form-field {
+      margin-bottom: 16px;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+    
+    // Compact checkbox
+    .mat-mdc-checkbox {
+      margin-top: 4px;
+      margin-bottom: 4px;
+    }
+  }
+  
+  // Dense mode uses same grid, just with reduced row-gap
+  .form-section {
+    row-gap: 16px; // Reduced from 24px in dense mode
+  }
+  
+  // Reduce section title spacing
+  .section-title {
+    margin-bottom: 12px;
+    font-size: 16px;
+    padding-top: 6px;
+  }
+  
+  // Reduce preview hint spacing
+  .preview-fields-hint {
+    margin-bottom: 16px;
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  
+  // Reduce journal preview status spacing
+  .journal-preview-status {
+    margin-bottom: 16px;
+    
+    .journal-matched-message,
+    .journal-new-alert,
+    .journal-review-message {
+      padding: 6px 10px;
+      font-size: 11px;
+    }
+  }
+  
+  // Reduce impact factors info spacing
+  .impact-factors-info {
+    margin-bottom: 16px;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+.form-section {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 500;
+  grid-column: 1 / -1; // Span all columns
+  margin-bottom: 0; // Grid handles spacing
+  color: #333;
+}
+
+// Grid system: 12 columns with consistent spacing
+.form-section {
+  margin-bottom: 20px; // Keep section spacing
+}
+
+// Field groups for logical grouping
+.field-group {
+  margin-bottom: 32px; // 32px spacing between groups
+  
+  &:last-child {
+    margin-bottom: 0; // Remove margin from last group
+  }
+  
+  .group-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #424242;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+}
+
+.reset-doi-container {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e0e0e0;
+  
+  .reset-doi-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    
+    mat-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 16px 24px; // vertical | horizontal
+  margin-bottom: 0; // Grid gap handles spacing
+  align-items: start;
+}
+
+.full-width {
+  grid-column: span 12; // Span all 12 columns
+  min-height: 70px; // Consistent height for Angular Material fields
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.half-width {
+  grid-column: span 6; // Each field occupies 6 columns (50% width)
+  min-height: 70px; // Consistent height for Angular Material fields
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  width: 100%; // Ensure full width within grid cell
+  
+  // Ensure mat-form-field respects container width
+  mat-form-field {
+    width: 100%;
+  }
+}
+
+// Ensure mat-form-field has consistent height
+::ng-deep {
+  .mat-mdc-form-field {
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    
+    .mat-mdc-text-field-wrapper {
+      flex: 1;
+    }
+  }
+}
+
+.basal-checkbox {
+  grid-column: span 12; // Occupies full width (field-12)
+  min-height: 70px; // Match height of form fields
+  display: flex;
+  align-items: center; // Center checkbox vertically
+  margin-top: 0; // Remove manual margin, grid handles spacing
+}
+
+.footer-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 16px;
+  gap: 12px;
+
+  .footer-left {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+
+    .footer-error {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #d32f2f;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+  }
+
+  .footer-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+
+    .footer-error {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #d32f2f;
+
+      mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    &.pending-warning {
+      .mat-mdc-raised-button,
+      .mat-mdc-button {
+        background-color: #ffca28 !important;
+        color: #000 !important;
+      }
+    }
+  }
+}
+
+.footer-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 4px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background-color: #fff8e1;
+  border: 1px solid #ffe082;
+  max-width: 360px;
+  font-size: 12px;
+  color: #e65100;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    color: #ff9800;
+    flex-shrink: 0;
+  }
+
+  .footer-warning-text {
+    .title {
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .subtitle {
+      font-weight: 400;
+      line-height: 1.4;
+    }
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+// DOI Error Banner
+.doi-error-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: #ffebee;
+  border: 1px solid #ef5350;
+  border-left: 4px solid #f44336;
+  border-radius: 4px;
+  margin-top: 8px;
+  
+  .error-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: #f44336;
+    flex-shrink: 0;
+  }
+  
+  .error-message {
+    font-size: 14px;
+    color: #c62828;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+}
+
+// DOI Row - Contenedor flex para DOI input y botón Fetch
+.doi-row {
+  display: flex;
+  align-items: flex-start !important; // <-- IMPORTANTE: alinear por arriba, no center
+  gap: 12px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  width: 100%;
+  
+  // Ajustar el mat-form-field para que no herede márgenes o alturas externas
+  .mat-mdc-form-field {
+    margin: 0 !important;
+    height: 48px !important; // Altura visual 48px para alinear con el botón
+  }
+  
+  // Normalizar la altura del mat-form-field eliminando padding vertical de wrappers internos
+  .mat-mdc-form-field-flex,
+  .mat-mdc-text-field-wrapper {
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    min-height: 48px !important; // Para alinear con el botón
+    height: 48px !important;
+    display: flex;
+    align-items: center;
+  }
+  
+  .doi-input {
+    flex: 1; // El input ocupa todo el ancho disponible
+    margin: 0 !important;
+    min-width: 0; // Permite que el input se reduzca si es necesario
+  }
+}
+
+// DOI Fetch Button - Botón con mayor contraste y relevancia visual
+.doi-fetch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 48px !important;
+  padding: 0 16px;
+  box-sizing: border-box;
+  font-weight: 600;
+  font-size: 14px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  margin: 0 !important;
+  
+  // Estilos para el spinner dentro del botón
+  mat-progress-spinner {
+    width: 20px !important;
+    height: 20px !important;
+    flex-shrink: 0;
+  }
+  
+  // Asegurar que el botón tenga buen contraste cuando está habilitado
+  // El mat-flat-button con color="primary" debería verse activo por defecto
+  // Solo reforzamos cuando no está disabled para mayor claridad visual
+  &:not([disabled]) {
+    // Asegurar que el botón se vea claramente activo y clickeable
+    opacity: 1;
+    
+    &:hover {
+      // El hover state de Material ya maneja esto, pero aseguramos que sea visible
+      opacity: 0.9;
+    }
+    
+    &:active {
+      opacity: 0.8;
+    }
+  }
+  
+  .button-text {
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+  }
+  
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+  ::ng-deep .mdc-button__label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  ::ng-deep .mdc-button__label mat-icon {
+    line-height: 1;
+    position: relative;
+    top: 1px;   // ajusta a 0 o -1 si lo quieres más fino
+  }
+  
+  // Solo se ve apagado cuando está realmente disabled
+  &[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+// DOI Row - Preview Mode
+.doi-row-preview {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: 16px;
+  margin-bottom: 8px;
+  width: 100%;
+  
+  .doi-input-preview {
+    flex: 1;
+    margin-bottom: 0 !important; // Asegurarse de que el mat-form-field no se expanda
+    
+    // Reducir la altura visual del mat-form-field
+    ::ng-deep {
+      .mat-mdc-text-field-wrapper {
+        min-height: 48px !important;
+        height: 48px !important;
+        padding-top: 0 !important;
+        padding-bottom: 0 !important;
+        background-color: #f5f5f5;
+      }
+      
+      .mat-mdc-form-field-infix {
+        padding-bottom: 0px;
+        padding-top: 5px;
+      }
+          // Ajustar el contenido interno del mat-input
+      .doi-preview-input.mat-mdc-input-element {
+        padding-top: 10px !important;
+        padding-bottom: 10px !important;
+      }
+      
+      // Mantener el DOI deshabilitado pero visualmente correcto
+      .mat-mdc-input-element:disabled,
+      .mat-mdc-input-element[disabled],
+      input:disabled {
+        color: rgba(0, 0, 0, 0.87) !important; // texto legible
+        -webkit-text-fill-color: rgba(0, 0, 0, 0.87) !important;
+      }
+      
+      // Diferenciar ligeramente el fondo para indicar que está bloqueado
+      .mat-mdc-form-field-focus-overlay {
+        background-color: #f5f5f5;
+      }
+    }
+  }
+  
+  // Alinear el "Change DOI" con el campo
+  .change-doi-btn {
+    height: 48px !important;
+    align-self: flex-start; // mantener alineación sin empujar el campo
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 16px;
+    box-sizing: border-box;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+    
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
+// Helper text bajo el DOI en preview mode
+.doi-preview-helper {
+  margin-top: 4px;
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+// Preview Mode Separator
+.preview-mode-separator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0 16px 0;
+  
+  .separator-line {
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to right, transparent, #e0e0e0, transparent);
+  }
+  
+  .separator-text {
+    font-size: 12px;
+    font-weight: 500;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 0 8px;
+    white-space: nowrap;
+  }
+}
+
+// DOI Locked Hint
+.doi-locked-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: -8px;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: #666;
+  
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: #999;
+  }
+}
+
+// Preview Fields Hint
+.preview-fields-hint {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #f5f5f5;
+  border-left: 3px solid #9e9e9e;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #616161;
+  line-height: 1.4;
+  margin-top: 0; // Align with journal badge above
+  margin-left: 0; // Align left with form fields (same as journal badge)
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #757575;
+    flex-shrink: 0;
+  }
+
+  span {
+    flex: 1;
+  }
+}
+
+// Combined Preview Information Banner
+.preview-info-banner {
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  
+  .banner-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    
+    .banner-section {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      
+      .section-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+      
+      span {
+        flex: 1;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      
+      &.info-section {
+        background-color: #e3f2fd;
+        border: 1px solid #90caf9;
+        border-left: 4px solid #2196f3;
+        color: #1976d2;
+        padding: 12px 16px;
+        border-radius: 4px;
+        
+        .section-icon {
+          color: #2196f3;
+        }
+      }
+      
+      &.warning-section {
+        background-color: #fff3e0;
+        border: 1px solid #ffcc80;
+        border-left: 4px solid #ff9800;
+        color: #e65100;
+        padding: 12px 16px;
+        border-radius: 4px;
+        
+        .section-icon {
+          color: #ff9800;
+        }
+      }
+    }
+  }
+}
+
+// Journal Preview Status (below field)
+.journal-preview-status {
+  margin-top: 10px; // 10px spacing below the Journal field
+  margin-left: 0; // Align left with form fields
+  
+  .journal-matched-message {
+    display: flex;
+    align-items: center;
+    gap: 10px; // Increased gap between icon and text
+    padding: 10px 14px; // Softer padding
+    background-color: #e8f5e9;
+    border-left: 3px solid #2e7d32;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #1b5e20;
+    line-height: 1.4;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #2e7d32;
+      flex-shrink: 0;
+      margin-right: 0; // Icon spacing handled by gap
+    }
+
+    span {
+      flex: 1;
+
+      strong {
+        font-weight: 600;
+        color: #1b5e20;
+      }
+    }
+  }
+  
+  .journal-new-alert {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 16px;
+    background-color: #fff3e0;
+    border: 1px solid #ff9800;
+    border-left: 3px solid #ff9800;
+    border-radius: 4px;
+    
+    .journal-new-message {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #e65100;
+      
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        color: #ff9800;
+        flex-shrink: 0;
+      }
+    }
+    
+    .journal-action-buttons {
+      display: flex;
+      gap: 8px;
+    }
+  }
+  
+  .journal-review-message {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background-color: #fff9c4;
+    border-left: 3px solid #f57f17;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #f57f17;
+    line-height: 1.4;
+    
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #f57f17;
+      flex-shrink: 0;
+    }
+  }
+}
+
+// Estilos para el autocomplete de journals
+.journal-option {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  
+  .journal-name {
+    font-weight: 500;
+    font-size: 14px;
+  }
+  
+  .journal-abbreviation {
+    font-size: 12px;
+    color: #666;
+    font-style: italic;
+  }
+  
+  .journal-issn {
+    font-size: 11px;
+    color: #999;
+  }
+}
+
+// Estilos para journal pendiente de creación
+.pending-journal {
+  .mat-mdc-form-field-subscript-wrapper {
+    margin-top: 4px;
+  }
+}
+.form-disabled {
+  opacity: 0.6;
+  pointer-events: none;
+  
+  input,
+  mat-select,
+  mat-checkbox,
+  mat-autocomplete,
+  button:not(.open-existing-btn):not(.cancel-redirect-link) {
+    pointer-events: none;
+  }
+  
+  // Permitir interacción con el banner de publicación existente
+  .existing-publication-banner {
+    pointer-events: auto;
+    opacity: 1; // Restaurar opacidad completa para el banner
+  }
+}
+
+.existing-publication-banner {
+  margin-top: 16px;
+  margin-bottom: 16px;
+  padding: 16px 20px;
+  background-color: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  border-left: 4px solid #ff9800;
+  pointer-events: auto !important; // Asegurar que siempre sea clickeable
+  position: relative;
+  z-index: 10; // Asegurar que esté por encima de otros elementos
+  
+  .banner-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    
+    .warning-icon {
+      color: #ff9800;
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+    
+    .banner-text {
+      flex: 1;
+      
+      .banner-title {
+        font-size: 16px;
+        font-weight: 600;
+        color: #e65100;
+        margin-bottom: 12px;
+      }
+      
+      .redirect-message {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        font-size: 14px;
+        color: #666;
+        font-style: italic;
+        
+        .redirect-spinner {
+      display: inline-block;
+      margin: 0 4px;
+    }
+      }
+      
+      .banner-metadata {
+        margin-bottom: 16px;
+        
+        .metadata-row {
+          display: flex;
+          margin-bottom: 6px;
+          font-size: 14px;
+          
+          .metadata-label {
+            font-weight: 600;
+            color: #666;
+            min-width: 80px;
+            margin-right: 8px;
+          }
+          
+          .metadata-value {
+            color: #333;
+            flex: 1;
+          }
+        }
+      }
+      
+      .banner-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+        
+        .open-existing-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+        }
+        
+        .cancel-redirect-link {
+          color: #1976d2;
+          cursor: pointer;
+          font-size: 13px;
+          text-decoration: underline;
+          margin-left: 0;
+          pointer-events: auto !important; // Asegurar que siempre sea clickeable
+          position: relative;
+          z-index: 11; // Asegurar que esté por encima del banner
+          display: inline-block; // Asegurar que sea un elemento de bloque para mejor clickeabilidad
+          
+          &:hover {
+            color: #1565c0;
+            text-decoration: none;
+          }
+        }
+      }
+    }
+  }
+}
+
+.journal-new-banner {
+  /* 👉 Que ocupe la misma fila completa del grid (las 12 columnas) */
+  grid-column: 1 / -1;
+
+  /* Layout interno del banner */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  margin-top: 8px;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  box-sizing: border-box;
+
+  background: #e8f3ff;
+  border: 1px solid #bcd7ff;
+  border-radius: 6px;
+  color: #0056b8;
+  font-size: 13px;
+  font-weight: 500;
+
+  mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    color: #0056b8;
+  }
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 4px;
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  &.matched {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+
+  &.new {
+    background-color: #fff3e0;
+    color: #e65100;
+  }
+
+  &.review {
+    background-color: #fff9c4;
+    color: #f57f17;
+  }
+}
+
+.impact-factors-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: #e8f5e9;
+  border: 1px solid #4caf50;
+  border-radius: 4px;
+  color: #2e7d32;
+  font-size: 14px;
+}
+
+.impact-factors-info mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: #4caf50;
+}
+
+.pdf-upload-field {
+  margin-bottom: 16px;
+}
+
+.pdf-upload-label {
+  display: block;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 8px;
+  font-weight: 400;
+}
+
+.pdf-hint {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdf-download-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #1976d2;
+  text-decoration: none;
+  margin-left: 8px;
+  font-size: 12px;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+  
+  .pdf-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+    color: #d32f2f;
+  }
+}
+
+.file-upload-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  
+  button {
+    flex-shrink: 0;
+  }
+  
+  button[mat-stroked-button] {
+    flex: 1;
+    justify-content: flex-start;
+    text-align: left;
+    
+    mat-icon {
+      margin-right: 8px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+  }
+  
+  .file-upload-container {
+    flex-direction: column;
+    align-items: stretch;
+    
+    button[mat-stroked-button] {
+      width: 100%;
+    }
+  }
+}
+
+// Skeleton Loaders for DOI Loading
+.skeleton {
+  min-height: 70px; // Match form field height
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s ease-in-out infinite;
+  border-radius: 4px;
+  pointer-events: none;
+  
+  &.skeleton-input {
+    height: 56px; // Standard Material input height
+  }
+}
+
+@keyframes skeleton-loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+// Publication Loading Indicator
+.publication-loading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background-color: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-left: 4px solid #2196f3;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  
+  mat-spinner {
+    flex-shrink: 0;
+  }
+  
+  span {
+    font-size: 14px;
+    color: #1976d2;
+    font-weight: 500;
+  }
+}
+
+// Loading section (reduces opacity but doesn't block)
+.form-section.loading-section {
+  opacity: 0.7;
+  pointer-events: auto; // Permite navegación
+  
+  input,
+  mat-select,
+  mat-checkbox {
+    pointer-events: none; // Deshabilita interacción con campos durante carga
+  }
+}
+
+// Loading Overlay for Authors Section
+.authors-section {
+  position: relative;
+  
+  &.loading {
+    app-participant-manager {
+      opacity: 0.5;
+      pointer-events: none; // Bloquea interacción con el contenido
+    }
+  }
+  
+  .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(3px);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    z-index: 10;
+    border-radius: 4px;
+    pointer-events: auto; // Bloquea la interacción temporalmente
+    
+    mat-progress-spinner {
+      flex-shrink: 0;
+    }
+    
+    span {
+      font-size: 13px;
+      color: #616161;
+      font-weight: 400;
+      white-space: nowrap;
+    }
+  }
+}

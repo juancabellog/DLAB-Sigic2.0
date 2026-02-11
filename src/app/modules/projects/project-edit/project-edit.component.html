@@ -1,0 +1,221 @@
+<div class="edit-container">
+  <div class="header-actions">
+    <button mat-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Projects
+    </button>
+    <h1>{{ getTitle() }}</h1>
+  </div>
+
+  <mat-card class="form-card">
+    <mat-card-content>
+      <form [formGroup]="projectForm" (ngSubmit)="onSubmit()">
+        <!-- Project Information Section -->
+        <div class="form-section">
+          <h3>Project Information</h3>
+          <div class="form-row">
+            <mat-form-field class="full-width">
+              <mat-label>Project Title</mat-label>
+              <input matInput formControlName="title" placeholder="Enter project title">
+              <mat-error *ngIf="projectForm.get('title')?.hasError('required')">
+                Project title is required
+              </mat-error>
+              <mat-error *ngIf="projectForm.get('title')?.hasError('minlength')">
+                Project title must be at least 5 characters
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field class="full-width">
+              <mat-label>Description</mat-label>
+              <textarea matInput formControlName="description" rows="4" placeholder="Enter project description"></textarea>
+              <mat-error *ngIf="projectForm.get('description')?.hasError('required')">
+                Description is required
+              </mat-error>
+              <mat-error *ngIf="projectForm.get('description')?.hasError('minlength')">
+                Description must be at least 20 characters
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field class="half-width">
+              <mat-label>Principal Investigator</mat-label>
+              <input matInput formControlName="principalInvestigator" placeholder="Enter PI name">
+              <mat-error *ngIf="projectForm.get('principalInvestigator')?.hasError('required')">
+                Principal Investigator is required
+              </mat-error>
+              <mat-error *ngIf="projectForm.get('principalInvestigator')?.hasError('minlength')">
+                PI name must be at least 2 characters
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="half-width">
+              <mat-label>Institution</mat-label>
+              <mat-select formControlName="institution">
+                <mat-option *ngFor="let inst of institutions" [value]="inst">
+                  {{ inst }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="projectForm.get('institution')?.hasError('required')">
+                Institution is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field class="half-width">
+              <mat-label>Funding Agency</mat-label>
+              <mat-select formControlName="fundingAgency">
+                <mat-option *ngFor="let agency of fundingAgencies" [value]="agency">
+                  {{ agency }}
+                </mat-option>
+              </mat-select>
+              <mat-error *ngIf="projectForm.get('fundingAgency')?.hasError('required')">
+                Funding Agency is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="half-width">
+              <mat-label>Project Code</mat-label>
+              <input matInput formControlName="projectCode" placeholder="Enter project code">
+              <mat-error *ngIf="projectForm.get('projectCode')?.hasError('required')">
+                Project Code is required
+              </mat-error>
+              <mat-error *ngIf="projectForm.get('projectCode')?.hasError('minlength')">
+                Project Code must be at least 3 characters
+              </mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Project Details Section -->
+        <div class="form-section">
+          <h3>Project Details</h3>
+          
+          <div class="form-row">
+            <mat-form-field class="half-width">
+              <mat-label>Start Date</mat-label>
+              <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+              <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+              <mat-datepicker #startPicker></mat-datepicker>
+              <mat-error *ngIf="projectForm.get('startDate')?.hasError('required')">
+                Start Date is required
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="half-width">
+              <mat-label>End Date</mat-label>
+              <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+              <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+              <mat-datepicker #endPicker></mat-datepicker>
+              <mat-error *ngIf="projectForm.get('endDate')?.hasError('required')">
+                End Date is required
+              </mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field class="half-width">
+              <mat-label>Budget (CLP)</mat-label>
+              <input matInput formControlName="budget" type="number" min="1">
+              <mat-error *ngIf="projectForm.get('budget')?.hasError('required')">
+                Budget is required
+              </mat-error>
+              <mat-error *ngIf="projectForm.get('budget')?.hasError('min')">
+                Budget must be greater than 0
+              </mat-error>
+            </mat-form-field>
+
+            <mat-form-field class="half-width">
+              <mat-label>Status</mat-label>
+              <mat-select formControlName="status">
+                <mat-option *ngFor="let status of statusOptions" [value]="status.value">
+                  {{ status.label }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <div class="full-width">
+              <label class="section-label">Research Areas</label>
+              <div class="research-areas-grid">
+                <mat-chip 
+                  *ngFor="let area of researchAreas" 
+                  [class.selected]="isResearchAreaSelected(area)"
+                  (click)="toggleResearchArea(area)"
+                  class="research-area-chip">
+                  {{ area }}
+                </mat-chip>
+              </div>
+              <div *ngIf="selectedResearchAreas.length === 0" class="error-message">
+                Please select at least one research area
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <!-- Participants Section -->
+        <div class="form-section">
+          <h3>Project Participants</h3>
+          
+          <div class="participants-container">
+            <div *ngFor="let participant of participants; let i = index" class="participant-row">
+              <mat-form-field class="half-width">
+                <mat-label>Participant Name</mat-label>
+                <input matInput [(ngModel)]="participant.name" placeholder="Enter participant name">
+              </mat-form-field>
+              
+              <mat-form-field class="half-width">
+                <mat-label>Role</mat-label>
+                <mat-select [(ngModel)]="participant.role">
+                  <mat-option value="Principal Investigator">Principal Investigator</mat-option>
+                  <mat-option value="Co-Investigator">Co-Investigator</mat-option>
+                  <mat-option value="Postdoc">Postdoc</mat-option>
+                  <mat-option value="PhD Student">PhD Student</mat-option>
+                  <mat-option value="Master Student">Master Student</mat-option>
+                  <mat-option value="Research Assistant">Research Assistant</mat-option>
+                </mat-select>
+              </mat-form-field>
+              
+              <button mat-icon-button color="warn" (click)="removeParticipant(i)" matTooltip="Remove participant">
+                <mat-icon>remove_circle</mat-icon>
+              </button>
+            </div>
+            
+            <button mat-button color="primary" (click)="addParticipant()" class="add-participant-btn">
+              <mat-icon>add</mat-icon>
+              Add Participant
+            </button>
+          </div>
+          
+          <div *ngIf="participants.length === 0" class="error-message">
+            Please add at least one participant
+          </div>
+        </div>
+      </form>
+    </mat-card-content>
+
+    <mat-card-actions class="action-buttons">
+      <button mat-button (click)="goBack()" [disabled]="isLoading">
+        Cancel
+      </button>
+      <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="onSubmit()" 
+        [disabled]="isLoading || projectForm.invalid || selectedResearchAreas.length === 0 || participants.length === 0">
+        <mat-spinner *ngIf="isLoading" diameter="20"></mat-spinner>
+        <mat-icon *ngIf="!isLoading">{{ isEditMode ? 'save' : 'add' }}</mat-icon>
+        {{ isEditMode ? 'Update' : 'Add' }} Project
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>
+

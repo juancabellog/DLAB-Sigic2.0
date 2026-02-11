@@ -1,0 +1,73 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /sigic2.0
+
+spring:
+  application:
+    name: scientific-products-platform
+  
+  datasource:
+    url: jdbc:mysql://192.168.2.220/sigicprod_2_0?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: root
+    password: Mariadb2022
+  
+  h2:
+    console:
+      enabled: false
+  
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false  # Deshabilitar OpenSessionInViewFilter para evitar lazy loading durante serialización
+    properties:
+      hibernate:
+        format_sql: false
+        # Configurar para respetar nombres exactos de columnas
+        physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+  
+  security:
+    user:
+      name: admin
+      password: admin
+
+jwt:
+  secret: myVerySecretKeyForJWTTokenGenerationThatIsLongEnoughForSecurityRequirements123456789
+  expiration: 7200000 # 2 hours
+  #7200000 = 2 hours
+  #28800000 = 8 hours
+  #86400000 = 24 hours
+
+logging:
+  level:
+    com.sisgic: DEBUG
+    com.sisgic.security: INFO
+    org.springframework.security: WARN
+    org.springframework.web.servlet.handler.HandlerMappingIntrospector: ERROR
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
+
+# Configuración para PDFs
+pdfs:
+  # Ruta al directorio de PDFs (puede ser absoluta o relativa al directorio backend)
+  # Si no se especifica, intentará resolver desde backend/pdfs o pdfs
+  path: ${PDFS_PATH:}
+
+# Configuración para carga de publicaciones desde DOI
+openalex:
+  # Proyecto por defecto a asignar cuando se carga una publicación desde DOI
+  default-project-code: PRJ0000000000004
+
+# Configuración de caché
+# Estos valores controlan el comportamiento de los cachés de catálogos y textos
+# La aplicación antigua puede invalidar estos cachés llamando a los endpoints de AdminCacheController
+cache:
+  catalogos:
+    max-size: 1000        # Máximo número de entradas en el caché de catálogos
+    ttl-minutes: 30      # Tiempo de vida en minutos para entradas del caché de catálogos
+  textos:
+    max-size: 5000       # Máximo número de entradas en el caché de textos
+    ttl-minutes: 60      # Tiempo de vida en minutos para entradas del caché de textos
