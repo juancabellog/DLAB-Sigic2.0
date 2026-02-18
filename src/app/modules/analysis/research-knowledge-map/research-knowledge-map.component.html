@@ -1,0 +1,78 @@
+<div class="analysis-workspace">
+  <!-- Header -->
+  <div class="workspace-header">
+    <div class="header-content">
+      <div class="header-title-section">
+        <button mat-icon-button routerLink="/analysis" matTooltip="Back to Analysis Center">
+          <mat-icon>arrow_back</mat-icon>
+        </button>
+        <div class="title-group">
+          <h1>Research Knowledge Map</h1>
+          <p class="subtitle">Explore thematic clusters and strategic research lines</p>
+        </div>
+      </div>
+      <div class="summary-metrics" *ngIf="graphData">
+        <span class="metric-badge">
+          <mat-icon>hub</mat-icon>
+          Nodes: <strong>{{ metrics.nodeCount }}</strong>
+        </span>
+        <span class="metric-badge">
+          <mat-icon>account_tree</mat-icon>
+          Connections: <strong>{{ metrics.linkCount }}</strong>
+        </span>
+        <span class="metric-badge">
+          <mat-icon>category</mat-icon>
+          Categories: <strong>{{ metrics.categoryCount }}</strong>
+        </span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button mat-icon-button matTooltip="Filters" (click)="toggleFiltersPanel()">
+        <mat-icon>filter_list</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Export PNG" (click)="exportPNG()">
+        <mat-icon>image</mat-icon>
+      </button>
+      <button mat-icon-button matTooltip="Reset view" (click)="resetView()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Contenido principal -->
+  <div class="workspace-content">
+    <!-- Panel lateral de filtros (colapsable) -->
+    <div class="filters-panel" [class.open]="filtersPanelOpen">
+      <div class="filters-panel-header">
+        <h3>Filters</h3>
+        <button mat-icon-button (click)="toggleFiltersPanel()" class="close-button">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <div class="filters-panel-content">
+        <div class="filter-group">
+          <label>Period:</label>
+          <div class="chips-container">
+            <mat-chip 
+              *ngFor="let period of availablePeriods"
+              [class.selected]="selectedPeriods.includes(period.id)"
+              (click)="togglePeriod(period.id)"
+              class="filter-chip">
+              {{ period.name || period.descripcion }}
+              <mat-icon *ngIf="selectedPeriods.includes(period.id)" class="chip-icon">close</mat-icon>
+            </mat-chip>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Área del grafo -->
+    <div class="graph-area">
+      <div #graphContainer class="graph-container"></div>
+      <div *ngIf="loading" class="loading-overlay">
+        <mat-spinner></mat-spinner>
+        <p>Loading research knowledge map...</p>
+      </div>
+    </div>
+  </div>
+</div>

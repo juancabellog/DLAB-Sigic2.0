@@ -1,0 +1,5 @@
+---
+globs: **/*.md
+description: Markdown files use gpt-5.2 model
+---
+# Markdown Files ModelMarkdown files (`**/*.md`) should use the `gpt-5.2` model.

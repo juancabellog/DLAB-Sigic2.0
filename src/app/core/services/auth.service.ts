@@ -138,13 +138,45 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
+  /**
+   * Verifica si el usuario tiene un rol específico
+   * El usuario puede tener múltiples roles, así que verifica si el rol está en el array
+   */
   hasRole(role: string): boolean {
     const user = this.getCurrentUser();
-    return user ? user.roles.includes(role) : false;
+    if (!user || !user.roles || !Array.isArray(user.roles)) {
+      return false;
+    }
+    return user.roles.includes(role);
   }
 
+  /**
+   * Verifica si el usuario es administrador
+   * Un usuario puede ser admin Y tener otros roles
+   */
   isAdmin(): boolean {
     return this.hasRole('ROLE_ADMIN');
+  }
+
+  /**
+   * Verifica si el usuario es coordinador
+   * Un usuario puede ser coordinador Y tener otros roles (ej: admin + coordinator)
+   */
+  isCoordinator(): boolean {
+    return this.hasRole('ROLE_COORDINATOR');
+  }
+
+  /**
+   * Verifica si el usuario puede acceder al módulo de análisis
+   * Acceso permitido si tiene ROLE_ADMIN O ROLE_COORDINATOR (o ambos)
+   */
+  canAccessAnalysis(): boolean {
+    const canAccess = this.isAdmin() || this.isCoordinator();
+    if (canAccess) {
+      const user = this.getCurrentUser();
+      //console.log('Usuario puede acceder a análisis. Roles:', user?.roles);
+    }
+    return canAccess;
   }
 
   /**
@@ -214,11 +246,51 @@ export class AuthService {
       try {
         const user = JSON.parse(userStr);
         this.currentUserSubject.next(user);
+        // Refrescar roles desde el backend después de cargar el usuario
+        // Usar setTimeout para asegurar que se ejecute después de la carga inicial
+        setTimeout(() => {
+          this.refreshRolesFromToken();
+        }, 100);
       } catch (error) {
         console.error('Error parsing user from storage:', error);
         this.logout();
       }
     }
+  }
+
+  /**
+   * Refresca los roles del usuario desde el backend
+   * Útil cuando los roles se actualizan en la BD pero el usuario sigue logueado
+   */
+  refreshRolesFromToken(): void {
+    const token = this.getToken();
+    if (!token) return;
+
+    // Obtener información actualizada del usuario desde el backend
+    this.http.get<User>(`${this.API_URL}/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    }).pipe(
+      catchError((error) => {
+        console.error('Error al refrescar roles desde backend:', error);
+        return of(null);
+      })
+    ).subscribe({
+      next: (userInfo) => {
+        if (userInfo && userInfo.roles) {
+          const currentUser = this.getCurrentUser();
+          if (currentUser) {
+            // Actualizar roles del usuario (preservando todos los roles)
+            // userInfo.roles es un array con todos los roles del usuario
+            currentUser.roles = Array.isArray(userInfo.roles) ? userInfo.roles : [];
+            this.setCurrentUser(currentUser);
+            console.log('Roles actualizados desde backend:', currentUser.roles);
+            console.log('¿Puede acceder a análisis?', this.canAccessAnalysis());
+          }
+        }
+      }
+    });
   }
 
   /**

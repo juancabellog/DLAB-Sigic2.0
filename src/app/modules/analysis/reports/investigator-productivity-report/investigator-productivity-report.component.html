@@ -1,0 +1,100 @@
+<div class="report-container">
+  <div class="report-header">
+    <button mat-icon-button routerLink="/analysis" class="back-button">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="header-content">
+      <h1>Investigator Productivity Report</h1>
+      <p class="subtitle">Publications, student supervision and awarded project funding</p>
+    </div>
+  </div>
+
+  <mat-card class="report-card">
+    <mat-card-content>
+      <div class="report-info">
+        <mat-icon class="info-icon">person</mat-icon>
+        <div class="info-content">
+          <h2>Report Overview</h2>
+          <p>Generate comprehensive investigator productivity report including:</p>
+          <ul>
+            <li>Publications by investigator with impact metrics</li>
+            <li>Student supervision (thesis students, postdoctoral fellows)</li>
+            <li>Awarded project funding and grants</li>
+            <li>Productivity trends and comparative analysis</li>
+            <li>Research output distribution by area and period</li>
+          </ul>
+        </div>
+      </div>
+      
+      <!-- Required Data Section -->
+      <div class="required-data-section">
+        <h3 class="section-title">Required Data</h3>
+        <p class="section-subtitle">Project Funding by Investigator (Source File)</p>
+        
+        <!-- Drag & Drop Area -->
+        <div 
+          class="drop-zone"
+          [class.drag-over]="isDragOver"
+          (dragover)="onDragOver($event)"
+          (dragleave)="onDragLeave($event)"
+          (drop)="onFileDropped($event)"
+          (click)="!selectedFile && fileInput.click()">
+          <input 
+            type="file" 
+            #fileInput
+            (change)="onFileSelected($event)"
+            accept=".xlsx,.xls,.csv"
+            style="display: none;">
+          
+          <div *ngIf="!selectedFile" class="drop-zone-content">
+            <mat-icon class="drop-icon">cloud_upload</mat-icon>
+            <p class="drop-text">Drag & drop file here</p>
+            <p class="drop-text-secondary">or</p>
+            <button 
+              mat-stroked-button 
+              type="button"
+              (click)="fileInput.click(); $event.stopPropagation()"
+              class="browse-button">
+              Browse File
+            </button>
+            <p class="drop-formats">Accepted formats: .xlsx, .xls, .csv</p>
+          </div>
+          
+          <div *ngIf="selectedFile" class="file-uploaded-content">
+            <mat-icon class="file-icon">description</mat-icon>
+            <div class="file-info">
+              <p class="file-name">{{ selectedFile.name }}</p>
+              <p class="file-date" *ngIf="fileUploadDate">
+                Last updated: {{ formatDate(fileUploadDate) }}
+              </p>
+            </div>
+            <button 
+              mat-icon-button 
+              type="button"
+              (click)="replaceFile(); $event.stopPropagation()"
+              class="remove-button"
+              [matTooltip]="'Remove file'">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        </div>
+        
+        <p class="file-status" *ngIf="!selectedFile">No file uploaded</p>
+      </div>
+    </mat-card-content>
+    
+    <!-- Paso 2: Generar reporte -->
+    <mat-card-actions style="padding: 16px 24px; border-top: 1px solid #e0e0e0;">
+      <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="generateReport()" 
+        [disabled]="generating || !selectedFile"
+        style="width: 100%;">
+        <mat-spinner *ngIf="generating" diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+        <span *ngIf="!generating">Generate Report</span>
+        <span *ngIf="generating">Generating...</span>
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

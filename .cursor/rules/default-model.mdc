@@ -1,0 +1,5 @@
+---
+alwaysApply: true
+description: Default model configuration for the project
+---
+# Default Model ConfigurationThe default model for this project is `gpt-5.2-codex` and the inline model is `gpt-5.2`.

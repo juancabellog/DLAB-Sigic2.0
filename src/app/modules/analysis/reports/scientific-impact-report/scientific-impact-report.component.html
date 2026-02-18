@@ -1,0 +1,40 @@
+<div class="report-container">
+  <div class="report-header">
+    <button mat-icon-button routerLink="/analysis" class="back-button">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="header-content">
+      <h1>Scientific Impact Report</h1>
+      <p class="subtitle">Publications by author with journal impact metrics</p>
+    </div>
+  </div>
+
+  <mat-card class="report-card">
+    <mat-card-content>
+      <div class="report-info">
+        <mat-icon class="info-icon">summarize</mat-icon>
+        <div class="info-content">
+          <h2>Report Overview</h2>
+          <p>This report generates scientific impact analysis including:</p>
+          <ul>
+            <li>Publications by author with journal impact metrics</li>
+            <li>Journal impact factors and citation metrics</li>
+            <li>Author contribution analysis</li>
+            <li>Impact distribution across research areas</li>
+          </ul>
+        </div>
+      </div>
+    </mat-card-content>
+    <mat-card-actions>
+      <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="generateReport()" 
+        [disabled]="generating">
+        <mat-spinner *ngIf="generating" diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+        <span *ngIf="!generating">Generate Report</span>
+        <span *ngIf="generating">Generating...</span>
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

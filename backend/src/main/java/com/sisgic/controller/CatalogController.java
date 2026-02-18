@@ -18,6 +18,7 @@ import com.sisgic.dto.FundingTypeDTO;
 import com.sisgic.dto.TipoDifusionDTO;
 import com.sisgic.dto.PublicoObjetivoDTO;
 import com.sisgic.dto.TipoColaboracionDTO;
+import com.sisgic.dto.TipoRRHHDTO;
 import com.sisgic.entity.TipoParticipacion;
 import com.sisgic.entity.TipoProducto;
 import com.sisgic.entity.TipoEvento;
@@ -50,12 +51,16 @@ import com.sisgic.repository.FundingTypeRepository;
 import com.sisgic.repository.TipoDifusionRepository;
 import com.sisgic.repository.PublicoObjetivoRepository;
 import com.sisgic.repository.TipoColaboracionRepository;
+import com.sisgic.repository.TipoRRHHRepository;
+import com.sisgic.entity.TipoRRHH;
 import com.sisgic.service.TextosService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
 
 @RestController
@@ -868,6 +873,9 @@ public class CatalogController {
     @Autowired
     private TipoColaboracionRepository tipoColaboracionRepository;
     
+    @Autowired
+    private TipoRRHHRepository tipoRRHHRepository;
+    
     @GetMapping("/collaboration-types")
     public ResponseEntity<List<TipoColaboracionDTO>> getAllCollaborationTypes() {
         List<TipoColaboracion> results = tipoColaboracionRepository.findAllByOrderByIdAsc();
@@ -888,6 +896,87 @@ public class CatalogController {
         TipoColaboracionDTO dto = new TipoColaboracionDTO();
         dto.setId(tipoColaboracion.getId());
         dto.setIdDescripcion(tipoColaboracion.getIdDescripcion());
+        return dto;
+    }
+    
+    // ========================================
+    // PERIODS ENDPOINTS
+    // ========================================
+    
+    @GetMapping("/periods")
+    public ResponseEntity<List<Map<String, Object>>> getAllPeriods() {
+        // Los períodos son valores calculados basados en fechas
+        // 1: hasta 2022-07-31
+        // 2: hasta 2023-07-31
+        // 3: hasta 2024-07-31
+        // 4: hasta 2025-07-31
+        // 5: después de 2025-07-31
+        List<Map<String, Object>> periods = new java.util.ArrayList<>();
+        
+        Map<String, Object> period1 = new HashMap<>();
+        period1.put("id", 1);
+        period1.put("name", "Período 1");
+        period1.put("description", "Hasta 31 de julio 2022");
+        periods.add(period1);
+        
+        Map<String, Object> period2 = new HashMap<>();
+        period2.put("id", 2);
+        period2.put("name", "Período 2");
+        period2.put("description", "Hasta 31 de julio 2023");
+        periods.add(period2);
+        
+        Map<String, Object> period3 = new HashMap<>();
+        period3.put("id", 3);
+        period3.put("name", "Período 3");
+        period3.put("description", "Hasta 31 de julio 2024");
+        periods.add(period3);
+        
+        Map<String, Object> period4 = new HashMap<>();
+        period4.put("id", 4);
+        period4.put("name", "Período 4");
+        period4.put("description", "Hasta 31 de julio 2025");
+        periods.add(period4);
+        
+        Map<String, Object> period5 = new HashMap<>();
+        period5.put("id", 5);
+        period5.put("name", "Período 5");
+        period5.put("description", "Después de 31 de julio 2025");
+        periods.add(period5);
+        
+        return ResponseEntity.ok(periods);
+    }
+    
+    // ========================================
+    // TIPO RRHH ENDPOINTS
+    // ========================================
+    
+    @GetMapping("/rrhh-types")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public ResponseEntity<List<TipoRRHHDTO>> getAllRRHHTypes() {
+        List<TipoRRHH> results = tipoRRHHRepository.findAll();
+        List<TipoRRHHDTO> dtos = results.stream()
+            .map(this::convertTipoRRHHToDTO)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+    
+    @GetMapping("/rrhh-types/{id}")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public ResponseEntity<TipoRRHHDTO> getRRHHTypeById(@PathVariable Long id) {
+        return tipoRRHHRepository.findById(id)
+            .map(tipoRRHH -> ResponseEntity.ok(convertTipoRRHHToDTO(tipoRRHH)))
+            .orElse(ResponseEntity.notFound().build());
+    }
+    
+    private TipoRRHHDTO convertTipoRRHHToDTO(TipoRRHH tipoRRHH) {
+        if (tipoRRHH == null) return null;
+        
+        TipoRRHHDTO dto = new TipoRRHHDTO();
+        dto.setId(tipoRRHH.getId());
+        dto.setIdDescripcion(tipoRRHH.getCodigoDescripcion());
+        dto.setDescripcion(tipoRRHH.getDescripcion());
+        dto.setCreatedAt(tipoRRHH.getCreatedAt() != null ? tipoRRHH.getCreatedAt().toString() : null);
+        dto.setUpdatedAt(tipoRRHH.getUpdatedAt() != null ? tipoRRHH.getUpdatedAt().toString() : null);
         return dto;
     }
 }

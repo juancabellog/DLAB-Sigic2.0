@@ -1,0 +1,39 @@
+.dialog-header {
+  margin-bottom: 16px;
+
+  h2 {
+    margin: 0 0 8px 0;
+  }
+
+  .subtitle {
+    color: #757575;
+    margin: 0;
+  }
+}
+
+.publications-table {
+  width: 100%;
+  min-width: 600px;
+
+  th {
+    font-weight: 500;
+  }
+}
+
+.no-data {
+  text-align: center;
+  padding: 40px;
+  color: #757575;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    color: #bdbdbd;
+  }
+
+  p {
+    margin: 0;
+  }
+}

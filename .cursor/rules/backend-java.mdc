@@ -1,0 +1,5 @@
+---
+globs: src/main/java/**,backend/src/main/java/**
+description: Backend Java files use gpt-5.2-codex model
+---
+# Backend Java ModelFiles in `src/main/java/**` or `backend/src/main/java/**` should use the `gpt-5.2-codex` model.

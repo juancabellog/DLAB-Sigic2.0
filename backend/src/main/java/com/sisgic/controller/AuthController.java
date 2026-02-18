@@ -18,8 +18,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -141,6 +143,36 @@ public class AuthController {
     public ResponseEntity<?> validateToken() {
         // Si llegamos aquí, el token es válido (Spring Security ya lo validó)
         return ResponseEntity.ok("Token is valid");
+    }
+
+    @GetMapping("/me")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
+    public ResponseEntity<?> getCurrentUser() {
+        // Obtener el usuario actual desde el contexto de seguridad
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body("Not authenticated");
+        }
+
+        UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+        
+        // Cargar el usuario con sus roles usando JOIN FETCH para evitar LazyInitializationException
+        User user = userRepository.findByUsernameWithRoles(userPrincipal.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        // Obtener todos los roles del usuario (puede tener múltiples roles)
+        // Los roles ya están cargados gracias al JOIN FETCH
+        List<String> roles = user.getRoles().stream()
+                .map(role -> role.getName())
+                .collect(Collectors.toList());
+
+        Map<String, Object> userInfo = new HashMap<>();
+        userInfo.put("username", user.getUsername());
+        userInfo.put("email", user.getEmail());
+        userInfo.put("roles", roles); // Array con todos los roles del usuario
+
+        return ResponseEntity.ok(userInfo);
     }
 
     public static class RegisterRequest {

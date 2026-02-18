@@ -63,6 +63,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/thesis-students/**").permitAll() // Estudiantes de tesis accesibles
                     .requestMatchers("/api/files/**").permitAll() // Upload de archivos accesible
                     .requestMatchers("/api/admin/cache/**").permitAll() // Endpoints de administración de caché accesibles (para app antigua)
+                    .requestMatchers("/api/analysis/**").permitAll() // Analysis Center endpoints accesibles
                     .requestMatchers("/pdfs/**").permitAll() // PDFs accesibles
                     .requestMatchers("/h2-console/**").permitAll()
                     .requestMatchers("/error").permitAll()

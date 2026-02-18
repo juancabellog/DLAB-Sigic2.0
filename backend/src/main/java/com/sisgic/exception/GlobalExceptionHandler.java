@@ -12,6 +12,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException e) {
+        System.err.println("========== GLOBAL EXCEPTION HANDLER - IllegalArgumentException ==========");
+        System.err.println("Error message: " + e.getMessage());
+        e.printStackTrace();
+        System.err.println("=========================================================================");
         return ResponseEntity.badRequest()
             .body(Map.of("error", "Validation error", "message", e.getMessage()));
     }
@@ -24,7 +28,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<Map<String, String>> handleIllegalStateException(IllegalStateException e) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+        System.err.println("========== GLOBAL EXCEPTION HANDLER - IllegalStateException ==========");
+        System.err.println("Error message: " + e.getMessage());
+        e.printStackTrace();
+        System.err.println("=====================================================================");
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
             .body(Map.of("error", "Internal error", "message", e.getMessage()));
     }
 

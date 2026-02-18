@@ -1,0 +1,56 @@
+<div class="analysis-landing">
+  <div class="landing-header">
+    <h1>Analysis Center</h1>
+    <p class="subtitle">Explore collaboration patterns and strategic research lines</p>
+  </div>
+
+  <div class="analysis-grid">
+    <mat-card 
+      *ngFor="let option of analysisOptions" 
+      class="analysis-card"
+      [routerLink]="option.route"
+      [style.border-left-color]="option.color">
+      <mat-card-content>
+        <div class="card-icon" [style.color]="option.color">
+          <mat-icon>{{ option.icon }}</mat-icon>
+        </div>
+        <h2>{{ option.title }}</h2>
+        <p>{{ option.description }}</p>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button [style.color]="option.color">
+          Explore
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <div class="section-divider"></div>
+
+  <div class="section-header">
+    <h2>Report Generation</h2>
+    <p class="section-subtitle">Generate structured analytical reports from current data</p>
+  </div>
+
+  <div class="reports-grid">
+    <mat-card 
+      *ngFor="let report of reportOptions" 
+      class="report-card"
+      [routerLink]="report.route">
+      <mat-card-content>
+        <div class="report-icon">
+          <mat-icon>{{ report.icon }}</mat-icon>
+        </div>
+        <h3>{{ report.title }}</h3>
+        <p>{{ report.description }}</p>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button [style.color]="report.color">
+          Generate Report
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

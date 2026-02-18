@@ -1,0 +1,56 @@
+<div class="dialog-header">
+  <h2 mat-dialog-title>Shared Publications</h2>
+  <p class="subtitle">
+    Between <strong>{{ data.sourceNode.name }}</strong> and <strong>{{ data.targetNode.name }}</strong>
+  </p>
+</div>
+
+<mat-dialog-content>
+  <table mat-table [dataSource]="data.publications" class="publications-table">
+    <ng-container matColumnDef="id">
+      <th mat-header-cell *matHeaderCellDef>ID</th>
+      <td mat-cell *matCellDef="let pub">{{ pub.id }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="descripcion">
+      <th mat-header-cell *matHeaderCellDef>Title</th>
+      <td mat-cell *matCellDef="let pub">{{ pub.descripcion }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="progressReport">
+      <th mat-header-cell *matHeaderCellDef>Period</th>
+      <td mat-cell *matCellDef="let pub">{{ pub.progressReport }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="journal">
+      <th mat-header-cell *matHeaderCellDef>Journal</th>
+      <td mat-cell *matCellDef="let pub">{{ pub.journal }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="doi">
+      <th mat-header-cell *matHeaderCellDef>DOI</th>
+      <td mat-cell *matCellDef="let pub">
+        <button 
+          *ngIf="pub.doi" 
+          mat-icon-button 
+          (click)="openDOI(pub.doi)"
+          matTooltip="Open DOI">
+          <mat-icon>open_in_new</mat-icon>
+        </button>
+        <span *ngIf="!pub.doi">-</span>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+
+  <div *ngIf="data.publications.length === 0" class="no-data">
+    <mat-icon>info</mat-icon>
+    <p>No shared publications between these researchers</p>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Close</button>
+</mat-dialog-actions>

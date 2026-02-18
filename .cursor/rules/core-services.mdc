@@ -1,0 +1,5 @@
+---
+globs: src/app/core/**
+description: Core services and utilities use gpt-5.2-pro model
+---
+# Core Services ModelFiles in `src/app/core/**` should use the `gpt-5.2-pro` model for enhanced reasoning and code quality.

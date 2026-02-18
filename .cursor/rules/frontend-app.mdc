@@ -1,0 +1,5 @@
+---
+globs: src/app/**
+description: Frontend application files use gpt-5.2-codex model
+---
+# Frontend Application ModelFiles in `src/app/**` should use the `gpt-5.2-codex` model for optimal code generation.

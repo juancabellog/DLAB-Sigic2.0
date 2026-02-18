@@ -1,0 +1,20 @@
+.spacer {
+  flex: 1 1 auto;
+}
+
+.sidebar {
+  width: 250px;
+}
+
+.sidebar-content {
+  padding: 20px 0;
+}
+
+.mat-mdc-list-item.active {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.mat-mdc-list-item.active .mat-icon {
+  color: #1976d2;
+}

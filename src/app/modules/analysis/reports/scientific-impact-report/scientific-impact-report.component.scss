@@ -1,0 +1,85 @@
+.report-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.report-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 32px;
+
+  .back-button {
+    margin-top: 4px;
+  }
+
+  .header-content {
+    flex: 1;
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 400;
+      margin: 0 0 8px 0;
+      color: #212121;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+      color: #757575;
+      margin: 0;
+    }
+  }
+}
+
+.report-card {
+  mat-card-content {
+    padding: 32px;
+
+    .report-info {
+      display: flex;
+      gap: 24px;
+
+      .info-icon {
+        font-size: 48px;
+        width: 48px;
+        height: 48px;
+        color: #424242;
+        flex-shrink: 0;
+      }
+
+      .info-content {
+        flex: 1;
+
+        h2 {
+          font-size: 1.5rem;
+          font-weight: 500;
+          margin: 0 0 16px 0;
+          color: #212121;
+        }
+
+        p {
+          font-size: 1rem;
+          color: #424242;
+          margin: 0 0 16px 0;
+          line-height: 1.6;
+        }
+
+        ul {
+          margin: 0;
+          padding-left: 24px;
+          color: #424242;
+
+          li {
+            margin-bottom: 8px;
+            line-height: 1.6;
+          }
+        }
+      }
+    }
+  }
+
+  mat-card-actions {
+    padding: 0 32px 32px 32px;
+  }
+}

@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
+import { analysisGuard } from './core/guards/analysis.guard';
 
 export const routes: Routes = [
   {
@@ -199,6 +200,42 @@ export const routes: Routes = [
     path: 'projects/:id/edit',
     loadComponent: () => import('./modules/projects/project-edit/project-edit.component').then(m => m.ProjectEditComponent),
     canActivate: [authGuard]
+  },
+  // Analysis routes
+  {
+    path: 'analysis',
+    loadComponent: () => import('./modules/analysis/analysis-landing/analysis-landing.component').then(m => m.AnalysisLandingComponent),
+    canActivate: [analysisGuard]
+  },
+  {
+    path: 'analysis/collaboration-networks',
+    loadComponent: () => import('./modules/analysis/collaboration-networks/collaboration-networks.component').then(m => m.CollaborationNetworksComponent),
+    canActivate: [analysisGuard]
+  },
+  {
+    path: 'analysis/research-knowledge-map',
+    loadComponent: () => import('./modules/analysis/research-knowledge-map/research-knowledge-map.component').then(m => m.ResearchKnowledgeMapComponent),
+    canActivate: [analysisGuard]
+  },
+  {
+    path: 'analysis/temporal-evolution',
+    loadComponent: () => import('./modules/analysis/temporal-evolution/temporal-evolution.component').then(m => m.TemporalEvolutionComponent),
+    canActivate: [analysisGuard]
+  },
+  {
+    path: 'analysis/reports/scientific-impact',
+    loadComponent: () => import('./modules/analysis/reports/scientific-impact-report/scientific-impact-report.component').then(m => m.ScientificImpactReportComponent),
+    canActivate: [analysisGuard]
+  },
+  {
+    path: 'analysis/reports/research-performance',
+    loadComponent: () => import('./modules/analysis/reports/research-performance-report/research-performance-report.component').then(m => m.ResearchPerformanceReportComponent),
+    canActivate: [analysisGuard]
+  },
+  {
+    path: 'analysis/reports/investigator-productivity',
+    loadComponent: () => import('./modules/analysis/reports/investigator-productivity-report/investigator-productivity-report.component').then(m => m.InvestigatorProductivityReportComponent),
+    canActivate: [analysisGuard]
   },
   // Generic catalog routes
   {

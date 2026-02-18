@@ -1,0 +1,5 @@
+---
+globs: **/*test*.*,**/*.spec.ts
+description: Test files use gpt-5.1-codex-mini model
+---
+# Test Files ModelTest files (`**/*test*.*` and `**/*.spec.ts`) should use the `gpt-5.1-codex-mini` model for efficient test generation.
