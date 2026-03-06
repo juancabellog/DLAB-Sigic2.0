@@ -60,6 +60,11 @@ public abstract class ProductoCientifico {
     @Column(name = "basal")
     private Character basal;
     
+    // Clusters como lista de IDs separados por coma (1-5)
+    @Lob
+    @Column(name = "cluster")
+    private String cluster;
+    
     // RELACIONES CON PROPIEDADES
     @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ParticipacionProducto> participantes = new ArrayList<>();
@@ -193,6 +198,14 @@ public abstract class ProductoCientifico {
     
     public void setBasal(Character basal) {
         this.basal = basal;
+    }
+    
+    public String getCluster() {
+        return cluster;
+    }
+    
+    public void setCluster(String cluster) {
+        this.cluster = cluster;
     }
     
     @JsonIgnore

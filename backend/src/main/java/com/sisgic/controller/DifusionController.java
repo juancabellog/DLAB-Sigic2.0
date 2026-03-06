@@ -409,6 +409,7 @@ public class DifusionController {
         dto.setPublicoObjetivo(difusion.getPublicoObjetivo());
         dto.setCiudad(difusion.getCiudad());
         dto.setLink(difusion.getLink());
+        dto.setMainResponsible(difusion.getMainResponsible());
 
         return dto;
     }
@@ -446,10 +447,10 @@ public class DifusionController {
             if (basalValue == 'S' || basalValue == 's' || basalValue == 'N' || basalValue == 'n') {
                 difusion.setBasal(Character.toUpperCase(basalValue));
             } else {
-                difusion.setBasal('N');
+                difusion.setBasal('S');
             }
         } else {
-            difusion.setBasal('N');
+            difusion.setBasal('S');
         }
         difusion.setLineasInvestigacion(dto.getLineasInvestigacion());
 

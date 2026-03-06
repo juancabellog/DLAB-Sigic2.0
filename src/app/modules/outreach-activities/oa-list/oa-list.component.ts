@@ -47,6 +47,10 @@ export class OAListComponent implements OnInit, OnDestroy {
   private searchResults: DifusionDTO[] = [];
   private viewModeSubscription?: Subscription;
 
+  // Sorting state for list view
+  sortColumn: 'description' | 'type' | 'location' | 'attendees' | 'period' | 'date' | 'responsible' | null = null;
+  sortDirection: 'asc' | 'desc' = 'asc';
+
   constructor(
     private messageService: MessageService,
     private router: Router,
@@ -134,6 +138,11 @@ export class OAListComponent implements OnInit, OnDestroy {
       });
     }
     
+    // Aplicar orden si hay columna seleccionada
+    if (this.sortColumn) {
+      filtered.sort((a, b) => this.compareActivities(a, b));
+    }
+
     this.filteredActivities = filtered;
     // Actualizar el contador final de resultados filtrados - SIEMPRE mostrar
     this.finalFilteredCount = filtered.length;
@@ -152,6 +161,67 @@ export class OAListComponent implements OnInit, OnDestroy {
     if (activity.ciudad) parts.push(activity.ciudad);
     if (activity.pais?.idDescripcion) parts.push(activity.pais.idDescripcion);
     return parts.length > 0 ? parts.join(', ') : 'N/A';
+  }
+
+  onSort(column: 'description' | 'type' | 'location' | 'attendees' | 'period' | 'date' | 'responsible'): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applyFilters();
+  }
+
+  private compareActivities(a: DifusionDTO, b: DifusionDTO): number {
+    let valueA: string | number | null = null;
+    let valueB: string | number | null = null;
+
+    switch (this.sortColumn) {
+      case 'description':
+        valueA = (this.getActivityTitle(a) || '').toLowerCase();
+        valueB = (this.getActivityTitle(b) || '').toLowerCase();
+        break;
+      case 'type':
+        valueA = (this.getActivityType(a) || '').toLowerCase();
+        valueB = (this.getActivityType(b) || '').toLowerCase();
+        break;
+      case 'location':
+        valueA = (this.getLocation(a) || '').toLowerCase();
+        valueB = (this.getLocation(b) || '').toLowerCase();
+        break;
+      case 'attendees':
+        valueA = a.numAsistentes ?? 0;
+        valueB = b.numAsistentes ?? 0;
+        break;
+      case 'period':
+        valueA = a.progressReport ?? 0;
+        valueB = b.progressReport ?? 0;
+        break;
+      case 'date':
+        valueA = a.fechaInicio || '';
+        valueB = b.fechaInicio || '';
+        break;
+      case 'responsible':
+        valueA = (a.mainResponsible || 'N/A').toLowerCase();
+        valueB = (b.mainResponsible || 'N/A').toLowerCase();
+        break;
+      default:
+        return 0;
+    }
+
+    if (valueA == null && valueB == null) return 0;
+    if (valueA == null) return this.sortDirection === 'asc' ? -1 : 1;
+    if (valueB == null) return this.sortDirection === 'asc' ? 1 : -1;
+
+    let compareResult: number;
+    if (typeof valueA === 'number' && typeof valueB === 'number') {
+      compareResult = valueA - valueB;
+    } else {
+      compareResult = String(valueA).localeCompare(String(valueB));
+    }
+
+    return this.sortDirection === 'asc' ? compareResult : -compareResult;
   }
 
   viewActivity(activity: DifusionDTO): void {

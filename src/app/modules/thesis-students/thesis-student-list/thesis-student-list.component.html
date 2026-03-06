@@ -107,12 +107,72 @@
       <div *ngIf="!loading && filteredThesis.length > 0 && viewMode === 'list'" class="list-view">
         <div class="list-header-row">
           <div class="list-cell icon-cell"></div>
-          <div class="list-cell title-cell">Title</div>
-          <div class="list-cell degree-cell">Degree</div>
-          <div class="list-cell institution-cell">Institution</div>
-          <div class="list-cell student-cell">Student</div>
-          <div class="list-cell status-cell">Status</div>
-          <div class="list-cell date-cell">Date</div>
+          <div
+            class="list-cell title-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'title' }"
+            (click)="onSort('title')">
+            <span>Title</span>
+            <mat-icon>
+              {{ sortColumn === 'title'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell degree-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'degree' }"
+            (click)="onSort('degree')">
+            <span>Degree</span>
+            <mat-icon>
+              {{ sortColumn === 'degree'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell institution-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'institution' }"
+            (click)="onSort('institution')">
+            <span>Institution</span>
+            <mat-icon>
+              {{ sortColumn === 'institution'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell student-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'student' }"
+            (click)="onSort('student')">
+            <span>Student</span>
+            <mat-icon>
+              {{ sortColumn === 'student'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell status-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'status' }"
+            (click)="onSort('status')">
+            <span>Status</span>
+            <mat-icon>
+              {{ sortColumn === 'status'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell date-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'date' }"
+            (click)="onSort('date')">
+            <span>Date</span>
+            <mat-icon>
+              {{ sortColumn === 'date'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
           <div class="list-cell actions-cell">Actions</div>
         </div>
         

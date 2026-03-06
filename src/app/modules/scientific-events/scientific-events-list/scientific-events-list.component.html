@@ -75,6 +75,10 @@
                 <span class="detail-label">Country:</span>
                 <span class="detail-value">{{ event.pais?.idDescripcion || 'Not specified' }}</span>
               </div>
+              <div class="detail-row" *ngIf="event.progressReport">
+                <span class="detail-label">Period:</span>
+                <span class="detail-value">{{ event.progressReport }}</span>
+              </div>
               <div class="detail-row" *ngIf="event.numParticipantes">
                 <span class="detail-label">Participants:</span>
                 <span class="detail-value">{{ event.numParticipantes }}</span>
@@ -107,11 +111,72 @@
       <div *ngIf="!loading && filteredEvents.length > 0 && viewMode === 'list'" class="list-view">
         <div class="list-header-row">
           <div class="list-cell icon-cell"></div>
-          <div class="list-cell title-cell">Title</div>
-          <div class="list-cell type-cell">Type</div>
-          <div class="list-cell location-cell">Location</div>
-          <div class="list-cell date-cell">Date</div>
-          <div class="list-cell status-cell">Status</div>
+          <div
+            class="list-cell title-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'title' }"
+            (click)="onSort('title')">
+            <span>Title</span>
+            <mat-icon>
+              {{ sortColumn === 'title'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell type-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'type' }"
+            (click)="onSort('type')">
+            <span>Type</span>
+            <mat-icon>
+              {{ sortColumn === 'type'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell location-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'location' }"
+            (click)="onSort('location')">
+            <span>Location</span>
+            <mat-icon>
+              {{ sortColumn === 'location'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell period-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'period' }"
+            (click)="onSort('period')">
+            <span>Period</span>
+            <mat-icon>
+              {{ sortColumn === 'period'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell date-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'date' }"
+            (click)="onSort('date')">
+            <span>Date</span>
+            <mat-icon>
+              {{ sortColumn === 'date'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell status-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'status' }"
+            (click)="onSort('status')">
+            <span>Status</span>
+            <mat-icon>
+              {{ sortColumn === 'status'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
           <div class="list-cell actions-cell">Actions</div>
         </div>
         
@@ -127,6 +192,7 @@
           </div>
           <div class="list-cell type-cell">{{ getEventType(event) }}</div>
           <div class="list-cell location-cell">{{ getEventLocation(event) }}</div>
+          <div class="list-cell period-cell">{{ event.progressReport || 'N/A' }}</div>
           <div class="list-cell date-cell">{{ event.fechaInicio | date:'MMM yyyy' }}</div>
           <div class="list-cell status-cell">
             <mat-chip [color]="getStatusColor(event.estadoProducto?.codigo || event.estadoProducto?.codigoDescripcion)" selected>

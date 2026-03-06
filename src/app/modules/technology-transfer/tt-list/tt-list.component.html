@@ -97,11 +97,61 @@
       <div *ngIf="!loading && filteredTransfers.length > 0 && viewMode === 'list'" class="list-view">
         <div class="list-header-row">
           <div class="list-cell icon-cell"></div>
-          <div class="list-cell title-cell">Description</div>
-          <div class="list-cell type-cell">Type</div>
-          <div class="list-cell beneficiary-cell">Beneficiary</div>
-          <div class="list-cell location-cell">Location</div>
-          <div class="list-cell year-cell">Year</div>
+          <div
+            class="list-cell title-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'description' }"
+            (click)="onSort('description')">
+            <span>Description</span>
+            <mat-icon>
+              {{ sortColumn === 'description'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell type-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'type' }"
+            (click)="onSort('type')">
+            <span>Type</span>
+            <mat-icon>
+              {{ sortColumn === 'type'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell beneficiary-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'beneficiary' }"
+            (click)="onSort('beneficiary')">
+            <span>Beneficiary</span>
+            <mat-icon>
+              {{ sortColumn === 'beneficiary'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell location-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'location' }"
+            (click)="onSort('location')">
+            <span>Location</span>
+            <mat-icon>
+              {{ sortColumn === 'location'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell year-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'year' }"
+            (click)="onSort('year')">
+            <span>Year</span>
+            <mat-icon>
+              {{ sortColumn === 'year'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
           <div class="list-cell actions-cell">Actions</div>
         </div>
         

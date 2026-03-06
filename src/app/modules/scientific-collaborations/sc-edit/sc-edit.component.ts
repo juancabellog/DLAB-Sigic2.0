@@ -77,7 +77,7 @@ export class ScEditComponent implements OnInit {
   paisDestino: PaisDTO | null = null;
 
   // Control del checkbox Basal
-  isBasal: boolean = false;
+  isBasal: boolean = true;
 
   // Control de carga de PDF
   selectedPdfFile: File | null = null;
@@ -208,7 +208,7 @@ export class ScEditComponent implements OnInit {
       basal: 'N'
     };
     this.paisDestino = null;
-    this.isBasal = false;
+    this.isBasal = true;
     this.participants = [];
     this.originalCollaboration = null;
   }

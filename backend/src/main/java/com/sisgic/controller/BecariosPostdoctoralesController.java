@@ -433,10 +433,10 @@ public class BecariosPostdoctoralesController {
             if (basalValue == 'S' || basalValue == 's' || basalValue == 'N' || basalValue == 'n') {
                 fellow.setBasal(Character.toUpperCase(basalValue));
             } else {
-                fellow.setBasal('N');
+                fellow.setBasal('S');
             }
         } else {
-            fellow.setBasal('N');
+            fellow.setBasal('S');
         }
         fellow.setLineasInvestigacion(dto.getLineasInvestigacion());
 

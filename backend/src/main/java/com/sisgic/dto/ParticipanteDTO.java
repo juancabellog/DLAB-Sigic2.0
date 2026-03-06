@@ -1,5 +1,7 @@
 package com.sisgic.dto;
 
+import java.util.List;
+
 /**
  * DTO para Participante en un producto
  */
@@ -10,6 +12,7 @@ public class ParticipanteDTO {
     private Integer orden;
     private Boolean corresponding; // Para publicaciones
     private Long idRRHHProducto; // ID de la participación en rrhh_producto
+    private List<AfiliacionDTO> afiliaciones; // Afiliaciones asociadas a este participante
     
     // Constructors
     public ParticipanteDTO() {}
@@ -61,6 +64,15 @@ public class ParticipanteDTO {
     public void setIdRRHHProducto(Long idRRHHProducto) {
         this.idRRHHProducto = idRRHHProducto;
     }
+    
+    public List<AfiliacionDTO> getAfiliaciones() {
+        return afiliaciones;
+    }
+    
+    public void setAfiliaciones(List<AfiliacionDTO> afiliaciones) {
+        this.afiliaciones = afiliaciones;
+    }
 }
+
 
 

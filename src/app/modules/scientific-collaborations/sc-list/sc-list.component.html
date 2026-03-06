@@ -117,12 +117,72 @@
       <div *ngIf="!loading && filteredCollaborations.length > 0 && viewMode === 'list'" class="list-view">
         <div class="list-header-row">
           <div class="list-cell icon-cell"></div>
-          <div class="list-cell title-cell">Description</div>
-          <div class="list-cell type-cell">Type</div>
-          <div class="list-cell institution-cell">Institution</div>
-          <div class="list-cell origin-cell">Origin</div>
-          <div class="list-cell destination-cell">Destination</div>
-          <div class="list-cell date-cell">Start Date</div>
+          <div
+            class="list-cell title-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'description' }"
+            (click)="onSort('description')">
+            <span>Description</span>
+            <mat-icon>
+              {{ sortColumn === 'description'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell type-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'type' }"
+            (click)="onSort('type')">
+            <span>Type</span>
+            <mat-icon>
+              {{ sortColumn === 'type'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell institution-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'institution' }"
+            (click)="onSort('institution')">
+            <span>Institution</span>
+            <mat-icon>
+              {{ sortColumn === 'institution'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell origin-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'origin' }"
+            (click)="onSort('origin')">
+            <span>Origin</span>
+            <mat-icon>
+              {{ sortColumn === 'origin'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell destination-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'destination' }"
+            (click)="onSort('destination')">
+            <span>Destination</span>
+            <mat-icon>
+              {{ sortColumn === 'destination'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell date-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'date' }"
+            (click)="onSort('date')">
+            <span>Start Date</span>
+            <mat-icon>
+              {{ sortColumn === 'date'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
           <div class="list-cell actions-cell">Actions</div>
         </div>
         

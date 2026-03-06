@@ -18,6 +18,7 @@ export interface ProductoCientificoDTO {
   codigoANID?: string;
   basal?: string; // Character como string
   lineasInvestigacion?: string; // JSON string
+  cluster?: string; // Lista de IDs de cluster separados por comas
   participantesNombres?: string; // Nombres de participantes concatenados por coma (campo calculado)
   createdAt?: string; // LocalDateTime como string
   updatedAt?: string; // LocalDateTime como string
@@ -30,6 +31,7 @@ export interface ParticipanteDTO {
   orden?: number;
   corresponding?: boolean;
   idRRHHProducto?: number; // ID de la participación en rrhh_producto
+  afiliaciones?: AfiliacionDTO[]; // Afiliaciones asociadas a este participante
 }
 
 // DTO para Afiliacion
@@ -191,6 +193,7 @@ export interface DifusionDTO extends ProductoCientificoDTO {
   publicoObjetivo?: string; // Lista separada por comas de IDs
   ciudad?: string;
   link?: string;
+  mainResponsible?: string; // Campo calculado: responsable principal (rol 20)
   participantes?: ParticipanteDTO[]; // Participantes en formato backend
 }
 

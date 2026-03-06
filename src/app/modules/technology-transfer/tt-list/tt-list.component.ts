@@ -46,6 +46,10 @@ export class TTListComponent implements OnInit, OnDestroy {
   private searchResults: TransferenciaTecnologicaDTO[] = [];
   private viewModeSubscription?: Subscription;
 
+  // Sorting state for list view
+  sortColumn: 'description' | 'type' | 'beneficiary' | 'location' | 'year' | null = null;
+  sortDirection: 'asc' | 'desc' = 'asc';
+
   constructor(
     private messageService: MessageService,
     private router: Router,
@@ -190,8 +194,66 @@ export class TTListComponent implements OnInit, OnDestroy {
       });
     }
     
+    // Aplicar orden si hay columna seleccionada
+    if (this.sortColumn) {
+      filtered.sort((a, b) => this.compareTransfers(a, b));
+    }
+
     this.filteredTransfers = filtered;
     // Actualizar el contador final de resultados filtrados - SIEMPRE mostrar
     this.finalFilteredCount = filtered.length;
+  }
+
+  onSort(column: 'description' | 'type' | 'beneficiary' | 'location' | 'year'): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applyFilters();
+  }
+
+  private compareTransfers(a: TransferenciaTecnologicaDTO, b: TransferenciaTecnologicaDTO): number {
+    let valueA: string | number | null = null;
+    let valueB: string | number | null = null;
+
+    switch (this.sortColumn) {
+      case 'description':
+        valueA = (this.getTransferTitle(a) || '').toLowerCase();
+        valueB = (this.getTransferTitle(b) || '').toLowerCase();
+        break;
+      case 'type':
+        valueA = (a.tipoTransferencia?.idDescripcion || 'N/A').toLowerCase();
+        valueB = (b.tipoTransferencia?.idDescripcion || 'N/A').toLowerCase();
+        break;
+      case 'beneficiary':
+        valueA = (a.institucion?.descripcion || a.institucion?.idDescripcion || 'N/A').toLowerCase();
+        valueB = (b.institucion?.descripcion || b.institucion?.idDescripcion || 'N/A').toLowerCase();
+        break;
+      case 'location':
+        valueA = (this.getLocation(a) || '').toLowerCase();
+        valueB = (this.getLocation(b) || '').toLowerCase();
+        break;
+      case 'year':
+        valueA = a.agno ?? 0;
+        valueB = b.agno ?? 0;
+        break;
+      default:
+        return 0;
+    }
+
+    if (valueA == null && valueB == null) return 0;
+    if (valueA == null) return this.sortDirection === 'asc' ? -1 : 1;
+    if (valueB == null) return this.sortDirection === 'asc' ? 1 : -1;
+
+    let compareResult: number;
+    if (typeof valueA === 'number' && typeof valueB === 'number') {
+      compareResult = valueA - valueB;
+    } else {
+      compareResult = String(valueA).localeCompare(String(valueB));
+    }
+
+    return this.sortDirection === 'asc' ? compareResult : -compareResult;
   }
 }

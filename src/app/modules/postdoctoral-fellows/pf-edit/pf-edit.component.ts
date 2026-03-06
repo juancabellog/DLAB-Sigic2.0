@@ -78,7 +78,7 @@ export class PfEditComponent implements OnInit {
   participants: ParticipantDTO[] = [];
 
   // Control del checkbox Basal
-  isBasal: boolean = false;
+  isBasal: boolean = true;
 
   // Control de carga de PDF
   selectedPdfFile: File | null = null;
@@ -231,7 +231,7 @@ export class PfEditComponent implements OnInit {
       fechaTermino: undefined,
       basal: 'N'
     };
-    this.isBasal = false;
+    this.isBasal = true;
     this.participants = [];
     this.selectedResources = [];
     this.selectedFundingTypes = [];

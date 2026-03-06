@@ -368,7 +368,7 @@
             </mat-form-field>
           </div>
         </div>
-        
+
         <!-- Group 3: Indexes -->
         <div class="field-group">
           <div class="group-title">Indexes</div>
@@ -395,6 +395,27 @@
           </div>
         </div>
         
+        <mat-divider></mat-divider>
+      
+        <div class="form-section">
+          <div class="section-title">Clusters</div>
+          <div class="form-row">
+            <div class="full-width cluster">
+              <div class="checkbox-group">
+                <mat-checkbox
+                  *ngFor="let cluster of clusterOptions"
+                  [checked]="isClusterSelected(cluster.id)"
+                  (change)="onClusterChange(cluster.id, $event.checked)"
+                  color="primary">
+                  {{ cluster.label }}
+                </mat-checkbox>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <mat-divider></mat-divider>
+
         <div class="form-row">
           <div class="full-width pdf-upload-field">
             <label class="pdf-upload-label">PDF Document</label>
@@ -443,7 +464,7 @@
         </div>
       </div>
       
-      <mat-divider></mat-divider>
+      <!-- Clusters section with soft grey separators (like Sector Types in Thesis) -->
       
       <div class="form-section authors-section">
         <div class="section-title">People & Affiliations</div>

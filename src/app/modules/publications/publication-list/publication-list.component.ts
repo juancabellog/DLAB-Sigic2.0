@@ -50,6 +50,10 @@ export class PublicationListComponent implements OnInit, OnDestroy {
   private searchResults: PublicacionDTO[] = [];
   private viewModeSubscription?: Subscription;
 
+  // Sorting state for list view
+  sortColumn: 'title' | 'journal' | 'year' | 'period' | 'status' | null = null;
+  sortDirection: 'asc' | 'desc' = 'asc';
+
   constructor(
     private messageService: MessageService,
     private router: Router,
@@ -226,9 +230,68 @@ export class PublicationListComponent implements OnInit, OnDestroy {
       });
     }
     
+    // Aplicar orden si hay columna seleccionada
+    if (this.sortColumn) {
+      filtered.sort((a, b) => this.comparePublications(a, b));
+    }
+
     this.filteredPublications = filtered;
     // Actualizar el contador final de resultados filtrados - SIEMPRE mostrar
     this.finalFilteredCount = filtered.length;
+  }
+
+  onSort(column: 'title' | 'journal' | 'year' | 'period' | 'status'): void {
+    if (this.sortColumn === column) {
+      // Toggle direction
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applyFilters();
+  }
+
+  private comparePublications(a: PublicacionDTO, b: PublicacionDTO): number {
+    let valueA: string | number | null = null;
+    let valueB: string | number | null = null;
+
+    switch (this.sortColumn) {
+      case 'title':
+        valueA = (this.getPublicationTitle(a) || '').toLowerCase();
+        valueB = (this.getPublicationTitle(b) || '').toLowerCase();
+        break;
+      case 'journal':
+        valueA = (this.getJournalName(a) || '').toLowerCase();
+        valueB = (this.getJournalName(b) || '').toLowerCase();
+        break;
+      case 'year':
+        valueA = a.yearPublished ?? 0;
+        valueB = b.yearPublished ?? 0;
+        break;
+      case 'period':
+        valueA = a.progressReport ?? 0;
+        valueB = b.progressReport ?? 0;
+        break;
+      case 'status':
+        valueA = (a.estadoProducto?.nombre || a.estadoProducto?.codigoDescripcion || a.estadoProducto?.codigo || 'N/A').toLowerCase();
+        valueB = (b.estadoProducto?.nombre || b.estadoProducto?.codigoDescripcion || b.estadoProducto?.codigo || 'N/A').toLowerCase();
+        break;
+      default:
+        return 0;
+    }
+
+    if (valueA == null && valueB == null) return 0;
+    if (valueA == null) return this.sortDirection === 'asc' ? -1 : 1;
+    if (valueB == null) return this.sortDirection === 'asc' ? 1 : -1;
+
+    let compareResult: number;
+    if (typeof valueA === 'number' && typeof valueB === 'number') {
+      compareResult = valueA - valueB;
+    } else {
+      compareResult = String(valueA).localeCompare(String(valueB));
+    }
+
+    return this.sortDirection === 'asc' ? compareResult : -compareResult;
   }
 
   /**

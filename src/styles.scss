@@ -476,6 +476,51 @@ html, body {
   }
 }
 
+// ========================================
+// GLOBAL SORTABLE TABLE HEADER STYLES
+// ========================================
+
+.sortable-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  user-select: none;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    font-weight: 500;
+  }
+
+  mat-icon {
+    font-size: 12px;
+    width: 12px;
+    height: 12px;
+    line-height: 12px;
+    opacity: 0.4;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+}
+
+.sortable-header-active {
+  span {
+    color: #333;
+    font-weight: 600;
+  }
+
+  mat-icon {
+    opacity: 1;
+  }
+}
+
 // Form Styles
 .form-card, .list-card {
   max-width: 1200px;

@@ -89,6 +89,10 @@
                 <span class="detail-label">DOI:</span>
                 <span class="detail-value">{{ publication.doi || 'Not available' }}</span>
               </div>
+              <div class="detail-row" *ngIf="publication.progressReport">
+                <span class="detail-label">Period:</span>
+                <span class="detail-value">{{ publication.progressReport }}</span>
+              </div>
               <div class="detail-row">
                 <span class="detail-label">Citations:</span>
                 <span class="detail-value">{{ publication.numCitas || 0 }}</span>
@@ -137,10 +141,61 @@
       <div *ngIf="filteredPublications.length > 0 && viewMode === 'list'" class="list-view">
         <div class="list-header-row">
           <div class="list-cell icon-cell"></div>
-          <div class="list-cell title-cell">Title</div>
-          <div class="list-cell journal-cell">Journal</div>
-          <div class="list-cell year-cell">Year</div>
-          <div class="list-cell status-cell">Status</div>
+          <div
+            class="list-cell title-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'title' }"
+            (click)="onSort('title')">
+            <span>Title</span>
+            <mat-icon>
+              {{ sortColumn === 'title'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell journal-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'journal' }"
+            (click)="onSort('journal')">
+            <span>Journal</span>
+            <mat-icon>
+              {{ sortColumn === 'journal'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell year-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'year' }"
+            (click)="onSort('year')">
+            <span>Year</span>
+            <mat-icon>
+              {{ sortColumn === 'year'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell period-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'period' }"
+            (click)="onSort('period')">
+            <span>Period</span>
+            <mat-icon>
+              {{ sortColumn === 'period'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell status-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'status' }"
+            (click)="onSort('status')">
+            <span>Status</span>
+            <mat-icon>
+              {{ sortColumn === 'status'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
           <div class="list-cell actions-cell">Actions</div>
         </div>
         
@@ -166,6 +221,7 @@
           </div>
           <div class="list-cell journal-cell">{{ getJournalName(publication) }}</div>
           <div class="list-cell year-cell">{{ publication.yearPublished }}</div>
+          <div class="list-cell period-cell">{{ publication.progressReport || 'N/A' }}</div>
           <div class="list-cell status-cell">
             <mat-chip *ngIf="isPending(publication)" 
                       class="status-chip pending-chip" 

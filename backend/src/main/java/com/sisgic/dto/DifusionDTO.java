@@ -36,6 +36,7 @@ public class DifusionDTO {
     private String publicoObjetivo; // Lista separada por comas de IDs
     private String ciudad;
     private String link;
+    private String mainResponsible; // Campo calculado: responsable principal (rol 20)
     
     // Participantes
     private List<ParticipanteDTO> participantes;
@@ -101,6 +102,9 @@ public class DifusionDTO {
     
     public String getParticipantesNombres() { return participantesNombres; }
     public void setParticipantesNombres(String participantesNombres) { this.participantesNombres = participantesNombres; }
+    
+    public String getMainResponsible() { return mainResponsible; }
+    public void setMainResponsible(String mainResponsible) { this.mainResponsible = mainResponsible; }
 }
 
 

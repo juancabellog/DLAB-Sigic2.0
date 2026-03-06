@@ -26,6 +26,7 @@ public class PublicacionDTO {
     private String participantesNombres; // Nombres de participantes concatenados por coma (campo calculado)
     private String createdAt;
     private String updatedAt;
+    private String cluster; // Lista de IDs de cluster separados por comas
     
     // Campos específicos de Publicacion
     private JournalDTO journal;
@@ -173,6 +174,14 @@ public class PublicacionDTO {
     
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public String getCluster() {
+        return cluster;
+    }
+    
+    public void setCluster(String cluster) {
+        this.cluster = cluster;
     }
     
     // Getters and Setters - Publicacion específicos

@@ -451,10 +451,10 @@ public class OrganizacionEventosCientificosController {
             if (basalValue == 'S' || basalValue == 's' || basalValue == 'N' || basalValue == 'n') {
                 evento.setBasal(Character.toUpperCase(basalValue));
             } else {
-                evento.setBasal('N');
+                evento.setBasal('S');
             }
         } else {
-            evento.setBasal('N');
+            evento.setBasal('S');
         }
         evento.setLineasInvestigacion(dto.getLineasInvestigacion());
 

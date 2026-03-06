@@ -34,7 +34,7 @@ public interface ColaboracionRepository extends JpaRepository<Colaboracion, Long
            "c.codigoPaisDestino, c.ciudadDestino, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
-           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.created_at, pr.updated_at, " +
+           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
            "pr.username, " +
            "f_getRRHHProducto(c.id) as participantesNombres " +
            "FROM colaboraciones c " +
@@ -56,7 +56,7 @@ public interface ColaboracionRepository extends JpaRepository<Colaboracion, Long
            "c.codigoPaisDestino, c.ciudadDestino, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
-           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.created_at, pr.updated_at, " +
+           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
            "pr.username, " +
            "f_getRRHHProducto(c.id) as participantesNombres " +
            "FROM colaboraciones c " +

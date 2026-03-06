@@ -101,11 +101,61 @@
       <div *ngIf="!loading && filteredFellows.length > 0 && viewMode === 'list'" class="list-view">
         <div class="list-header-row">
           <div class="list-cell icon-cell"></div>
-          <div class="list-cell title-cell">Research Topic</div>
-          <div class="list-cell institution-cell">Institution where it was inserted</div>
-          <div class="list-cell sector-cell">Inserted</div>
-          <div class="list-cell fellow-cell">Name of Postdoctoral Fellow</div>
-          <div class="list-cell date-cell">Start Date</div>
+          <div
+            class="list-cell title-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'topic' }"
+            (click)="onSort('topic')">
+            <span>Research Topic</span>
+            <mat-icon>
+              {{ sortColumn === 'topic'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell institution-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'institution' }"
+            (click)="onSort('institution')">
+            <span>Institution where it was inserted</span>
+            <mat-icon>
+              {{ sortColumn === 'institution'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell sector-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'sector' }"
+            (click)="onSort('sector')">
+            <span>Inserted</span>
+            <mat-icon>
+              {{ sortColumn === 'sector'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell fellow-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'name' }"
+            (click)="onSort('name')">
+            <span>Name of Postdoctoral Fellow</span>
+            <mat-icon>
+              {{ sortColumn === 'name'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell date-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'date' }"
+            (click)="onSort('date')">
+            <span>Start Date</span>
+            <mat-icon>
+              {{ sortColumn === 'date'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
           <div class="list-cell actions-cell">Actions</div>
         </div>
         

@@ -47,7 +47,7 @@ public interface TransferenciaTecnologicaRepository extends JpaRepository<Transf
            "tt.ciudad, tt.region, tt.year, tt.codigoPais, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
-           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.created_at, pr.updated_at, " +
+           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
            "pr.username, " +
            "f_getRRHHProducto(tt.id) as participantesNombres " +
            "FROM transferenciatecnologica tt " +
@@ -69,7 +69,7 @@ public interface TransferenciaTecnologicaRepository extends JpaRepository<Transf
            "tt.ciudad, tt.region, tt.year, tt.codigoPais, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
-           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.created_at, pr.updated_at, " +
+           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
            "pr.username, " +
            "f_getRRHHProducto(tt.id) as participantesNombres " +
            "FROM transferenciatecnologica tt " +

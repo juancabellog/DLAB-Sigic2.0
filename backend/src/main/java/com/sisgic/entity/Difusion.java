@@ -1,6 +1,7 @@
 package com.sisgic.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Formula;
 
 @Entity
 @Table(name = "difusion")
@@ -33,6 +34,11 @@ public class Difusion extends ProductoCientifico {
     
     @Column(name = "link", columnDefinition = "TEXT")
     private String link;
+    
+    // Campo calculado: responsable principal (rol 20).
+    // Usamos solo @Formula, SIN @Column, para que Hibernate no intente mapearlo a una columna física.
+    @Formula("(SELECT f_getParticipantByRol(id, 20))")
+    private String mainResponsible;
     
     // Constructors
     public Difusion() {}
@@ -100,6 +106,14 @@ public class Difusion extends ProductoCientifico {
     
     public void setLink(String link) {
         this.link = link;
+    }
+    
+    public String getMainResponsible() {
+        return mainResponsible;
+    }
+    
+    public void setMainResponsible(String mainResponsible) {
+        this.mainResponsible = mainResponsible;
     }
 }
 

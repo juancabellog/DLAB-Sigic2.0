@@ -7,6 +7,11 @@ spring:
   application:
     name: scientific-products-platform
   
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
+
   datasource:
     url: jdbc:mysql://192.168.2.220/sigicprod_2_0?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
     driverClassName: com.mysql.cj.jdbc.Driver

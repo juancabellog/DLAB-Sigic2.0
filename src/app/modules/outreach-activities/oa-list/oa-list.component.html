@@ -65,6 +65,10 @@
                 <span class="detail-label">Type:</span>
                 <span class="detail-value">{{ getActivityType(activity) }}</span>
               </div>
+              <div class="detail-row" *ngIf="activity.progressReport">
+                <span class="detail-label">Period:</span>
+                <span class="detail-value">{{ activity.progressReport }}</span>
+              </div>
               <div class="detail-row">
                 <span class="detail-label">Location:</span>
                 <span class="detail-value">{{ getLocation(activity) }}</span>
@@ -76,6 +80,10 @@
               <div class="detail-row" *ngIf="activity.fechaInicio">
                 <span class="detail-label">Start Date:</span>
                 <span class="detail-value">{{ activity.fechaInicio | date:'MMM yyyy' }}</span>
+              </div>
+              <div class="detail-row" *ngIf="activity.mainResponsible">
+                <span class="detail-label">Main Responsible:</span>
+                <span class="detail-value">{{ activity.mainResponsible }}</span>
               </div>
             </div>
           </mat-card-content>
@@ -113,11 +121,83 @@
       <div *ngIf="!loading && filteredActivities.length > 0 && viewMode === 'list'" class="list-view">
         <div class="list-header-row">
           <div class="list-cell icon-cell"></div>
-          <div class="list-cell title-cell">Description</div>
-          <div class="list-cell type-cell">Type</div>
-          <div class="list-cell location-cell">Location</div>
-          <div class="list-cell attendees-cell">Attendees</div>
-          <div class="list-cell date-cell">Start Date</div>
+          <div
+            class="list-cell title-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'description' }"
+            (click)="onSort('description')">
+            <span>Description</span>
+            <mat-icon>
+              {{ sortColumn === 'description'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell type-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'type' }"
+            (click)="onSort('type')">
+            <span>Type</span>
+            <mat-icon>
+              {{ sortColumn === 'type'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell location-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'location' }"
+            (click)="onSort('location')">
+            <span>Location</span>
+            <mat-icon>
+              {{ sortColumn === 'location'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell attendees-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'attendees' }"
+            (click)="onSort('attendees')">
+            <span>Attendees</span>
+            <mat-icon>
+              {{ sortColumn === 'attendees'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell period-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'period' }"
+            (click)="onSort('period')">
+            <span>Period</span>
+            <mat-icon>
+              {{ sortColumn === 'period'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell date-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'date' }"
+            (click)="onSort('date')">
+            <span>Start Date</span>
+            <mat-icon>
+              {{ sortColumn === 'date'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell responsible-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'responsible' }"
+            (click)="onSort('responsible')">
+            <span>Main Responsible</span>
+            <mat-icon>
+              {{ sortColumn === 'responsible'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
           <div class="list-cell actions-cell">Actions</div>
         </div>
         
@@ -134,7 +214,9 @@
           <div class="list-cell type-cell">{{ getActivityType(activity) }}</div>
           <div class="list-cell location-cell">{{ getLocation(activity) }}</div>
           <div class="list-cell attendees-cell">{{ activity.numAsistentes || 'N/A' }}</div>
+          <div class="list-cell period-cell">{{ activity.progressReport || 'N/A' }}</div>
           <div class="list-cell date-cell">{{ activity.fechaInicio | date:'MMM yyyy' }}</div>
+          <div class="list-cell responsible-cell">{{ activity.mainResponsible || 'N/A' }}</div>
           <div class="list-cell actions-cell">
             <button 
               *ngIf="getPdfUrl(activity)" 

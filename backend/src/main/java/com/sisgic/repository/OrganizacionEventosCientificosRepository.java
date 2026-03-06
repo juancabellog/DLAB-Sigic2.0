@@ -44,7 +44,7 @@ public interface OrganizacionEventosCientificosRepository extends JpaRepository<
     @Query(value = "SELECT o.id, o.idTipoEvento, o.codigoPais, o.ciudad, o.numParticipantes, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
-           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.created_at, pr.updated_at, " +
+           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
            "pr.username, " +
            "f_getRRHHProducto(o.id) as participantesNombres " +
            "FROM organizacioneventoscientificos o " +
@@ -65,7 +65,7 @@ public interface OrganizacionEventosCientificosRepository extends JpaRepository<
     @Query(value = "SELECT o.id, o.idTipoEvento, o.codigoPais, o.ciudad, o.numParticipantes, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
-           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.created_at, pr.updated_at, " +
+           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
            "pr.username, " +
            "f_getRRHHProducto(o.id) as participantesNombres " +
            "FROM organizacioneventoscientificos o " +

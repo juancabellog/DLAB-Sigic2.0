@@ -481,10 +481,10 @@ public class TransferenciaTecnologicaController {
             if (basalValue == 'S' || basalValue == 's' || basalValue == 'N' || basalValue == 'n') {
                 transfer.setBasal(Character.toUpperCase(basalValue));
             } else {
-                transfer.setBasal('N');
+                transfer.setBasal('S');
             }
         } else {
-            transfer.setBasal('N');
+            transfer.setBasal('S');
         }
         transfer.setLineasInvestigacion(dto.getLineasInvestigacion());
 

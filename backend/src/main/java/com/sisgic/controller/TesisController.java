@@ -478,10 +478,10 @@ public class TesisController {
             if (basalValue == 'S' || basalValue == 's' || basalValue == 'N' || basalValue == 'n') {
                 tesis.setBasal(Character.toUpperCase(basalValue));
             } else {
-                tesis.setBasal('N');
+                tesis.setBasal('S');
             }
         } else {
-            tesis.setBasal('N');
+            tesis.setBasal('S');
         }
         tesis.setLineasInvestigacion(dto.getLineasInvestigacion());
 

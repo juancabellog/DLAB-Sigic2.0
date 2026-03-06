@@ -72,7 +72,7 @@ export class OaEditComponent implements OnInit {
   participants: ParticipantDTO[] = [];
 
   // Control del checkbox Basal
-  isBasal: boolean = false;
+  isBasal: boolean = true;
 
   // Control de carga de PDF
   selectedPdfFile: File | null = null;
@@ -205,9 +205,9 @@ export class OaEditComponent implements OnInit {
       tipoProducto: { id: 1 },
       fechaInicio: undefined,
       fechaTermino: undefined,
-      basal: 'N'
+      basal: 'S'
     };
-    this.isBasal = false;
+    this.isBasal = true;
     this.participants = [];
     this.selectedTargetAudiences = [];
     this.originalActivity = null;

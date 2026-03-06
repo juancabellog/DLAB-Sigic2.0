@@ -263,6 +263,9 @@ public class PublicacionController {
                 if (dto.getLineasInvestigacion() != null) {
                     existingPublication.setLineasInvestigacion(dto.getLineasInvestigacion());
                 }
+                if (dto.getCluster() != null) {
+                    existingPublication.setCluster(dto.getCluster());
+                }
                 
                 // Actualizar relaciones de ProductoCientifico
                 if (dto.getTipoProducto() != null && dto.getTipoProducto().getId() != null) {
@@ -304,11 +307,10 @@ public class PublicacionController {
                     existingPublication.setNumCitas(dto.getNumCitas());
                 }
                 
-                // Actualizar participantes
+                // Actualizar participantes: borrar todos y recrear desde el DTO
+                // (las afiliaciones se recrean usando los datos que vienen desde el frontend)
                 if (dto.getParticipantes() != null) {
-                    // Eliminar participantes existentes
                     participacionProductoRepository.deleteByProductoId(existingPublication.getId());
-                    // Agregar nuevos participantes
                     if (!dto.getParticipantes().isEmpty()) {
                         saveParticipantes(existingPublication, dto.getParticipantes());
                     }
@@ -473,20 +475,33 @@ public class PublicacionController {
         
         // Cargar participantes solo cuando se necesita (detalles)
         List<ParticipacionProducto> participaciones = participacionProductoRepository.findByProductoId(publicacion.getId());
-        List<ParticipanteDTO> participantesDTO = participaciones.stream()
-            .map(pp -> {
-                ParticipanteDTO pDTO = new ParticipanteDTO();
-                pDTO.setRrhhId(pp.getRrhh() != null ? pp.getRrhh().getId() : null);
-                pDTO.setTipoParticipacionId(pp.getTipoParticipacion() != null ? pp.getTipoParticipacion().getId() : null);
-                pDTO.setOrden(pp.getOrden());
-                pDTO.setCorresponding(pp.isCorresponding());
-                // Incluir el idRRHHProducto (id de la participación)
-                if (pp.getId() != null && pp.getId().getId() != null) {
-                    pDTO.setIdRRHHProducto(pp.getId().getId());
-                }
-                return pDTO;
-            })
-            .collect(Collectors.toList());
+        List<ParticipanteDTO> participantesDTO = new ArrayList<>();
+        
+        for (ParticipacionProducto pp : participaciones) {
+            ParticipanteDTO pDTO = new ParticipanteDTO();
+            pDTO.setRrhhId(pp.getRrhh() != null ? pp.getRrhh().getId() : null);
+            pDTO.setTipoParticipacionId(pp.getTipoParticipacion() != null ? pp.getTipoParticipacion().getId() : null);
+            pDTO.setOrden(pp.getOrden());
+            pDTO.setCorresponding(pp.isCorresponding());
+            
+            Long rrhhId = pp.getRrhh() != null ? pp.getRrhh().getId() : null;
+            Long productoId = publicacion.getId();
+            Long rrhhProductoId = (pp.getId() != null ? pp.getId().getId() : null);
+            
+            if (rrhhProductoId != null) {
+                pDTO.setIdRRHHProducto(rrhhProductoId);
+                
+                // Cargar afiliaciones asociadas a esta participación
+                List<Afiliacion> afiliaciones = afiliacionRepository.findByParticipacion(rrhhId, productoId, rrhhProductoId);
+                List<AfiliacionDTO> afiliacionesDTO = afiliaciones.stream()
+                    .map(this::convertToAfiliacionDTO)
+                    .collect(Collectors.toList());
+                pDTO.setAfiliaciones(afiliacionesDTO);
+            }
+            
+            participantesDTO.add(pDTO);
+        }
+        
         dto.setParticipantes(participantesDTO);
         
         return dto;
@@ -542,6 +557,7 @@ public class PublicacionController {
             dto.setBasal(null);
         }
         dto.setLineasInvestigacion(publicacion.getLineasInvestigacion());
+        dto.setCluster(publicacion.getCluster());
         dto.setParticipantesNombres(publicacion.getParticipantesNombres());
         dto.setCreatedAt(publicacion.getCreatedAt() != null ? publicacion.getCreatedAt().toString() : null);
         dto.setUpdatedAt(publicacion.getUpdatedAt() != null ? publicacion.getUpdatedAt().toString() : null);
@@ -652,15 +668,16 @@ public class PublicacionController {
             // Validar que sea S o N
             if (basalValue == 'S' || basalValue == 's' || basalValue == 'N' || basalValue == 'n') {
                 publicacion.setBasal(Character.toUpperCase(basalValue));
-            } else {
-                // Si no es válido, establecer por defecto "N"
-                publicacion.setBasal('N');
-            }
         } else {
-            // Si viene null o vacío, establecer por defecto "N"
-            publicacion.setBasal('N');
+            // Si no es válido, establecer por defecto "S"
+            publicacion.setBasal('S');
         }
+    } else {
+        // Si viene null o vacío, establecer por defecto "S"
+        publicacion.setBasal('S');
+    }
         publicacion.setLineasInvestigacion(dto.getLineasInvestigacion());
+        publicacion.setCluster(dto.getCluster());
         
         // Relaciones de ProductoCientifico
         if (dto.getTipoProducto() != null && dto.getTipoProducto().getId() != null) {
@@ -689,6 +706,7 @@ public class PublicacionController {
         
         return publicacion;
     }
+
 
     /**
      * Convierte un string a LocalDate
@@ -744,6 +762,38 @@ public class PublicacionController {
                 participacion.setId(id);
                 
                 participacionProductoRepository.save(participacion);
+                
+                // Si vienen afiliaciones desde el frontend, recrearlas para esta participación
+                if (pDTO.getAfiliaciones() != null && !pDTO.getAfiliaciones().isEmpty()) {
+                    for (AfiliacionDTO affDTO : pDTO.getAfiliaciones()) {
+                        Long nextAffId = afiliacionRepository.getNextIdForAfiliacion(
+                            publicacion.getId(),
+                            rrhh.getId(),
+                            nextId
+                        );
+                        
+                        AfiliacionId afiliacionId = new AfiliacionId(
+                            rrhh.getId(),
+                            publicacion.getId(),
+                            nextId,
+                            nextAffId
+                        );
+                        
+                        Afiliacion afiliacion = new Afiliacion();
+                        afiliacion.setId(afiliacionId);
+                        afiliacion.setParticipacionProducto(participacion);
+                        
+                        Institucion institucion = null;
+                        if (affDTO.getIdInstitucion() != null) {
+                            institucion = institucionRepository.findById(affDTO.getIdInstitucion())
+                                .orElse(null);
+                        }
+                        afiliacion.setInstitucion(institucion);
+                        afiliacion.setTexto(affDTO.getTexto());
+                        
+                        afiliacionRepository.save(afiliacion);
+                    }
+                }
             }
         }
     }

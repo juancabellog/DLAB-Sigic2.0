@@ -49,7 +49,7 @@ public interface TesisRepository extends JpaRepository<Tesis, Long> {
            "t.fechaInicioPrograma, t.nombreCompletoTitulo, t.tipoSector, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
-           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.created_at, pr.updated_at, " +
+           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
            "pr.username, " +
            "f_getRRHHProducto(t.id) as participantesNombres, " +
            "f_getParticipantByRol(t.id, 7) as estudiante " +
@@ -72,7 +72,7 @@ public interface TesisRepository extends JpaRepository<Tesis, Long> {
            "t.fechaInicioPrograma, t.nombreCompletoTitulo, t.tipoSector, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
-           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.created_at, pr.updated_at, " +
+           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
            "pr.username, " +
            "f_getRRHHProducto(t.id) as participantesNombres, " +
            "f_getParticipantByRol(t.id, 7) as estudiante " +

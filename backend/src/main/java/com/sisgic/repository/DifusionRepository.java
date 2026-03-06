@@ -38,9 +38,10 @@ public interface DifusionRepository extends JpaRepository<Difusion, Long> {
            "d.duracion, d.publicoObjetivo, d.ciudad, d.link, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
-           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.created_at, pr.updated_at, " +
+           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
            "pr.username, " +
-           "f_getRRHHProducto(d.id) as participantesNombres " +
+           "f_getRRHHProducto(d.id) as participantesNombres, " +
+           "f_getParticipantByRol(d.id, 20) as mainResponsible " +
            "FROM difusion d " +
            "INNER JOIN producto pr ON d.id = pr.id " +
            "WHERE f_productIsVisible(d.id, pr.username, :idRRHH, :userName) = 1",
@@ -60,9 +61,10 @@ public interface DifusionRepository extends JpaRepository<Difusion, Long> {
            "d.duracion, d.publicoObjetivo, d.ciudad, d.link, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
-           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.created_at, pr.updated_at, " +
+           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
            "pr.username, " +
-           "f_getRRHHProducto(d.id) as participantesNombres " +
+           "f_getRRHHProducto(d.id) as participantesNombres, " +
+           "f_getParticipantByRol(d.id, 20) as mainResponsible " +
            "FROM difusion d " +
            "INNER JOIN producto pr ON d.id = pr.id " +
            "WHERE d.id = :id AND f_productIsVisible(d.id, pr.username, :idRRHH, :userName) = 1",

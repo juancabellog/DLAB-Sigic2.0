@@ -472,10 +472,10 @@ public class ColaboracionController {
             if (basalValue == 'S' || basalValue == 's' || basalValue == 'N' || basalValue == 'n') {
                 colaboracion.setBasal(Character.toUpperCase(basalValue));
             } else {
-                colaboracion.setBasal('N');
+                colaboracion.setBasal('S');
             }
         } else {
-            colaboracion.setBasal('N');
+            colaboracion.setBasal('S');
         }
         colaboracion.setLineasInvestigacion(dto.getLineasInvestigacion());
 

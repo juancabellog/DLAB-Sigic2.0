@@ -46,6 +46,10 @@ export class PFListComponent implements OnInit, OnDestroy {
   private searchResults: BecariosPostdoctoralesDTO[] = [];
   private viewModeSubscription?: Subscription;
 
+  // Sorting state for list view
+  sortColumn: 'topic' | 'institution' | 'sector' | 'name' | 'date' | null = null;
+  sortDirection: 'asc' | 'desc' = 'asc';
+
   constructor(
     private messageService: MessageService,
     private router: Router,
@@ -132,6 +136,11 @@ export class PFListComponent implements OnInit, OnDestroy {
       });
     }
     
+    // Aplicar orden si hay columna seleccionada
+    if (this.sortColumn) {
+      filtered.sort((a, b) => this.compareFellows(a, b));
+    }
+
     this.filteredFellows = filtered;
     // Actualizar el contador final de resultados filtrados - SIEMPRE mostrar
     this.finalFilteredCount = filtered.length;
@@ -147,6 +156,59 @@ export class PFListComponent implements OnInit, OnDestroy {
 
   getSector(fellow: BecariosPostdoctoralesDTO): string {
     return fellow.tipoSector?.idDescripcion || 'N/A';
+  }
+
+  onSort(column: 'topic' | 'institution' | 'sector' | 'name' | 'date'): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applyFilters();
+  }
+
+  private compareFellows(a: BecariosPostdoctoralesDTO, b: BecariosPostdoctoralesDTO): number {
+    let valueA: string | number | null = null;
+    let valueB: string | number | null = null;
+
+    switch (this.sortColumn) {
+      case 'topic':
+        valueA = (this.getFellowTitle(a) || '').toLowerCase();
+        valueB = (this.getFellowTitle(b) || '').toLowerCase();
+        break;
+      case 'institution':
+        valueA = (this.getInstitution(a) || '').toLowerCase();
+        valueB = (this.getInstitution(b) || '').toLowerCase();
+        break;
+      case 'sector':
+        valueA = (this.getSector(a) || '').toLowerCase();
+        valueB = (this.getSector(b) || '').toLowerCase();
+        break;
+      case 'name':
+        valueA = (a.postdoctoralFellowName || 'N/A').toLowerCase();
+        valueB = (b.postdoctoralFellowName || 'N/A').toLowerCase();
+        break;
+      case 'date':
+        valueA = a.fechaInicio || '';
+        valueB = b.fechaInicio || '';
+        break;
+      default:
+        return 0;
+    }
+
+    if (valueA == null && valueB == null) return 0;
+    if (valueA == null) return this.sortDirection === 'asc' ? -1 : 1;
+    if (valueB == null) return this.sortDirection === 'asc' ? 1 : -1;
+
+    let compareResult: number;
+    if (typeof valueA === 'number' && typeof valueB === 'number') {
+      compareResult = valueA - valueB;
+    } else {
+      compareResult = String(valueA).localeCompare(String(valueB));
+    }
+
+    return this.sortDirection === 'asc' ? compareResult : -compareResult;
   }
 
   viewFellow(fellow: BecariosPostdoctoralesDTO): void {

@@ -47,6 +47,10 @@ export class SCListComponent implements OnInit, OnDestroy {
   private searchResults: ColaboracionDTO[] = [];
   private viewModeSubscription?: Subscription;
 
+  // Sorting state for list view
+  sortColumn: 'description' | 'type' | 'institution' | 'origin' | 'destination' | 'date' | null = null;
+  sortDirection: 'asc' | 'desc' = 'asc';
+
   constructor(
     private messageService: MessageService,
     private router: Router,
@@ -134,6 +138,11 @@ export class SCListComponent implements OnInit, OnDestroy {
       });
     }
     
+    // Aplicar orden si hay columna seleccionada
+    if (this.sortColumn) {
+      filtered.sort((a, b) => this.compareCollaborations(a, b));
+    }
+
     this.filteredCollaborations = filtered;
     // Actualizar el contador final de resultados filtrados - SIEMPRE mostrar
     this.finalFilteredCount = filtered.length;
@@ -189,6 +198,63 @@ export class SCListComponent implements OnInit, OnDestroy {
     }
     
     return 'N/A';
+  }
+
+  onSort(column: 'description' | 'type' | 'institution' | 'origin' | 'destination' | 'date'): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applyFilters();
+  }
+
+  private compareCollaborations(a: ColaboracionDTO, b: ColaboracionDTO): number {
+    let valueA: string | number | null = null;
+    let valueB: string | number | null = null;
+
+    switch (this.sortColumn) {
+      case 'description':
+        valueA = (this.getCollaborationTitle(a) || '').toLowerCase();
+        valueB = (this.getCollaborationTitle(b) || '').toLowerCase();
+        break;
+      case 'type':
+        valueA = (this.getCollaborationType(a) || '').toLowerCase();
+        valueB = (this.getCollaborationType(b) || '').toLowerCase();
+        break;
+      case 'institution':
+        valueA = (a.institucion?.descripcion || a.institucion?.idDescripcion || 'N/A').toLowerCase();
+        valueB = (b.institucion?.descripcion || b.institucion?.idDescripcion || 'N/A').toLowerCase();
+        break;
+      case 'origin':
+        valueA = (this.getOrigin(a) || '').toLowerCase();
+        valueB = (this.getOrigin(b) || '').toLowerCase();
+        break;
+      case 'destination':
+        valueA = (this.getDestination(a) || '').toLowerCase();
+        valueB = (this.getDestination(b) || '').toLowerCase();
+        break;
+      case 'date':
+        valueA = a.fechaInicio || '';
+        valueB = b.fechaInicio || '';
+        break;
+      default:
+        return 0;
+    }
+
+    if (valueA == null && valueB == null) return 0;
+    if (valueA == null) return this.sortDirection === 'asc' ? -1 : 1;
+    if (valueB == null) return this.sortDirection === 'asc' ? 1 : -1;
+
+    let compareResult: number;
+    if (typeof valueA === 'number' && typeof valueB === 'number') {
+      compareResult = valueA - valueB;
+    } else {
+      compareResult = String(valueA).localeCompare(String(valueB));
+    }
+
+    return this.sortDirection === 'asc' ? compareResult : -compareResult;
   }
 
   viewCollaboration(collaboration: ColaboracionDTO): void {

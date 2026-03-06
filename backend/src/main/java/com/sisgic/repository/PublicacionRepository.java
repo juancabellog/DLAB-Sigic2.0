@@ -81,7 +81,7 @@ public interface PublicacionRepository extends JpaRepository<Publicacion, Long> 
            "p.indexs, p.funding, p.doi, p.numCitas, p.impactFactor, p.avgImpactFactor, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
-           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.created_at, pr.updated_at, " +
+           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
            "pr.username, " +
            "f_getRRHHProducto(p.id) as participantesNombres " +
            "FROM publicacion p " +
@@ -103,7 +103,7 @@ public interface PublicacionRepository extends JpaRepository<Publicacion, Long> 
            "p.indexs, p.funding, p.doi, p.numCitas, p.impactFactor, p.avgImpactFactor, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
-           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.created_at, pr.updated_at, " +
+           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
            "pr.username, " +
            "f_getRRHHProducto(p.id) as participantesNombres " +
            "FROM publicacion p " +

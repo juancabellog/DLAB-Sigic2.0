@@ -296,7 +296,7 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
           this.publication.fechaInicio = `${this.publication.yearPublished}-01-01`;
           this.publication.codigoANID = '';
           this.publication.progressReport = undefined;
-          this.isBasal = false;
+          this.isBasal = true;
           
           // Limpiar archivo PDF seleccionado
           this.selectedPdfFile = null;
@@ -373,8 +373,22 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
   missingAffiliationsCount: number = 0;
   private updateMissingAffiliationsTimeout: any = null;
 
+  // Marca cuándo el participant-manager ya procesó al menos una vez
+  // (usamos esto para saber que las afiliaciones se cargaron/inicializaron)
+  participantsInitialized: boolean = false;
+
+  // Opciones de clusters (1 a 5)
+  clusterOptions: { id: number; label: string }[] = [
+    { id: 1, label: 'Cluster I' },
+    { id: 2, label: 'Cluster II' },
+    { id: 3, label: 'Cluster III' },
+    { id: 4, label: 'Cluster IV' },
+    { id: 5, label: 'Cluster V' }
+  ];
+  selectedClusters: number[] = [];
+
   // Control del checkbox Basal
-  isBasal: boolean = false;
+  isBasal: boolean = true;
 
   // Control de carga de PDF
   selectedPdfFile: File | null = null;
@@ -393,7 +407,8 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
     lastpage: '',
     codigoANID: '',
     progressReport: undefined,
-    tipoProducto: { id: 3 } // ID 3 para publicaciones
+    tipoProducto: { id: 3 }, // ID 3 para publicaciones
+    cluster: ''
   };
 
   constructor(
@@ -501,7 +516,8 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
       tipoProducto: { id: 3 }, // ID 3 para publicaciones
       // fechaInicio se establecerá automáticamente cuando cambie yearPublished
       fechaInicio: undefined,
-      basal: 'N' // Por defecto "N" (no basal)
+      basal: 'N', // Por defecto "N" (no basal)
+      cluster: ''
     };
     // Establecer fechaInicio basada en yearPublished inicial
     if (this.publication.yearPublished) {
@@ -511,6 +527,7 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
     this.participants = [];
     this.updateMissingAffiliationsStatus();
     this.originalPublication = null;
+    this.selectedClusters = [];
   }
 
   loadPublicationForEdit(id: number): void {
@@ -559,6 +576,19 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
         }
         this.publication = publication;
         this.originalPublication = JSON.parse(JSON.stringify(publication)); // Deep copy
+
+        // Cargar clusters seleccionados desde el string de backend
+        this.selectedClusters = [];
+        if (this.publication.cluster) {
+          try {
+            this.selectedClusters = this.publication.cluster
+              .split(',')
+              .map(id => parseInt(id.trim(), 10))
+              .filter(id => !isNaN(id));
+          } catch {
+            this.selectedClusters = [];
+          }
+        }
         
         // Los factores de impacto ya vienen del backend desde impactFactor y avgImpactFactor
         // No necesitamos recargarlos si ya están en la publicación
@@ -802,6 +832,8 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
     this.hasIncompleteParticipants = hasIncomplete;
     // También actualizar el estado de afiliaciones faltantes cuando cambia el estado de incompletitud
     this.debouncedUpdateMissingAffiliationsStatus();
+    // Marcar que el participant-manager ya terminó su primer ciclo de cálculo
+    this.participantsInitialized = true;
   }
 
   onJournalChange(selectedJournal: JournalDTO | null): void {
@@ -834,6 +866,21 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
     // Actualizar publication.basal cuando cambia el checkbox
     // El backend espera "S" o "N" como string
     this.publication.basal = checked ? 'S' : 'N';
+  }
+
+  isClusterSelected(clusterId: number): boolean {
+    return this.selectedClusters.includes(clusterId);
+  }
+
+  onClusterChange(clusterId: number, checked: boolean): void {
+    if (checked) {
+      if (!this.selectedClusters.includes(clusterId)) {
+        this.selectedClusters.push(clusterId);
+      }
+    } else {
+      this.selectedClusters = this.selectedClusters.filter(id => id !== clusterId);
+    }
+    this.publication.cluster = this.selectedClusters.join(',');
   }
 
   loadImpactFactors(): void {
@@ -1224,7 +1271,7 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
           this.publication.factorImpactoPromedio = undefined;
           this.publication.progressReport = undefined;
           this.publication.codigoANID = '';
-          this.isBasal = false;
+          this.isBasal = true;
           
           // Limpiar el DOI para que pueda ingresar uno nuevo
           // El DOI se habilita automáticamente porque isPreviewMode = false
@@ -1302,7 +1349,10 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
       rrhhId: p.rrhhId,
       tipoParticipacionId: p.participationTypeId,
       orden: p.order || index + 1,
-      corresponding: p.corresponding || false
+      corresponding: p.corresponding || false,
+      idRRHHProducto: p.idRRHHProducto,
+      // Pasar las afiliaciones para que el backend pueda recrearlas si borra/crea participantes
+      afiliaciones: (p as any).affiliations || []
     }));
 
     // Si hay un archivo seleccionado, primero subirlo
@@ -1337,6 +1387,8 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
           linkPDF: this.publication.linkPDF || undefined,
           // Asegurar que basal esté establecido correctamente (S o N)
           basal: this.isBasal ? 'S' : 'N',
+          // Asegurar que cluster se base en los seleccionados
+          cluster: this.selectedClusters.join(','),
           // Incluir participantes en formato backend
           participantes: participantesBackend.length > 0 ? participantesBackend : undefined
         };
@@ -1652,22 +1704,19 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
 
   /**
    * Verifica si se puede confirmar la publicación
-   * En preview:
-   *  - Todos los autores resueltos (RRHH + rol)
-   *  - Sin participantes incompletos reportados por el participant-manager
+   * En modo edición normal:
+   *  - Esperar a que el participant-manager haya inicializado (participantsInitialized)
    *  - No estar en loading
-   * La validación profunda de importRequest se hace al hacer click (validateImportRequest).
+   * En preview, mantenemos la lógica relajada (se valida a fondo en validateImportRequest).
    */
   get canConfirmPublication(): boolean {
+    // En modo edición normal (no preview), requerimos que participantes estén inicializados
     if (!this.isInPreviewMode) {
-      // En modo edición normal, usar la validación existente
-      return !this.hasIncompleteParticipants && !this.loading;
+      return !this.loading && this.participantsInitialized;
     }
 
-    // En modo preview, usar sólo lo que el usuario ve (autores / participantes)
-    return !this.loading;/*this.allAuthorsResolved &&
-          !this.hasIncompleteParticipants &&
-          !this.loading;*/
+    // En modo preview, usamos sólo el estado de loading (la validación detallada se hace al confirmar)
+    return !this.loading;
   }
 
   /**

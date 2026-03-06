@@ -44,7 +44,7 @@ public interface BecariosPostdoctoralesRepository extends JpaRepository<Becarios
     @Query(value = "SELECT bp.id, bp.idInstitucion, bp.fundingSource, bp.idTipoSector, bp.resources, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
-           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.created_at, pr.updated_at, " +
+           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
            "pr.username, " +
            "f_getRRHHProducto(bp.id) as participantesNombres, " +
            "f_getParticipantByRol(bp.id, 19) as postdoctoralFellowName " +
@@ -66,7 +66,7 @@ public interface BecariosPostdoctoralesRepository extends JpaRepository<Becarios
     @Query(value = "SELECT bp.id, bp.idInstitucion, bp.fundingSource, bp.idTipoSector, bp.resources, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
-           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.created_at, pr.updated_at, " +
+           "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
            "pr.username, " +
            "f_getRRHHProducto(bp.id) as participantesNombres, " +
            "f_getParticipantByRol(bp.id, 19) as postdoctoralFellowName " +

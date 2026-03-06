@@ -46,6 +46,10 @@ export class ThesisStudentListComponent implements OnInit, OnDestroy {
   private searchResults: TesisDTO[] = [];
   private viewModeSubscription?: Subscription;
 
+  // Sorting state for list view
+  sortColumn: 'title' | 'degree' | 'institution' | 'student' | 'status' | 'date' | null = null;
+  sortDirection: 'asc' | 'desc' = 'asc';
+
   constructor(
     private messageService: MessageService,
     private router: Router,
@@ -132,9 +136,72 @@ export class ThesisStudentListComponent implements OnInit, OnDestroy {
       });
     }
     
+    // Aplicar orden si hay columna seleccionada
+    if (this.sortColumn) {
+      filtered.sort((a, b) => this.compareThesis(a, b));
+    }
+
     this.filteredThesis = filtered;
     // Actualizar el contador final de resultados filtrados - SIEMPRE mostrar
     this.finalFilteredCount = filtered.length;
+  }
+
+  onSort(column: 'title' | 'degree' | 'institution' | 'student' | 'status' | 'date'): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applyFilters();
+  }
+
+  private compareThesis(a: TesisDTO, b: TesisDTO): number {
+    let valueA: string | number | null = null;
+    let valueB: string | number | null = null;
+
+    switch (this.sortColumn) {
+      case 'title':
+        valueA = (this.getThesisTitle(a) || '').toLowerCase();
+        valueB = (this.getThesisTitle(b) || '').toLowerCase();
+        break;
+      case 'degree':
+        valueA = (a.gradoAcademico?.descripcion || a.gradoAcademico?.idDescripcion || 'N/A').toLowerCase();
+        valueB = (b.gradoAcademico?.descripcion || b.gradoAcademico?.idDescripcion || 'N/A').toLowerCase();
+        break;
+      case 'institution':
+        valueA = (a.institucionOG?.descripcion || a.institucionOG?.idDescripcion || 'N/A').toLowerCase();
+        valueB = (b.institucionOG?.descripcion || b.institucionOG?.idDescripcion || 'N/A').toLowerCase();
+        break;
+      case 'student':
+        valueA = (a.estudiante || 'N/A').toLowerCase();
+        valueB = (b.estudiante || 'N/A').toLowerCase();
+        break;
+      case 'status':
+        valueA = (this.getThesisStatus(a) || 'N/A').toLowerCase();
+        valueB = (this.getThesisStatus(b) || 'N/A').toLowerCase();
+        break;
+      case 'date':
+        // fechaInicioPrograma es string ISO (YYYY-MM-DD), se puede comparar como string
+        valueA = a.fechaInicioPrograma || '';
+        valueB = b.fechaInicioPrograma || '';
+        break;
+      default:
+        return 0;
+    }
+
+    if (valueA == null && valueB == null) return 0;
+    if (valueA == null) return this.sortDirection === 'asc' ? -1 : 1;
+    if (valueB == null) return this.sortDirection === 'asc' ? 1 : -1;
+
+    let compareResult: number;
+    if (typeof valueA === 'number' && typeof valueB === 'number') {
+      compareResult = valueA - valueB;
+    } else {
+      compareResult = String(valueA).localeCompare(String(valueB));
+    }
+
+    return this.sortDirection === 'asc' ? compareResult : -compareResult;
   }
 
   getThesisTitle(thesis: TesisDTO): string {

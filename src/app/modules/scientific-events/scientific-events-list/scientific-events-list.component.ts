@@ -48,6 +48,10 @@ export class ScientificEventsListComponent implements OnInit, OnDestroy {
   private searchResults: OrganizacionEventosCientificosDTO[] = [];
   private viewModeSubscription?: Subscription;
 
+  // Sorting state for list view
+  sortColumn: 'title' | 'type' | 'location' | 'period' | 'date' | 'status' | null = null;
+  sortDirection: 'asc' | 'desc' = 'asc';
+
   constructor(
     private messageService: MessageService,
     private router: Router,
@@ -194,9 +198,71 @@ export class ScientificEventsListComponent implements OnInit, OnDestroy {
       });
     }
     
+    // Aplicar orden si hay columna seleccionada
+    if (this.sortColumn) {
+      filtered.sort((a, b) => this.compareEvents(a, b));
+    }
+
     this.filteredEvents = filtered;
     // Actualizar el contador final de resultados filtrados - SIEMPRE mostrar
     this.finalFilteredCount = filtered.length;
+  }
+
+  onSort(column: 'title' | 'type' | 'location' | 'period' | 'date' | 'status'): void {
+    if (this.sortColumn === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortColumn = column;
+      this.sortDirection = 'asc';
+    }
+    this.applyFilters();
+  }
+
+  private compareEvents(a: OrganizacionEventosCientificosDTO, b: OrganizacionEventosCientificosDTO): number {
+    let valueA: string | number | null = null;
+    let valueB: string | number | null = null;
+
+    switch (this.sortColumn) {
+      case 'title':
+        valueA = (this.getEventTitle(a) || '').toLowerCase();
+        valueB = (this.getEventTitle(b) || '').toLowerCase();
+        break;
+      case 'type':
+        valueA = (this.getEventType(a) || '').toLowerCase();
+        valueB = (this.getEventType(b) || '').toLowerCase();
+        break;
+      case 'location':
+        valueA = (this.getEventLocation(a) || '').toLowerCase();
+        valueB = (this.getEventLocation(b) || '').toLowerCase();
+        break;
+      case 'period':
+        valueA = a.progressReport ?? 0;
+        valueB = b.progressReport ?? 0;
+        break;
+      case 'date':
+        valueA = a.fechaInicio || '';
+        valueB = b.fechaInicio || '';
+        break;
+      case 'status':
+        valueA = (a.estadoProducto?.nombre || a.estadoProducto?.codigoDescripcion || a.estadoProducto?.codigo || 'N/A').toLowerCase();
+        valueB = (b.estadoProducto?.nombre || b.estadoProducto?.codigoDescripcion || b.estadoProducto?.codigo || 'N/A').toLowerCase();
+        break;
+      default:
+        return 0;
+    }
+
+    if (valueA == null && valueB == null) return 0;
+    if (valueA == null) return this.sortDirection === 'asc' ? -1 : 1;
+    if (valueB == null) return this.sortDirection === 'asc' ? 1 : -1;
+
+    let compareResult: number;
+    if (typeof valueA === 'number' && typeof valueB === 'number') {
+      compareResult = valueA - valueB;
+    } else {
+      compareResult = String(valueA).localeCompare(String(valueB));
+    }
+
+    return this.sortDirection === 'asc' ? compareResult : -compareResult;
   }
 }
 
