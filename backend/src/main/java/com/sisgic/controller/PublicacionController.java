@@ -1099,7 +1099,16 @@ public class PublicacionController {
             // 7. Asignar proyecto por defecto
             assignDefaultProject(saved);
             
-            // 8. Retornar la publicación creada
+            // 8. Intentar descargar y adjuntar PDF desde OpenAlex (si existe pdf_url)
+            try {
+                openAlexService.attachPdfFromOpenAlexIfAvailable(saved);
+            } catch (Exception e) {
+                // No bloquear la importación si falla la descarga del PDF
+                System.err.println("Warning: no se pudo adjuntar PDF desde OpenAlex: " + e.getMessage());
+                e.printStackTrace();
+            }
+            
+            // 9. Retornar la publicación creada
             PublicacionDTO resultDTO = convertToDTO(saved);
             return ResponseEntity.ok(resultDTO);
             

@@ -408,6 +408,7 @@ export interface PublicationPreviewDataDTO {
   firstPage?: string;
   lastPage?: string;
   openAlexUrl?: string;
+  linkPDF?: string; // Link al PDF descargado (formato "PDF:pdfs/uuid.pdf")
 }
 
 export interface JournalPreviewDTO {

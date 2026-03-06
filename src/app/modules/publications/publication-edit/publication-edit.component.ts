@@ -516,14 +516,15 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
       tipoProducto: { id: 3 }, // ID 3 para publicaciones
       // fechaInicio se establecerá automáticamente cuando cambie yearPublished
       fechaInicio: undefined,
-      basal: 'N', // Por defecto "N" (no basal)
+      basal: 'S', // Por defecto "S" (Basal asociado)
       cluster: ''
     };
     // Establecer fechaInicio basada en yearPublished inicial
     if (this.publication.yearPublished) {
       this.publication.fechaInicio = `${this.publication.yearPublished}-01-01`;
     }
-    this.isBasal = false;
+    // Checkbox "Product associated with Basal funding" marcado por defecto
+    this.isBasal = true;
     this.participants = [];
     this.updateMissingAffiliationsStatus();
     this.originalPublication = null;
@@ -1018,6 +1019,11 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
             this.publication.fechaInicio = pub.publicationDate || this.publication.fechaInicio || '';
             this.publication.firstpage = pub.firstPage || this.publication.firstpage || '';
             this.publication.lastpage = pub.lastPage || this.publication.lastpage || '';
+
+            // Si OpenAlex ya entregó y descargamos un PDF, propagarlo al formulario
+            if (pub.linkPDF) {
+              this.publication.linkPDF = pub.linkPDF;
+            }
             
             // Calcular progressReport basado en fechaInicio
             if (pub.publicationDate) {

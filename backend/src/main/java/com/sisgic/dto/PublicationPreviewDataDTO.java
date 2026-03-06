@@ -14,6 +14,7 @@ public class PublicationPreviewDataDTO {
     private String firstPage;
     private String lastPage;
     private String openAlexUrl;
+    private String linkPDF; // Link al PDF descargado (formato "PDF:pdfs/uuid.pdf")
     
     // Constructors
     public PublicationPreviewDataDTO() {}
@@ -89,6 +90,14 @@ public class PublicationPreviewDataDTO {
     
     public void setOpenAlexUrl(String openAlexUrl) {
         this.openAlexUrl = openAlexUrl;
+    }
+
+    public String getLinkPDF() {
+        return linkPDF;
+    }
+
+    public void setLinkPDF(String linkPDF) {
+        this.linkPDF = linkPDF;
     }
 }
 

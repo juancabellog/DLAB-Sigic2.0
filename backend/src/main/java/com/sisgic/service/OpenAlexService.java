@@ -8,7 +8,10 @@ import com.sisgic.dto.PublicationPreviewDataDTO;
 import com.sisgic.dto.JournalPreviewDTO;
 import com.sisgic.dto.AuthorPreviewDTO;
 import com.sisgic.dto.AffiliationPreviewDTO;
+import com.sisgic.entity.Publicacion;
 import com.sisgic.repository.JournalRepository;
+import com.sisgic.repository.PublicacionRepository;
+import com.sisgic.service.PdfFileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -52,6 +55,12 @@ public class OpenAlexService {
     
     @Autowired
     private com.sisgic.repository.RRHHRepository rrhhRepository;
+
+    @Autowired
+    private PdfFileService pdfFileService;
+
+    @Autowired
+    private PublicacionRepository publicacionRepository;
     
     @Value("${openalex.default-project-code:PRJ0000000000004}")
     private String defaultProjectCode;
@@ -158,6 +167,25 @@ public class OpenAlexService {
         }
         if (json.has("publication_year") && !json.get("publication_year").isNull()) {
             dto.setPublicationYear(json.get("publication_year").asInt());
+        }
+
+        // Intentar obtener y descargar el PDF si existe primary_location.pdf_url
+        try {
+            if (json.has("primary_location") && !json.get("primary_location").isNull()) {
+                JsonNode primaryLocation = json.get("primary_location");
+                if (primaryLocation.has("pdf_url") && !primaryLocation.get("pdf_url").isNull()) {
+                    String pdfUrl = primaryLocation.get("pdf_url").asText(null);
+                    if (pdfUrl != null && !pdfUrl.trim().isEmpty()) {
+                        String linkPdf = pdfFileService.downloadAndSavePdfFromUrl(pdfUrl);
+                        if (linkPdf != null && !linkPdf.trim().isEmpty()) {
+                            dto.setLinkPDF(linkPdf);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("OpenAlexService: Error al descargar PDF en parseOpenAlexJson: " + e.getMessage());
+            e.printStackTrace();
         }
         
         // Journal matching
@@ -634,6 +662,67 @@ public class OpenAlexService {
     public String getDefaultProjectCode() {
         return defaultProjectCode;
     }
+
+    /**
+     * Usa OpenAlex para intentar obtener un PDF para la publicación dada.
+     * Si OpenAlex retorna primary_location.pdf_url y el PDF se descarga correctamente,
+     * se guarda en el directorio de PDFs y se actualiza el campo linkPDF de la publicación
+     * con el formato "PDF:pdfs/{uuid}.pdf".
+     *
+     * Este método está pensado para ser llamado después de crear la publicación
+     * (por ejemplo, en el flujo de importación desde DOI).
+     */
+    public void attachPdfFromOpenAlexIfAvailable(Publicacion publicacion) {
+        if (publicacion == null || publicacion.getDoi() == null || publicacion.getDoi().trim().isEmpty()) {
+            return;
+        }
+
+        try {
+            // Normalizar DOI igual que en las otras llamadas a OpenAlex
+            String normalizedDoi = normalizeDoi(publicacion.getDoi());
+            String openAlexUrl = OPENALEX_BASE_URL + DOI_PREFIX + normalizedDoi;
+
+            ResponseEntity<String> response = restTemplate.getForEntity(openAlexUrl, String.class);
+            System.out.println("openAlexUrl: " + openAlexUrl + " response: " + response.getStatusCode());
+            if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
+                return;
+            }
+
+            JsonNode json = objectMapper.readTree(response.getBody());
+            if (json == null || json.isNull()) {
+                return;
+            }
+
+            // Navegar a primary_location.pdf_url
+            if (!json.has("primary_location") || json.get("primary_location").isNull()) {
+                return;
+            }
+
+            JsonNode primaryLocation = json.get("primary_location");
+            if (!primaryLocation.has("pdf_url") || primaryLocation.get("pdf_url").isNull()) {
+                return;
+            }
+
+            String pdfUrl = primaryLocation.get("pdf_url").asText(null);
+            if (pdfUrl == null || pdfUrl.trim().isEmpty()) {
+                return;
+            }
+
+            // Descargar y guardar PDF
+            String linkPdf = pdfFileService.downloadAndSavePdfFromUrl(pdfUrl);
+            if (linkPdf == null || linkPdf.trim().isEmpty()) {
+                return;
+            }
+
+            // Actualizar publicación en BD
+            publicacion.setLinkPDF(linkPdf);
+            publicacionRepository.save(publicacion);
+
+        } catch (Exception e) {
+            System.err.println("OpenAlexService: Error al adjuntar PDF desde OpenAlex: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
     
     /**
      * Convierte PublicationFromDoiDTO a PublicationPreviewDTO con estados normalizados
@@ -652,6 +741,7 @@ public class OpenAlexService {
         pubData.setFirstPage(data.getFirstPage());
         pubData.setLastPage(data.getLastPage());
         pubData.setOpenAlexUrl(data.getOpenAlexUrl());
+        pubData.setLinkPDF(data.getLinkPDF());
         preview.setPublication(pubData);
         
         // Journal con estado normalizado

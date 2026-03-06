@@ -28,6 +28,7 @@ public class PublicationFromDoiDTO {
     
     // Metadata adicional
     private String openAlexUrl;             // URL de OpenAlex para referencia
+    private String linkPDF;                 // Link al PDF descargado y guardado (formato "PDF:pdfs/uuid.pdf")
     
     // Constructors
     public PublicationFromDoiDTO() {}
@@ -119,6 +120,14 @@ public class PublicationFromDoiDTO {
     
     public void setOpenAlexUrl(String openAlexUrl) {
         this.openAlexUrl = openAlexUrl;
+    }
+
+    public String getLinkPDF() {
+        return linkPDF;
+    }
+
+    public void setLinkPDF(String linkPDF) {
+        this.linkPDF = linkPDF;
     }
 }
 
