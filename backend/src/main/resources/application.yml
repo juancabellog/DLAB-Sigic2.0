@@ -76,3 +76,6 @@ cache:
   textos:
     max-size: 5000       # Máximo número de entradas en el caché de textos
     ttl-minutes: 60      # Tiempo de vida en minutos para entradas del caché de textos
+
+app:
+  version: "dev"

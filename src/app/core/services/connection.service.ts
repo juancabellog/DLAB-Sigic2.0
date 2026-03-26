@@ -15,6 +15,8 @@ export class ConnectionService {
   private readonly HEALTH_CHECK_INTERVAL = 30000; // 30 segundos
   private readonly TOKEN_VALIDATION_INTERVAL = 300000; // 5 minutos
   private readonly CONNECTION_TIMEOUT = 5000; // 5 segundos
+  private readonly CLIENT_VERSION = environment.appVersion || 'dev';
+  private versionMismatchHandled = false;
 
   private connectionStatusSubject = new BehaviorSubject<boolean>(true);
   public connectionStatus$ = this.connectionStatusSubject.asObservable();
@@ -86,41 +88,27 @@ export class ConnectionService {
         // Conexión exitosa
         const wasDisconnected = !this.connectionStatusSubject.value;
         this.connectionStatusSubject.next(true);
-        
-        // Si estaba desconectado y ahora está conectado, validar el token
-        if (wasDisconnected) {
-          // Validar el token cuando se restablece la conexión
-          this.validateToken().subscribe({
-            next: (isValid) => {
-              if (isValid) {
-                this.snackBar.open(
-                  '✅ Connection restored with server',
-                  'Close',
-                  {
-                    duration: 3000,
-                    panelClass: ['success-snackbar'],
-                    horizontalPosition: 'center',
-                    verticalPosition: 'top'
-                  }
-                );
-              } else {
-                // Token inválido, el usuario será redirigido al login
-                this.snackBar.open(
-                  '🔒 Your session has expired. You will be redirected to login.',
-                  'OK',
-                  {
-                    duration: 4000,
-                    panelClass: ['security-snackbar'],
-                    horizontalPosition: 'center',
-                    verticalPosition: 'top'
-                  }
-                );
-              }
-            },
-            error: () => {
-              // Error al validar token, redirigir al login
+
+        // Validar token SIEMPRE que la conexión esté OK, para:
+        // - Detectar expiración de sesión
+        // - Comparar versión cliente/servidor en cada health check
+        this.validateToken().subscribe({
+          next: (isValid) => {
+            if (wasDisconnected && isValid) {
               this.snackBar.open(
-                '🔒 Error validating session. You will be redirected to login.',
+                '✅ Connection restored with server',
+                'Close',
+                {
+                  duration: 3000,
+                  panelClass: ['success-snackbar'],
+                  horizontalPosition: 'center',
+                  verticalPosition: 'top'
+                }
+              );
+            } else if (!isValid) {
+              // Token inválido, el usuario será redirigido al login
+              this.snackBar.open(
+                '🔒 Your session has expired. You will be redirected to login.',
                 'OK',
                 {
                   duration: 4000,
@@ -130,8 +118,21 @@ export class ConnectionService {
                 }
               );
             }
-          });
-        }
+          },
+          error: () => {
+            // Error al validar token, redirigir al login
+            this.snackBar.open(
+              '🔒 Error validating session. You will be redirected to login.',
+              'OK',
+              {
+                duration: 4000,
+                panelClass: ['security-snackbar'],
+                horizontalPosition: 'center',
+                verticalPosition: 'top'
+              }
+            );
+          }
+        });
       }),
       catchError((error) => {
         // Conexión fallida
@@ -168,13 +169,28 @@ export class ConnectionService {
       return of(false);
     }
 
-    return this.http.get(`${this.API_URL}/auth/validate`, {
+    return this.http.get<{ status?: string; version?: string }>(`${this.API_URL}/auth/validate`, {
       headers: {
         'Authorization': `Bearer ${token}`
       }
     }).pipe(
-      tap(() => {
+      tap((resp) => {
         this.connectionStatusSubject.next(true);
+
+        // Chequear versión del backend: si cambia, informar al usuario para que recargue
+        if (!this.versionMismatchHandled && resp && resp.version && resp.version !== this.CLIENT_VERSION) {
+          this.versionMismatchHandled = true;
+          this.snackBar.open(
+            'A new version of the platform is available. Please refresh your browser to update.',
+            undefined,
+            {
+              duration: undefined, // mensaje permanente hasta que el usuario recargue
+              panelClass: ['info-snackbar'],
+              horizontalPosition: 'center',
+              verticalPosition: 'top'
+            }
+          );
+        }
       }),
       catchError((error) => {
         if (error.status === 401) {

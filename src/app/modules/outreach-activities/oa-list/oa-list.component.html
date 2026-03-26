@@ -24,6 +24,9 @@
     [items]="activities"
     [showBasalFilter]="true"
     [readonly]="true"
+    [showExportButton]="true"
+    exportLabel="Export Excel"
+    [exportLoading]="exportLoading"
     [currentViewMode]="viewMode"
     [finalFilteredCount]="finalFilteredCount"
     itemType="activity"
@@ -31,7 +34,8 @@
     (searchResults)="onSearchResults($event)"
     (searchTermChange)="onSearchTermChange($event)"
     (viewModeChange)="onViewModeChange($event)"
-    (basalFilterChange)="onBasalFilterChange($event)">
+    (basalFilterChange)="onBasalFilterChange($event)"
+    (exportRequested)="onExportRequested()">
   </app-list-controls>
 
   <div *ngIf="loading" class="loading-container">

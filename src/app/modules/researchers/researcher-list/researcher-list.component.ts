@@ -35,6 +35,7 @@ import { RRHHDTO } from '../../../core/models/backend-dtos';
 export class ResearcherListComponent implements OnInit {
   viewMode: ViewMode = 'card';
   filteredResearchers: RRHHDTO[] = [];
+  researchers: RRHHDTO[] = [];
   isSearching: boolean = false;
   loading: boolean = false;
 
@@ -58,7 +59,8 @@ export class ResearcherListComponent implements OnInit {
     // Solicitar un tamaño de página grande para obtener todos los investigadores
     this.researcherService.getResearchers({ page: 0, size: 10000 }).subscribe({
       next: (response) => {
-        this.filteredResearchers = response.content || [];
+        this.researchers = response.content || [];
+        this.filteredResearchers = [...this.researchers];
         this.loading = false;
       },
       error: (error) => {
@@ -107,5 +109,9 @@ export class ResearcherListComponent implements OnInit {
 
   onSearchTermChange(searchTerm: string): void {
     this.isSearching = searchTerm.length > 0;
+    // Cuando se limpia el término de búsqueda, restaurar la lista completa
+    if (!this.isSearching) {
+      this.filteredResearchers = [...this.researchers];
+    }
   }
 }

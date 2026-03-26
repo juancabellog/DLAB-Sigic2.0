@@ -10,6 +10,24 @@
       </mat-error>
     </mat-form-field>
 
+    <div class="full-width gender-group">
+      <label class="gender-label">Gender</label>
+      <mat-radio-group
+        class="gender-radio-group"
+        formControlName="gender"
+        aria-label="Select gender">
+        <mat-radio-button class="gender-radio-button" value="M">
+          Male
+        </mat-radio-button>
+        <mat-radio-button class="gender-radio-button" value="F">
+          Female
+        </mat-radio-button>
+      </mat-radio-group>
+      <div class="gender-error" *ngIf="createForm.get('gender')?.invalid && (createForm.get('gender')?.touched || createForm.get('gender')?.dirty)">
+        Gender is required
+      </div>
+    </div>
+
     <mat-form-field class="full-width">
       <mat-label>Email</mat-label>
       <input matInput type="email" formControlName="email">

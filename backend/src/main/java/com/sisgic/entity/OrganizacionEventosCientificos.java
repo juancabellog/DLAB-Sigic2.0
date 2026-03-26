@@ -1,6 +1,7 @@
 package com.sisgic.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.Formula;
 
 @Entity
 @Table(name = "organizacioneventoscientificos")
@@ -20,6 +21,9 @@ public class OrganizacionEventosCientificos extends ProductoCientifico {
     
     @Column(name = "numParticipantes")
     private Integer numParticipantes;
+    
+    @Formula("(SELECT f_getParticipantByRol(id, 14))")
+    private String organizer; // Campo calculado: nombre del organizador (rol 14)
     
     // Constructors
     public OrganizacionEventosCientificos() {}
@@ -55,6 +59,14 @@ public class OrganizacionEventosCientificos extends ProductoCientifico {
     
     public void setNumParticipantes(Integer numParticipantes) {
         this.numParticipantes = numParticipantes;
+    }
+    
+    public String getOrganizer() {
+        return organizer;
+    }
+    
+    public void setOrganizer(String organizer) {
+        this.organizer = organizer;
     }
 }
 

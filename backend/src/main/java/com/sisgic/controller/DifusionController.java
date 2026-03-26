@@ -17,10 +17,16 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletResponse;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -53,6 +59,9 @@ public class DifusionController {
 
     @Autowired
     private ParticipacionProductoRepository participacionProductoRepository;
+
+    @Autowired
+    private PublicoObjetivoRepository publicoObjetivoRepository;
 
     @Autowired
     private TextosService textosService;
@@ -101,6 +110,151 @@ public class DifusionController {
         Page<DifusionDTO> difusionesDTO = difusiones.map(d -> convertToDTOWithoutParticipants(d, textosMap));
 
         return ResponseEntity.ok(difusionesDTO);
+    }
+
+    /**
+     * Exporta actividades de difusión visibles a Excel.
+     */
+    @GetMapping("/export")
+    public void exportOutreachActivitiesToExcel(
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDir,
+            HttpServletResponse response) {
+        try {
+            Sort sort = sortDir.equalsIgnoreCase("DESC")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+            Long idRRHH = userService.getCurrentUserIdRRHH().orElse(null);
+            String userName = userService.getCurrentUsername().orElse(null);
+            List<Difusion> activities = difusionRepository
+                .findVisibleByUserIdRRHH(idRRHH, userName, PageRequest.of(0, 100000, sort))
+                .getContent();
+
+            Map<Long, String> targetAudienceDescriptions = new HashMap<>();
+            for (PublicoObjetivo po : publicoObjetivoRepository.findAllByOrderByIdAsc()) {
+                String desc = po.getIdDescripcion() != null
+                    ? textosService.getTextValue(po.getIdDescripcion(), 2, "us").orElse(po.getIdDescripcion())
+                    : "";
+                if (po.getId() != null) {
+                    targetAudienceDescriptions.put(po.getId(), desc);
+                }
+            }
+
+            Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("Outreach Activities");
+
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {
+                "Id",
+                "Name",
+                "Description",
+                "Diffusion Type",
+                "Country",
+                "Place",
+                "Number of Attendees",
+                "Duration",
+                "Start Date",
+                "End Date",
+                "Target Audience",
+                "Clusters",
+                "Progress Report (Period)",
+                "ANID Code",
+                "creationDate",
+                "Main Responsible",
+                "Participants"
+            };
+
+            for (int i = 0; i < headers.length; i++) {
+                headerRow.createCell(i).setCellValue(headers[i]);
+            }
+
+            int rowNum = 1;
+            for (Difusion activity : activities) {
+                Row row = sheet.createRow(rowNum++);
+                DifusionDTO dto = convertToDTO(activity);
+
+                List<ParticipacionProducto> participaciones = participacionProductoRepository.findByProductoId(activity.getId());
+                String mainResponsible = participaciones.stream()
+                    .filter(pp -> pp.getTipoParticipacion() != null && pp.getTipoParticipacion().getId() != null
+                        && pp.getTipoParticipacion().getId().longValue() == 20L)
+                    .map(pp -> pp.getRrhh() != null ? pp.getRrhh().getFullname() : null)
+                    .filter(name -> name != null && !name.trim().isEmpty())
+                    .distinct()
+                    .collect(Collectors.joining(", "));
+
+                String participants = participaciones.stream()
+                    .filter(pp -> pp.getTipoParticipacion() == null || pp.getTipoParticipacion().getId() == null
+                        || pp.getTipoParticipacion().getId().longValue() != 20L)
+                    .map(pp -> pp.getRrhh() != null ? pp.getRrhh().getFullname() : null)
+                    .filter(name -> name != null && !name.trim().isEmpty())
+                    .distinct()
+                    .collect(Collectors.joining(", "));
+
+                String targetAudience = "";
+                if (dto.getPublicoObjetivo() != null && !dto.getPublicoObjetivo().trim().isEmpty()) {
+                    targetAudience = java.util.Arrays.stream(dto.getPublicoObjetivo().split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .map(idStr -> {
+                            try {
+                                Long id = Long.parseLong(idStr);
+                                return targetAudienceDescriptions.getOrDefault(id, idStr);
+                            } catch (NumberFormatException e) {
+                                return idStr;
+                            }
+                        })
+                        .collect(Collectors.joining(", "));
+                }
+
+                String cluster = "";
+                if (dto.getCluster() != null && !dto.getCluster().trim().isEmpty()) {
+                    cluster = java.util.Arrays.stream(dto.getCluster().split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .map(this::mapClusterLabel)
+                        .collect(Collectors.joining(", "));
+                }
+
+                String diffusionType = dto.getTipoDifusion() != null && dto.getTipoDifusion().getIdDescripcion() != null
+                    ? textosService.getTextValue(dto.getTipoDifusion().getIdDescripcion(), 2, "us")
+                        .orElse(dto.getTipoDifusion().getIdDescripcion())
+                    : "";
+                String country = dto.getPais() != null && dto.getPais().getIdDescripcion() != null
+                    ? textosService.getTextValue(dto.getPais().getIdDescripcion(), 2, "us")
+                        .orElse(dto.getPais().getIdDescripcion())
+                    : "";
+
+                row.createCell(0).setCellValue(dto.getId() != null ? dto.getId().toString() : "");
+                row.createCell(1).setCellValue(dto.getDescripcion() != null ? dto.getDescripcion() : "");
+                row.createCell(2).setCellValue(dto.getComentario() != null ? dto.getComentario() : "");
+                row.createCell(3).setCellValue(diffusionType);
+                row.createCell(4).setCellValue(country);
+                row.createCell(5).setCellValue(dto.getLugar() != null ? dto.getLugar() : "");
+                row.createCell(6).setCellValue(dto.getNumAsistentes() != null ? dto.getNumAsistentes().toString() : "");
+                row.createCell(7).setCellValue(dto.getDuracion() != null ? dto.getDuracion().toString() : "");
+                row.createCell(8).setCellValue(dto.getFechaInicio() != null ? dto.getFechaInicio() : "");
+                row.createCell(9).setCellValue(dto.getFechaTermino() != null ? dto.getFechaTermino() : "");
+                row.createCell(10).setCellValue(targetAudience);
+                row.createCell(11).setCellValue(cluster);
+                row.createCell(12).setCellValue(dto.getProgressReport() != null ? dto.getProgressReport() : "");
+                row.createCell(13).setCellValue(dto.getCodigoANID() != null ? dto.getCodigoANID() : "");
+                row.createCell(14).setCellValue(dto.getCreatedAt() != null ? dto.getCreatedAt() : "");
+                row.createCell(15).setCellValue(mainResponsible);
+                row.createCell(16).setCellValue(participants);
+            }
+
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=outreach-activities.xlsx");
+            workbook.write(response.getOutputStream());
+            workbook.close();
+        } catch (Exception e) {
+            throw new RuntimeException("Error generating outreach activities Excel file", e);
+        }
     }
 
     /**
@@ -183,9 +337,7 @@ public class DifusionController {
                 }
                 // Actualizar linkPDF siempre (puede ser null para limpiarlo)
                 existingDifusion.setLinkPDF(dto.getLinkPDF());
-                if (dto.getProgressReport() != null) {
-                    existingDifusion.setProgressReport(dto.getProgressReport());
-                }
+                existingDifusion.setProgressReport(dto.getProgressReport());
                 if (dto.getCodigoANID() != null) {
                     existingDifusion.setCodigoANID(dto.getCodigoANID());
                 }
@@ -201,6 +353,9 @@ public class DifusionController {
                 }
                 if (dto.getLineasInvestigacion() != null) {
                     existingDifusion.setLineasInvestigacion(dto.getLineasInvestigacion());
+                }
+                if (dto.getCluster() != null) {
+                    existingDifusion.setCluster(dto.getCluster());
                 }
 
                 // Actualizar relaciones de ProductoCientifico
@@ -364,6 +519,7 @@ public class DifusionController {
             dto.setBasal(null);
         }
         dto.setLineasInvestigacion(difusion.getLineasInvestigacion());
+        dto.setCluster(difusion.getCluster());
         dto.setParticipantesNombres(difusion.getParticipantesNombres());
         dto.setCreatedAt(difusion.getCreatedAt() != null ? difusion.getCreatedAt().toString() : null);
         dto.setUpdatedAt(difusion.getUpdatedAt() != null ? difusion.getUpdatedAt().toString() : null);
@@ -453,6 +609,7 @@ public class DifusionController {
             difusion.setBasal('S');
         }
         difusion.setLineasInvestigacion(dto.getLineasInvestigacion());
+        difusion.setCluster(dto.getCluster());
 
         // Relaciones de ProductoCientifico
         if (dto.getTipoProducto() != null && dto.getTipoProducto().getId() != null) {
@@ -499,6 +656,23 @@ public class DifusionController {
             } catch (Exception e2) {
                 return null;
             }
+        }
+    }
+
+    private String mapClusterLabel(String clusterId) {
+        switch (clusterId) {
+            case "1":
+                return "I";
+            case "2":
+                return "II";
+            case "3":
+                return "III";
+            case "4":
+                return "IV";
+            case "5":
+                return "V";
+            default:
+                return clusterId;
         }
     }
 

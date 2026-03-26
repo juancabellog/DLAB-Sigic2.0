@@ -311,6 +311,12 @@ html, body {
 // SHARED COMPONENT STYLES
 // ========================================
 
+// Shared helper: allow compact cluster checkbox rows inside full-width containers
+.full-width.cluster {
+  min-height: 0 !important;
+  margin-bottom: 0px !important;
+}
+
 // Action Bar Styles
 .action-bar {
   display: flex;

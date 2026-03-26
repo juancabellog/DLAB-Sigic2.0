@@ -41,13 +41,14 @@ export class ThesisStudentListComponent implements OnInit, OnDestroy {
   thesis: TesisDTO[] = [];
   isSearching: boolean = false;
   loading: boolean = false;
+  exportLoading: boolean = false;
   basalOnly: boolean = false;
   finalFilteredCount: number | null = null;
   private searchResults: TesisDTO[] = [];
   private viewModeSubscription?: Subscription;
 
   // Sorting state for list view
-  sortColumn: 'title' | 'degree' | 'institution' | 'student' | 'status' | 'date' | null = null;
+  sortColumn: 'title' | 'degree' | 'institution' | 'student' | 'status' | 'period' | 'date' | null = null;
   sortDirection: 'asc' | 'desc' = 'asc';
 
   constructor(
@@ -126,6 +127,43 @@ export class ThesisStudentListComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
+  onExportRequested(): void {
+    if (this.filteredThesis.length === 0) {
+      this.messageService.info('There are no results to export.');
+      return;
+    }
+    this.exportLoading = true;
+    // Exportar siempre el conjunto actual de resultados (con filtros y búsqueda aplicados)
+    this.thesisService.exportThesisToExcel({
+      page: 0,
+      size: 10000,
+      sort: this.sortColumn || 'id',
+      direction: this.sortDirection === 'asc' ? 'ASC' : 'DESC'
+    }).pipe(
+      catchError(error => {
+        console.error('Error exporting thesis to Excel:', error);
+        this.messageService.error('Error exporting thesis. Please try again later.');
+        return of(null as any);
+      }),
+      finalize(() => {
+        this.exportLoading = false;
+      })
+    ).subscribe(blob => {
+      if (!blob) {
+        return;
+      }
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'thesis-students.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      this.messageService.success('Export started. Your download should begin shortly.');
+    });
+  }
+
   private applyFilters(): void {
     let filtered = [...this.searchResults];
     
@@ -146,7 +184,7 @@ export class ThesisStudentListComponent implements OnInit, OnDestroy {
     this.finalFilteredCount = filtered.length;
   }
 
-  onSort(column: 'title' | 'degree' | 'institution' | 'student' | 'status' | 'date'): void {
+  onSort(column: 'title' | 'degree' | 'institution' | 'student' | 'status' | 'period' | 'date'): void {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
@@ -181,6 +219,11 @@ export class ThesisStudentListComponent implements OnInit, OnDestroy {
         valueA = (this.getThesisStatus(a) || 'N/A').toLowerCase();
         valueB = (this.getThesisStatus(b) || 'N/A').toLowerCase();
         break;
+      case 'period':
+        // progressReport es numérico; usar 0 para null
+        valueA = a.progressReport ?? 0;
+        valueB = b.progressReport ?? 0;
+        break;
       case 'date':
         // fechaInicioPrograma es string ISO (YYYY-MM-DD), se puede comparar como string
         valueA = a.fechaInicioPrograma || '';
@@ -213,8 +256,8 @@ export class ThesisStudentListComponent implements OnInit, OnDestroy {
   }
 
   getProgressReport(thesis: TesisDTO): string {
-    if (thesis.progressReport != null && thesis.progressReport !== undefined) {
-      return `Period ${thesis.progressReport}`;
+    if (thesis.progressReport != null && thesis.progressReport !== undefined && thesis.progressReport !== '') {
+      return thesis.progressReport;
     }
     return 'N/A';
   }

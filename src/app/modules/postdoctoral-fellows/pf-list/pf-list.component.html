@@ -24,14 +24,18 @@
     [items]="fellows"
     [showBasalFilter]="true"
     [readonly]="true"
+    [showExportButton]="true"
+    exportLabel="Export Excel"
+    [exportLoading]="exportLoading"
     [currentViewMode]="viewMode"
     [finalFilteredCount]="finalFilteredCount"
-    itemType="fellow"
+    itemType="postdoctoral fellow"
     listType="postdoctoral-fellows"
     (searchResults)="onSearchResults($event)"
     (searchTermChange)="onSearchTermChange($event)"
     (viewModeChange)="onViewModeChange($event)"
-    (basalFilterChange)="onBasalFilterChange($event)">
+    (basalFilterChange)="onBasalFilterChange($event)"
+    (exportRequested)="onExportRequested()">
   </app-list-controls>
 
   <div *ngIf="loading" class="loading-container">
@@ -73,9 +77,17 @@
                 <span class="detail-label">Name:</span>
                 <span class="detail-value">{{ fellow.postdoctoralFellowName }}</span>
               </div>
+              <div class="detail-row" *ngIf="fellow.progressReport">
+                <span class="detail-label">Period:</span>
+                <span class="detail-value">{{ fellow.progressReport }}</span>
+              </div>
               <div class="detail-row" *ngIf="fellow.fechaInicio">
                 <span class="detail-label">Start Date:</span>
                 <span class="detail-value">{{ fellow.fechaInicio | date:'MMM yyyy' }}</span>
+              </div>
+              <div class="detail-row" *ngIf="fellow.fechaTermino">
+                <span class="detail-label">End Date:</span>
+                <span class="detail-value">{{ fellow.fechaTermino | date:'MMM yyyy' }}</span>
               </div>
             </div>
           </mat-card-content>
@@ -146,12 +158,34 @@
             </mat-icon>
           </div>
           <div
+            class="list-cell period-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'period' }"
+            (click)="onSort('period')">
+            <span>Period</span>
+            <mat-icon>
+              {{ sortColumn === 'period'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
             class="list-cell date-cell sortable-header"
             [ngClass]="{ 'sortable-header-active': sortColumn === 'date' }"
             (click)="onSort('date')">
             <span>Start Date</span>
             <mat-icon>
               {{ sortColumn === 'date'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell end-date-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'endDate' }"
+            (click)="onSort('endDate')">
+            <span>End Date</span>
+            <mat-icon>
+              {{ sortColumn === 'endDate'
                   ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
                   : 'unfold_more' }}
             </mat-icon>
@@ -172,7 +206,9 @@
           <div class="list-cell institution-cell">{{ getInstitution(fellow) }}</div>
           <div class="list-cell sector-cell">{{ getSector(fellow) }}</div>
           <div class="list-cell fellow-cell">{{ fellow.postdoctoralFellowName || 'N/A' }}</div>
+          <div class="list-cell period-cell">{{ fellow.progressReport || 'N/A' }}</div>
           <div class="list-cell date-cell">{{ fellow.fechaInicio | date:'MMM yyyy' }}</div>
+          <div class="list-cell end-date-cell">{{ fellow.fechaTermino | date:'MMM yyyy' }}</div>
           <div class="list-cell actions-cell">
             <button 
               mat-icon-button 

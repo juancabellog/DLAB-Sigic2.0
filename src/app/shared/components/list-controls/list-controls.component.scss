@@ -41,6 +41,10 @@
   flex-shrink: 0; // que no se achique, el que cede es el buscador
 }
 
+.export-button {
+  white-space: nowrap;
+}
+
 .basal-filter-checkbox,
 .pending-filter-checkbox {
   white-space: nowrap;

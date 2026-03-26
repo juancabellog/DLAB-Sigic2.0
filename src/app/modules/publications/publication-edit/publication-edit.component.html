@@ -121,22 +121,17 @@
           </button>
         </div>
         
-        <!-- Banner de publicación existente -->
+        <!-- Banner de publicación existente (read-only) -->
         <div *ngIf="hasExistingPublication && existingPublication" class="existing-publication-banner">
           <div class="banner-content">
             <mat-icon class="warning-icon">warning</mat-icon>
             <div class="banner-text">
-              <div class="banner-title">This publication already exists in the system.</div>
-              
-              <!-- Mensaje de redirección -->
-              <div class="redirect-message" *ngIf="!redirectCancelled">
-                <span>Redirecting to the existing record</span>
-                <mat-spinner 
-                  *ngIf="showRedirectSpinner"
-                  diameter="16"
-                  class="redirect-spinner">
-                </mat-spinner>
-                <span *ngIf="showRedirectSpinner">…</span>
+              <div class="banner-title">
+                This publication already exists in the platform.
+                <span class="existing-publication-badge">Existing publication</span>
+              </div>
+              <div class="banner-subtitle">
+                You can view its information but cannot modify it.
               </div>
               
               <div class="banner-metadata">
@@ -156,6 +151,7 @@
               
               <div class="banner-actions">
                 <button 
+                  *ngIf="existingPublication.visible !== false"
                   mat-raised-button 
                   color="primary"
                   (click)="openExistingPublication()"
@@ -340,10 +336,32 @@
             </mat-form-field>
           </div>
         </div>
-        
+        <div class="form-row">
+          <mat-form-field appearance="fill" class="half-width">
+            <mat-label>Impact Factor</mat-label>
+            <input matInput type="text" [value]="formatImpactFactor(publication.factorImpacto)" placeholder="e.g., 25,2345" disabled>
+            <mat-spinner *ngIf="loadingImpactFactors" matSuffix diameter="20"></mat-spinner>
+            <mat-icon *ngIf="!loadingImpactFactors && publication.factorImpacto" matSuffix>check_circle</mat-icon>
+          </mat-form-field>
+          
+          <mat-form-field appearance="fill" class="half-width">
+            <mat-label>Average Impact Factor 5y</mat-label>
+            <input matInput type="text" [value]="formatImpactFactor(publication.factorImpactoPromedio)" placeholder="e.g., 23,8765" disabled>
+            <mat-spinner *ngIf="loadingImpactFactors" matSuffix diameter="20"></mat-spinner>
+            <mat-icon *ngIf="!loadingImpactFactors && publication.factorImpactoPromedio" matSuffix>check_circle</mat-icon>
+          </mat-form-field>
+        </div>
+        <div *ngIf="publication.journal && publication.yearPublished && !loadingImpactFactors && (publication.factorImpacto || publication.factorImpactoPromedio)" class="form-row">
+          <div class="full-width impact-factors-info">
+            <mat-icon>info</mat-icon>
+            <span>Impact factors calculated for {{ publication.journal.descripcion }} ({{ publication.yearPublished }})</span>
+          </div>
+        </div>
+      </div>
+      
         <!-- Group 2: Funding -->
         <div class="field-group">
-          <div class="group-title">Funding</div>
+          <div class="group-title">Product Information</div>
           <div class="form-row">
             <mat-checkbox [(ngModel)]="isBasal" (change)="onBasalChange($event.checked)" color="primary" class="basal-checkbox">
               Product associated with Basal funding
@@ -354,51 +372,75 @@
             <mat-form-field class="half-width">
               <mat-label>Progress Report (Period)</mat-label>
               <mat-select [(ngModel)]="publication.progressReport">
-                <mat-option [value]="1">Period 1</mat-option>
-                <mat-option [value]="2">Period 2</mat-option>
-                <mat-option [value]="3">Period 3</mat-option>
-                <mat-option [value]="4">Period 4</mat-option>
-                <mat-option [value]="5">Period 5</mat-option>
+                <mat-option value="1">Period 1</mat-option>
+                <mat-option value="2">Period 2</mat-option>
+                <mat-option value="3">Period 3</mat-option>
+                <mat-option value="4">Period 4</mat-option>
+                <mat-option value="5">Period 5</mat-option>
               </mat-select>
             </mat-form-field>
             
             <mat-form-field class="half-width">
               <mat-label>ANID Code</mat-label>
-              <input matInput [(ngModel)]="publication.codigoANID" placeholder="Enter ANID code">
+            <input matInput [(ngModel)]="publication.codigoANID" placeholder="Enter ANID code" [readonly]="true">
             </mat-form-field>
           </div>
         </div>
-
+        <mat-divider></mat-divider>
         <!-- Group 3: Indexes -->
         <div class="field-group">
           <div class="group-title">Indexes</div>
           <div class="form-row">
-            <mat-form-field appearance="fill" class="half-width">
-              <mat-label>Impact Factor</mat-label>
-              <input matInput type="text" [value]="formatImpactFactor(publication.factorImpacto)" placeholder="e.g., 25,2345" disabled>
-              <mat-spinner *ngIf="loadingImpactFactors" matSuffix diameter="20"></mat-spinner>
-              <mat-icon *ngIf="!loadingImpactFactors && publication.factorImpacto" matSuffix>check_circle</mat-icon>
-            </mat-form-field>
-            
-            <mat-form-field appearance="fill" class="half-width">
-              <mat-label>Average Impact Factor 5y</mat-label>
-              <input matInput type="text" [value]="formatImpactFactor(publication.factorImpactoPromedio)" placeholder="e.g., 23,8765" disabled>
-              <mat-spinner *ngIf="loadingImpactFactors" matSuffix diameter="20"></mat-spinner>
-              <mat-icon *ngIf="!loadingImpactFactors && publication.factorImpactoPromedio" matSuffix>check_circle</mat-icon>
+            <div class="full-width">
+              <div class="checkbox-group">
+                <mat-checkbox
+                  *ngFor="let indexType of indexTypes"
+                  [checked]="isIndexSelected(indexType.id)"
+                  (change)="onIndexTypeChange(indexType, $event.checked)"
+                  color="primary"
+                  [disabled]="hasExistingPublication">
+                  {{ indexType.descripcion }}
+                </mat-checkbox>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row" *ngIf="hasOtherIndexType()">
+            <mat-form-field appearance="fill" class="full-width">
+              <mat-label>Other index</mat-label>
+              <input
+                matInput
+                [(ngModel)]="indexOtherText"
+                (ngModelChange)="onIndexOtherTextChange($event)"
+                placeholder="Enter other index description"
+                [disabled]="hasExistingPublication">
             </mat-form-field>
           </div>
-          <div *ngIf="publication.journal && publication.yearPublished && !loadingImpactFactors && (publication.factorImpacto || publication.factorImpactoPromedio)" class="form-row">
-            <div class="full-width impact-factors-info">
-              <mat-icon>info</mat-icon>
-              <span>Impact factors calculated for {{ publication.journal.descripcion }} ({{ publication.yearPublished }})</span>
+
+          <mat-divider></mat-divider>
+        <!-- Group 4: Funding -->
+        <div class="field-group">
+          <div class="group-title">Funding</div>
+          <div class="form-row">
+            <div class="full-width">
+              <div class="checkbox-group">
+                <mat-checkbox
+                  *ngFor="let fundingType of fundingTypes"
+                  [checked]="isFundingSelected(fundingType.id!)"
+                  (change)="onFundingTypeChange(fundingType, $event.checked)"
+                  color="primary"
+                  [disabled]="hasExistingPublication">
+                  {{ fundingType.idDescripcion }}
+                </mat-checkbox>
+              </div>
             </div>
           </div>
         </div>
-        
+
         <mat-divider></mat-divider>
       
         <div class="form-section">
-          <div class="section-title">Clusters</div>
+          <div class="group-title">Clusters</div>
           <div class="form-row">
             <div class="full-width cluster">
               <div class="checkbox-group">
@@ -414,7 +456,7 @@
           </div>
         </div>
         
-        <mat-divider></mat-divider>
+        <mat-divider style="margin-top: 0px !important;"></mat-divider>
 
         <div class="form-row">
           <div class="full-width pdf-upload-field">
@@ -463,9 +505,7 @@
           </div>
         </div>
       </div>
-      
-      <!-- Clusters section with soft grey separators (like Sector Types in Thesis) -->
-      
+            
       <div class="form-section authors-section">
         <div class="section-title">People & Affiliations</div>
         <app-participant-manager 

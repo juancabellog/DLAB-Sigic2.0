@@ -193,9 +193,7 @@ public class OrganizacionEventosCientificosController {
                 }
                 // Actualizar linkPDF siempre (puede ser null para limpiarlo)
                 existingEvento.setLinkPDF(dto.getLinkPDF());
-                if (dto.getProgressReport() != null) {
-                    existingEvento.setProgressReport(dto.getProgressReport());
-                }
+                existingEvento.setProgressReport(dto.getProgressReport());
                 if (dto.getCodigoANID() != null) {
                     existingEvento.setCodigoANID(dto.getCodigoANID());
                 }
@@ -212,6 +210,9 @@ public class OrganizacionEventosCientificosController {
                 }
                 if (dto.getLineasInvestigacion() != null) {
                     existingEvento.setLineasInvestigacion(dto.getLineasInvestigacion());
+                }
+                if (dto.getCluster() != null) {
+                    existingEvento.setCluster(dto.getCluster());
                 }
 
                 // Actualizar relaciones de ProductoCientifico
@@ -365,9 +366,11 @@ public class OrganizacionEventosCientificosController {
             dto.setBasal(null);
         }
         dto.setLineasInvestigacion(evento.getLineasInvestigacion());
+        dto.setCluster(evento.getCluster());
         dto.setParticipantesNombres(evento.getParticipantesNombres());
         dto.setCreatedAt(evento.getCreatedAt() != null ? evento.getCreatedAt().toString() : null);
         dto.setUpdatedAt(evento.getUpdatedAt() != null ? evento.getUpdatedAt().toString() : null);
+        dto.setOrganizer(evento.getOrganizer());
 
         // Relaciones de ProductoCientifico
         if (evento.getTipoProducto() != null) {
@@ -457,6 +460,7 @@ public class OrganizacionEventosCientificosController {
             evento.setBasal('S');
         }
         evento.setLineasInvestigacion(dto.getLineasInvestigacion());
+        evento.setCluster(dto.getCluster());
 
         // Relaciones de ProductoCientifico
         if (dto.getTipoProducto() != null && dto.getTipoProducto().getId() != null) {

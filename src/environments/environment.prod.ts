@@ -3,6 +3,7 @@ export const environment = {
   apiUrl: '/sigic2.0/api',
   appName: 'Scientific Products Platform',
   version: '1.0.0',
+  appVersion: '2025.03.19-02',
   defaultPageSize: 10,
   maxPageSize: 100,
   supportedLanguages: ['es', 'en'],

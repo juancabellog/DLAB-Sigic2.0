@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { ROLE_ANID_EXPORT_CENTER } from '../constants/roles';
 
 export interface User {
   id: number;
@@ -177,6 +178,14 @@ export class AuthService {
       //console.log('Usuario puede acceder a análisis. Roles:', user?.roles);
     }
     return canAccess;
+  }
+
+  /**
+   * Access control for the ANID Export Center tool (Dashboard).
+   * Keep role checks centralized to avoid string magic in components.
+   */
+  canAccessAnidExportCenter(): boolean {
+    return this.hasRole(ROLE_ANID_EXPORT_CENTER);
   }
 
   /**

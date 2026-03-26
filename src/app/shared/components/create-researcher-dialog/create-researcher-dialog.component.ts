@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
+import { MatRadioModule } from '@angular/material/radio';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -31,7 +32,8 @@ export interface CreateResearcherDialogData {
     MatButtonModule,
     MatSelectModule,
     MatProgressSpinnerModule,
-    MatIconModule
+    MatIconModule,
+    MatRadioModule
   ],
   templateUrl: './create-researcher-dialog.component.html',
   styleUrls: ['./create-researcher-dialog.component.scss']
@@ -54,6 +56,7 @@ export class CreateResearcherDialogComponent implements OnInit {
   ) {
     this.createForm = this.formBuilder.group({
       fullName: ['', [Validators.required]],
+      gender: ['M', [Validators.required]],
       email: ['', [Validators.email]],
       orcid: ['', [this.orcidValidator.bind(this)]],
       rut: [''],
@@ -157,6 +160,7 @@ export class CreateResearcherDialogComponent implements OnInit {
 
     const createRequest = {
       fullName: formValue.fullName.trim(),
+      gender: formValue.gender,
       email: formValue.email?.trim() || null,
       orcid: formValue.orcid?.trim() || null,
       rut: formValue.rut?.trim() || null,

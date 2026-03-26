@@ -79,6 +79,16 @@ export class TtEditComponent implements OnInit {
   // Lista de participantes
   participants: ParticipantDTO[] = [];
 
+  // Opciones de clusters (1 a 5)
+  clusterOptions: { id: number; label: string }[] = [
+    { id: 1, label: 'Cluster I' },
+    { id: 2, label: 'Cluster II' },
+    { id: 3, label: 'Cluster III' },
+    { id: 4, label: 'Cluster IV' },
+    { id: 5, label: 'Cluster V' }
+  ];
+  selectedClusters: number[] = [];
+
   // Control del checkbox Basal
   isBasal: boolean = true;
 
@@ -97,7 +107,7 @@ export class TtEditComponent implements OnInit {
       codigoANID: '',
       progressReport: undefined,
       categoriaTransferencia: '',
-      tipoProducto: { id: 6 } // ID 6 para Technology Transfer (según orden en DataInitializer)
+      tipoProducto: { id: 10 } // ID 10 para Technology Transfer
     };
 
   // Categorías de transferencia seleccionadas (para el formulario)
@@ -229,15 +239,17 @@ export class TtEditComponent implements OnInit {
       codigoANID: '',
       progressReport: undefined,
       categoriaTransferencia: '',
-      tipoProducto: { id: 6 },
+      tipoProducto: { id: 10 },
       fechaInicio: undefined,
       fechaTermino: undefined,
-      basal: 'N'
+      basal: 'N',
+      cluster: ''
     };
     this.isBasal = true;
     this.participants = [];
     this.selectedCategories = [];
     this.originalTransfer = null;
+    this.selectedClusters = [];
   }
 
   loadTransferForEdit(id: number): void {
@@ -313,6 +325,19 @@ export class TtEditComponent implements OnInit {
 
         this.transfer = transfer;
         this.originalTransfer = JSON.parse(JSON.stringify(transfer));
+
+        // Cargar clusters seleccionados desde el string de backend
+        this.selectedClusters = [];
+        if (this.transfer.cluster) {
+          try {
+            this.selectedClusters = this.transfer.cluster
+              .split(',')
+              .map(id => parseInt(id.trim(), 10))
+              .filter(id => !isNaN(id));
+          } catch (e) {
+            this.selectedClusters = [];
+          }
+        }
       } else {
         this.messageService.error('Technology transfer not found');
         this.router.navigate(['/technology-transfer']);
@@ -353,6 +378,21 @@ export class TtEditComponent implements OnInit {
   onBasalChange(checked: boolean): void {
     this.isBasal = checked;
     this.transfer.basal = checked ? 'S' : 'N';
+  }
+
+  isClusterSelected(clusterId: number): boolean {
+    return this.selectedClusters.includes(clusterId);
+  }
+
+  onClusterChange(clusterId: number, checked: boolean): void {
+    if (checked) {
+      if (!this.selectedClusters.includes(clusterId)) {
+        this.selectedClusters.push(clusterId);
+      }
+    } else {
+      this.selectedClusters = this.selectedClusters.filter(id => id !== clusterId);
+    }
+    this.transfer.cluster = this.selectedClusters.join(',');
   }
 
   onCategoryChange(category: CategoriaTransferenciaDTO, checked: boolean): void {
@@ -468,7 +508,8 @@ export class TtEditComponent implements OnInit {
           linkPDF: this.transfer.linkPDF || undefined, // Asegurar que linkPDF se incluya explícitamente
           participantes: participantes,
           basal: this.isBasal ? 'S' : 'N',
-          categoriaTransferencia: this.selectedCategories.map(c => c.id).join(',')
+          categoriaTransferencia: this.selectedCategories.map(c => c.id).join(','),
+          cluster: this.selectedClusters.join(',')
         };
 
         const saveOperation = this.isEditMode && this.transferId

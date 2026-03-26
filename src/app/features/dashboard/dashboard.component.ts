@@ -19,6 +19,7 @@ import { OutreachActivitiesService } from '../../core/services/outreach-activiti
 import { ScientificCollaborationsService } from '../../core/services/scientific-collaborations.service';
 import { AuthService } from '../../core/services/auth.service';
 import { DashboardService } from '../../core/services/dashboard.service';
+import { AnidExportCenterComponent } from './anid-export-center/anid-export-center.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -30,7 +31,8 @@ import { DashboardService } from '../../core/services/dashboard.service';
     MatButtonModule,
     MatIconModule,
     MatGridListModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    AnidExportCenterComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss']

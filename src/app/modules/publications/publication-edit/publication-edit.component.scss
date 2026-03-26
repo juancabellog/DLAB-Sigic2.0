@@ -255,10 +255,6 @@
   flex-direction: column;
   justify-content: flex-start;
 }
-.full-width.cluster{
-  min-height: 0px !important;
-}
-
 .half-width {
   grid-column: span 6; // Each field occupies 6 columns (50% width)
   min-height: 70px; // Consistent height for Angular Material fields
@@ -906,22 +902,19 @@
         font-size: 16px;
         font-weight: 600;
         color: #e65100;
-        margin-bottom: 12px;
+        margin-bottom: 4px;
       }
-      
-      .redirect-message {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 12px;
-        font-size: 14px;
-        color: #666;
-        font-style: italic;
         
-        .redirect-spinner {
-      display: inline-block;
-      margin: 0 4px;
-    }
+        .banner-subtitle {
+          font-size: 13px;
+          color: rgba(0, 0, 0, 0.75);
+          margin-bottom: 12px;
+        }
+      
+      .banner-subtitle {
+        font-size: 13px;
+        color: rgba(0, 0, 0, 0.75);
+        margin-bottom: 12px;
       }
       
       .banner-metadata {
@@ -977,6 +970,19 @@
       }
     }
   }
+}
+
+.existing-publication-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background-color: #e3f2fd;
+  color: #1565c0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .journal-new-banner {

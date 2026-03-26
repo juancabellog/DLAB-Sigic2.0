@@ -16,6 +16,7 @@ import { MessageService } from '../../../core/services/message.service';
 import { ViewModeService, ViewMode } from '../../../core/services/view-mode.service';
 import { ScientificEventsService } from '../../../core/services/scientific-events.service';
 import { ListStateService } from '../../../core/services/list-state.service';
+import { UtilsService } from '../../../core/services/utils.service';
 import { OrganizacionEventosCientificosDTO } from '../../../core/models/backend-dtos';
 import { ListControlsComponent } from '../../../shared/components/list-controls/list-controls.component';
 
@@ -49,7 +50,7 @@ export class ScientificEventsListComponent implements OnInit, OnDestroy {
   private viewModeSubscription?: Subscription;
 
   // Sorting state for list view
-  sortColumn: 'title' | 'type' | 'location' | 'period' | 'date' | 'status' | null = null;
+  sortColumn: 'title' | 'commentTitle' | 'type' | 'location' | 'organizer' | 'period' | 'date' | 'status' | null = null;
   sortDirection: 'asc' | 'desc' = 'asc';
 
   constructor(
@@ -57,7 +58,8 @@ export class ScientificEventsListComponent implements OnInit, OnDestroy {
     private router: Router,
     private viewModeService: ViewModeService,
     private scientificEventsService: ScientificEventsService,
-    private listStateService: ListStateService
+    private listStateService: ListStateService,
+    private utilsService: UtilsService
   ) {}
 
   ngOnInit(): void {
@@ -131,6 +133,18 @@ export class ScientificEventsListComponent implements OnInit, OnDestroy {
     return event.tipoEvento?.descripcion || 'Type not specified';
   }
 
+  getPdfUrl(event: OrganizacionEventosCientificosDTO): string | null {
+    return this.utilsService.getPdfUrl(event.linkPDF);
+  }
+
+  downloadPdf(ev: Event, event: OrganizacionEventosCientificosDTO): void {
+    ev.stopPropagation();
+    const pdfUrl = this.getPdfUrl(event);
+    if (pdfUrl) {
+      window.open(pdfUrl, '_blank');
+    }
+  }
+
   viewEvent(event: OrganizacionEventosCientificosDTO): void {
     if (event.id) {
       this.router.navigate(['/scientific-events', event.id]);
@@ -140,6 +154,14 @@ export class ScientificEventsListComponent implements OnInit, OnDestroy {
   editEvent(event: OrganizacionEventosCientificosDTO): void {
     if (event.id) {
       this.router.navigate(['/scientific-events', event.id, 'edit']);
+    }
+  }
+
+  copyEvent(event: OrganizacionEventosCientificosDTO): void {
+    if (event.id) {
+      this.router.navigate(['/scientific-events/new'], {
+        queryParams: { copyFrom: event.id }
+      });
     }
   }
 
@@ -208,7 +230,7 @@ export class ScientificEventsListComponent implements OnInit, OnDestroy {
     this.finalFilteredCount = filtered.length;
   }
 
-  onSort(column: 'title' | 'type' | 'location' | 'period' | 'date' | 'status'): void {
+  onSort(column: 'title' | 'commentTitle' | 'type' | 'location' | 'organizer' | 'period' | 'date' | 'status'): void {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
@@ -227,6 +249,10 @@ export class ScientificEventsListComponent implements OnInit, OnDestroy {
         valueA = (this.getEventTitle(a) || '').toLowerCase();
         valueB = (this.getEventTitle(b) || '').toLowerCase();
         break;
+      case 'commentTitle':
+        valueA = (a.comentario || '').toLowerCase();
+        valueB = (b.comentario || '').toLowerCase();
+        break;
       case 'type':
         valueA = (this.getEventType(a) || '').toLowerCase();
         valueB = (this.getEventType(b) || '').toLowerCase();
@@ -234,6 +260,10 @@ export class ScientificEventsListComponent implements OnInit, OnDestroy {
       case 'location':
         valueA = (this.getEventLocation(a) || '').toLowerCase();
         valueB = (this.getEventLocation(b) || '').toLowerCase();
+        break;
+      case 'organizer':
+        valueA = (a.organizer || 'N/A').toLowerCase();
+        valueB = (b.organizer || 'N/A').toLowerCase();
         break;
       case 'period':
         valueA = a.progressReport ?? 0;

@@ -28,6 +28,23 @@
       class="pending-filter-checkbox">
       Pending only
     </mat-checkbox>
+
+    <button
+      *ngIf="showExportButton"
+      mat-stroked-button
+      color="primary"
+      class="export-button"
+      (click)="onExportClick()"
+      matTooltip="Export current results to Excel">
+      <mat-icon *ngIf="!exportLoading">download</mat-icon>
+      <mat-spinner
+        *ngIf="exportLoading"
+        diameter="20"
+        strokeWidth="3"
+        class="export-spinner">
+      </mat-spinner>
+      <span>&nbsp;{{ exportLabel }}</span>
+    </button>
     
     <app-view-mode-selector
       [currentMode]="currentViewMode"

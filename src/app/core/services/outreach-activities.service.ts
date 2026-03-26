@@ -44,6 +44,14 @@ export class OutreachActivitiesService {
   deleteOutreachActivity(id: number): Observable<boolean> {
     return this.baseHttp.delete<boolean>(`/outreach-activities/${id}`);
   }
+
+  /**
+   * Exporta las actividades de difusión visibles a Excel
+   */
+  exportOutreachActivitiesToExcel(params: { sort: string; direction: 'ASC' | 'DESC' }): Observable<Blob> {
+    const { sort, direction } = params;
+    return this.baseHttp.getFile(`/outreach-activities/export?sortBy=${sort}&sortDir=${direction}`);
+  }
 }
 
 

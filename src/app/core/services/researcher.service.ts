@@ -60,6 +60,14 @@ export class ResearcherService {
   }
 
   /**
+   * Busca el mejor match de investigador usando el servicio avanzado de matching.
+   * Devuelve a lo más un RRHHDTO.
+   */
+  matchResearcherByName(name: string): Observable<RRHHDTO[]> {
+    return this.baseHttp.get<RRHHDTO[]>(`/researchers/match?name=${encodeURIComponent(name)}`);
+  }
+
+  /**
    * Obtiene estadísticas de investigadores
    */
   getResearcherStats(): Observable<any> {

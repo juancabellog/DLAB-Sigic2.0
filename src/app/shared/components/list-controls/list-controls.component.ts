@@ -4,6 +4,7 @@ import { RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
 import { SearchBarComponent } from '../search-bar/search-bar.component';
 import { ViewModeSelectorComponent, ViewMode } from '../view-mode-selector/view-mode-selector.component';
@@ -19,6 +20,7 @@ import { ListStateService } from '../../../core/services/list-state.service';
     MatButtonModule,
     MatIconModule,
     MatCheckboxModule,
+    MatProgressSpinnerModule,
     SearchBarComponent,
     ViewModeSelectorComponent
   ],
@@ -37,12 +39,17 @@ export class ListControlsComponent implements OnInit, OnChanges {
   @Input() finalFilteredCount: number | null = null; // Número final de resultados filtrados
   @Input() itemType: string = 'publication'; // Tipo de item para el mensaje
   @Input() listType: string = ''; // Tipo de lista para guardar estado (ej: 'publications', 'thesis-students')
+  @Input() showExportButton: boolean = false; // Mostrar botón de export
+  @Input() exportLabel: string = 'Export Excel';
+  @Input() exportLoading: boolean = false; // Estado de carga para export
+
 
   @Output() searchResults = new EventEmitter<any[]>();
   @Output() searchTermChange = new EventEmitter<string>();
   @Output() viewModeChange = new EventEmitter<ViewMode>();
   @Output() basalFilterChange = new EventEmitter<boolean>();
   @Output() pendingFilterChange = new EventEmitter<boolean>();
+  @Output() exportRequested = new EventEmitter<void>();
 
   basalOnly: boolean = false;
   pendingOnly: boolean = false;
@@ -107,5 +114,9 @@ export class ListControlsComponent implements OnInit, OnChanges {
       this.listStateService.saveState(this.listType, { pendingOnly: this.pendingOnly });
     }
     this.pendingFilterChange.emit(this.pendingOnly);
+  }
+
+  onExportClick(): void {
+    this.exportRequested.emit();
   }
 }

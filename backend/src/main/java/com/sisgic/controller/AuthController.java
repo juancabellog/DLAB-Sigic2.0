@@ -10,6 +10,7 @@ import com.sisgic.security.JwtUtils;
 import com.sisgic.security.UserPrincipal;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -46,6 +47,9 @@ public class AuthController {
 
     @Autowired
     com.sisgic.repository.RRHHRepository rrhhRepository;
+
+    @Value("${app.version:dev}")
+    private String appVersion;
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -142,7 +146,10 @@ public class AuthController {
     @GetMapping("/validate")
     public ResponseEntity<?> validateToken() {
         // Si llegamos aquí, el token es válido (Spring Security ya lo validó)
-        return ResponseEntity.ok("Token is valid");
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", "ok");
+        body.put("version", appVersion);
+        return ResponseEntity.ok(body);
     }
 
     @GetMapping("/me")

@@ -116,34 +116,52 @@
       </div>
       
       <mat-divider></mat-divider>
+
+      <div class="form-section">
+        <div class="section-title">Clusters</div>
+        <div class="form-row">
+          <div class="full-width cluster">
+            <div class="checkbox-group">
+              <mat-checkbox
+                *ngFor="let cluster of clusterOptions"
+                [checked]="isClusterSelected(cluster.id)"
+                (change)="onClusterChange(cluster.id, $event.checked)"
+                color="primary">
+                {{ cluster.label }}
+              </mat-checkbox>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
       
       <div class="form-section">
         <div class="section-title">Product Information</div>
         
-        <div class="form-row">
-          <mat-form-field class="half-width">
-            <mat-label>Progress Report (Period)</mat-label>
-            <mat-select [(ngModel)]="transfer.progressReport">
-              <mat-option [value]="1">Period 1</mat-option>
-              <mat-option [value]="2">Period 2</mat-option>
-              <mat-option [value]="3">Period 3</mat-option>
-              <mat-option [value]="4">Period 4</mat-option>
-              <mat-option [value]="5">Period 5</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field class="half-width">
-            <mat-label>ANID Code</mat-label>
-            <input matInput [(ngModel)]="transfer.codigoANID" placeholder="Enter ANID code">
-          </mat-form-field>
-        </div>
-
         <div class="form-row">
           <mat-checkbox [(ngModel)]="isBasal" (change)="onBasalChange($event.checked)" color="primary">
             Product associated with Basal funding
           </mat-checkbox>
         </div>
 
+        <div class="form-row">
+          <mat-form-field class="half-width">
+            <mat-label>Progress Report (Period)</mat-label>
+            <mat-select [(ngModel)]="transfer.progressReport">
+              <mat-option value="1">Period 1</mat-option>
+              <mat-option value="2">Period 2</mat-option>
+              <mat-option value="3">Period 3</mat-option>
+              <mat-option value="4">Period 4</mat-option>
+              <mat-option value="5">Period 5</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field class="half-width">
+            <mat-label>ANID Code</mat-label>
+            <input matInput [(ngModel)]="transfer.codigoANID" placeholder="Enter ANID code" [readonly]="true">
+          </mat-form-field>
+        </div>
         <div class="form-row">
           <div class="full-width pdf-upload-field">
             <label class="pdf-upload-label">PDF Document</label>

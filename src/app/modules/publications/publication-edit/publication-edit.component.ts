@@ -24,7 +24,7 @@ import { CatalogService } from '../../../core/services/catalog.service';
 import { BaseHttpService } from '../../../core/services/base-http.service';
 import { UtilsService } from '../../../core/services/utils.service';
 import { CatalogType, TipoParticipacionDTO } from '../../../core/models/catalog-types';
-import { PublicacionDTO, JournalDTO, PublicationPreviewDTO, PublicationImportRequestDTO, AuthorPreviewDTO, JournalPreviewDTO } from '../../../core/models/backend-dtos';
+import { PublicacionDTO, JournalDTO, PublicationPreviewDTO, PublicationImportRequestDTO, AuthorPreviewDTO, JournalPreviewDTO, FundingTypeDTO } from '../../../core/models/backend-dtos';
 import { catchError, finalize, switchMap, tap } from 'rxjs/operators';
 import { of, forkJoin } from 'rxjs';
 import { firstValueFrom } from 'rxjs';
@@ -61,6 +61,18 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
   doiLoading: boolean = false;
   doiAutoFilled: boolean = false;
   loadingImpactFactors: boolean = false;
+
+  // Indexes (multi-select) - stored in Publicacion.indexs (JSON string)
+  readonly INDEX_OTHER_ID: number = 10;
+  indexTypes: { id: number; descripcion: string }[] = [];
+  selectedIndexIds: number[] = [];
+  indexOtherText: string = '';
+  loadingIndexTypes: boolean = false;
+
+  // Funding (multi-select) - stored in Publicacion.funding (JSON array of ids)
+  fundingTypes: FundingTypeDTO[] = [];
+  selectedFundingIds: number[] = [];
+  loadingFundingTypes: boolean = false;
   
   // Variables para el preview desde DOI
   previewData: PublicationPreviewDTO | null = null;
@@ -408,7 +420,9 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
     codigoANID: '',
     progressReport: undefined,
     tipoProducto: { id: 3 }, // ID 3 para publicaciones
-    cluster: ''
+    cluster: '',
+    indexs: undefined,
+    funding: '[]'
   };
 
   constructor(
@@ -433,6 +447,8 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
         this.publicationId = parseInt(id);
         // Establecer loading inmediatamente cuando estamos editando
         this.loading = true;
+        this.loadIndexTypes();
+        this.loadFundingTypes();
         // Cargar journals y luego la publicación
         this.loadJournals(() => {
           if (this.publicationId !== null) {
@@ -443,6 +459,8 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
         this.isEditMode = false;
         this.publicationId = null;
         this.loading = false;
+        this.loadIndexTypes();
+        this.loadFundingTypes();
         // Cargar journals y luego inicializar nueva publicación
         this.loadJournals(() => {
           this.initializeNewPublication();
@@ -488,6 +506,216 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
     });
   }
 
+  loadIndexTypes(callback?: () => void): void {
+    this.loadingIndexTypes = true;
+    this.baseHttp.get<{ id: number; descripcion: string }[]>('/catalogs/index-types').pipe(
+      catchError(error => {
+        console.error('Error loading index types:', error);
+        return of([] as { id: number; descripcion: string }[]);
+      }),
+      finalize(() => {
+        this.loadingIndexTypes = false;
+        if (callback) callback();
+      })
+    ).subscribe(items => {
+      this.indexTypes = (items || []).map(i => ({
+        id: i.id,
+        descripcion: (i as any).descripcion || ''
+      }));
+      // Keep Others (id=10) as the last item, while sorting the rest alphabetically.
+      this.indexTypes.sort((a, b) => {
+        const aIsOther = a.id === this.INDEX_OTHER_ID;
+        const bIsOther = b.id === this.INDEX_OTHER_ID;
+        if (aIsOther && !bIsOther) return 1;
+        if (!aIsOther && bIsOther) return -1;
+        return (a.descripcion || '').localeCompare(b.descripcion || '');
+      });
+    });
+  }
+
+  loadFundingTypes(callback?: () => void): void {
+    this.loadingFundingTypes = true;
+    this.baseHttp.get<FundingTypeDTO[]>('/catalogs/funding-types').pipe(
+      catchError(error => {
+        console.error('Error loading funding types:', error);
+        return of([] as FundingTypeDTO[]);
+      }),
+      finalize(() => {
+        this.loadingFundingTypes = false;
+        if (callback) callback();
+      })
+    ).subscribe(items => {
+      this.fundingTypes = items || [];
+      // Orden estable por descripción
+      this.fundingTypes.sort((a, b) => (a.idDescripcion || '').localeCompare(b.idDescripcion || ''));
+    });
+  }
+
+  private parseIndexesFromPublication(): void {
+    this.selectedIndexIds = [];
+    this.indexOtherText = '';
+
+    const raw = this.publication?.indexs;
+    if (!raw || !raw.trim()) {
+      return;
+    }
+
+    const trimmed = raw.trim();
+    let parsedAny: any[] = [];
+
+    if (trimmed.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          parsedAny = parsed;
+        }
+      } catch {
+        // fallback to comma-separated below
+      }
+    }
+
+    // Backward compatibility: accept old "1,2,3" storage format.
+    if (!parsedAny || parsedAny.length === 0) {
+      const ids = trimmed
+        .split(',')
+        .map(s => parseInt(s.trim(), 10))
+        .filter(n => !isNaN(n));
+
+      parsedAny = ids.map(id => ({ id }));
+    }
+
+    const unique = new Set<number>();
+    for (const item of parsedAny) {
+      const id = Number(item?.id);
+      if (isNaN(id)) continue;
+      unique.add(id);
+      if (id === this.INDEX_OTHER_ID) {
+        this.indexOtherText = item?.text != null ? String(item.text) : '';
+      }
+    }
+
+    this.selectedIndexIds = Array.from(unique);
+  }
+
+  isIndexSelected(indexId: number): boolean {
+    return this.selectedIndexIds.includes(indexId);
+  }
+
+  hasOtherIndexType(): boolean {
+    return this.selectedIndexIds.includes(this.INDEX_OTHER_ID);
+  }
+
+  onIndexTypeChange(indexType: { id: number }, checked: boolean): void {
+    if (checked) {
+      if (!this.selectedIndexIds.includes(indexType.id)) {
+        this.selectedIndexIds.push(indexType.id);
+      }
+    } else {
+      this.selectedIndexIds = this.selectedIndexIds.filter(id => id !== indexType.id);
+      if (indexType.id === this.INDEX_OTHER_ID) {
+        this.indexOtherText = '';
+      }
+    }
+
+    this.updateIndexString();
+  }
+
+  onIndexOtherTextChange(value: string): void {
+    this.indexOtherText = value;
+    this.updateIndexString();
+  }
+
+  private updateIndexString(): void {
+    // Save as JSON array, e.g.: [{id:3}, {id:10,text:'xxx'}]
+    if (!this.publication) return;
+
+    const unique = Array.from(new Set(this.selectedIndexIds));
+    this.selectedIndexIds = unique;
+
+    if (unique.length === 0) {
+      this.publication.indexs = undefined;
+      return;
+    }
+
+    const payload = unique.map(id => {
+      if (id === this.INDEX_OTHER_ID) {
+        return { id, text: this.indexOtherText || '' };
+      }
+      return { id };
+    });
+
+    this.publication.indexs = JSON.stringify(payload);
+  }
+
+  private parseFundingFromPublication(): void {
+    this.selectedFundingIds = [];
+
+    const raw = this.publication?.funding;
+    if (!raw || !raw.trim()) {
+      return;
+    }
+
+    const trimmed = raw.trim();
+    let parsedAny: any = null;
+
+    if (trimmed.startsWith('[')) {
+      try {
+        parsedAny = JSON.parse(trimmed);
+      } catch {
+        parsedAny = null;
+      }
+    }
+
+    if (!parsedAny) {
+      // Backward compatibility: accept old comma-separated ids.
+      const ids = trimmed
+        .split(',')
+        .map(s => parseInt(s.trim(), 10))
+        .filter(n => !isNaN(n));
+      this.selectedFundingIds = Array.from(new Set(ids));
+      return;
+    }
+
+    if (Array.isArray(parsedAny)) {
+      const ids: number[] = [];
+      for (const item of parsedAny) {
+        if (typeof item === 'number') {
+          ids.push(item);
+        } else if (item && typeof item === 'object' && item.id != null) {
+          const idNum = Number(item.id);
+          if (!isNaN(idNum)) ids.push(idNum);
+        }
+      }
+      this.selectedFundingIds = Array.from(new Set(ids));
+    }
+  }
+
+  isFundingSelected(fundingId: number): boolean {
+    return this.selectedFundingIds.includes(fundingId);
+  }
+
+  onFundingTypeChange(fundingType: FundingTypeDTO, checked: boolean): void {
+    const id = Number(fundingType.id);
+    if (!id || isNaN(id)) return;
+
+    if (checked) {
+      if (!this.selectedFundingIds.includes(id)) {
+        this.selectedFundingIds.push(id);
+      }
+    } else {
+      this.selectedFundingIds = this.selectedFundingIds.filter(existingId => existingId !== id);
+    }
+
+    this.updateFundingString();
+  }
+
+  private updateFundingString(): void {
+    if (!this.publication) return;
+    const unique = Array.from(new Set(this.selectedFundingIds));
+    this.selectedFundingIds = unique;
+    this.publication.funding = JSON.stringify(unique); // e.g. [1,2,4]
+  }
+
   // Getters para el template
   get pageTitle(): string {
     return this.isEditMode ? 'Edit Publication' : 'New Publication';
@@ -517,7 +745,9 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
       // fechaInicio se establecerá automáticamente cuando cambie yearPublished
       fechaInicio: undefined,
       basal: 'S', // Por defecto "S" (Basal asociado)
-      cluster: ''
+      cluster: '',
+      indexs: undefined,
+      funding: '[]'
     };
     // Establecer fechaInicio basada en yearPublished inicial
     if (this.publication.yearPublished) {
@@ -529,6 +759,9 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
     this.updateMissingAffiliationsStatus();
     this.originalPublication = null;
     this.selectedClusters = [];
+    this.selectedIndexIds = [];
+    this.indexOtherText = '';
+    this.selectedFundingIds = [];
   }
 
   loadPublicationForEdit(id: number): void {
@@ -576,6 +809,8 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
           publication.fechaInicio = `${publication.yearPublished}-01-01`;
         }
         this.publication = publication;
+        this.parseIndexesFromPublication();
+        this.parseFundingFromPublication();
         this.originalPublication = JSON.parse(JSON.stringify(publication)); // Deep copy
 
         // Cargar clusters seleccionados desde el string de backend
@@ -953,13 +1188,13 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
         this.updateMissingAffiliationsStatus();
       })
     ).subscribe(response => {
+      console.log('response', response);
       if (response) {
         // Verificar si la publicación ya existe
         if (response.exists === true) {
-          // Verificar si el usuario puede ver la publicación
-          if (response.visible === false || !response.publicationId) {
-            // La publicación existe pero el usuario no puede verla
-            const errorMessage = response.message || 'This publication already exists but is not available for your account.';
+          // Necesitamos al menos el ID de la publicación para poder cargarla
+          if (!response.publicationId) {
+            const errorMessage = response.message || 'This publication already exists but could not be loaded.';
             this.doiError = errorMessage;
             this.messageService.error(errorMessage);
             this.existingPublication = null;
@@ -968,10 +1203,10 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
             return;
           }
           
-          // La publicación ya existe y el usuario puede verla
+          // La publicación ya existe: mostrar banner y, si es visible, cargarla en modo solo-lectura
           this.existingPublication = {
             exists: true,
-            visible: true,
+            visible: response.visible !== false,
             publicationId: response.publicationId,
             title: response.title,
             journal: response.journal,
@@ -982,15 +1217,33 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
           this.previewData = null;
           this.isPreviewMode = false;
           this.doiError = null;
-          
-          // Reiniciar control de redirección
-          this.redirectCancelled = false;
-          this.showRedirectSpinner = false;
-          
-          // Iniciar redirección automática
-          this.startAutoRedirect();
-          
-          // Deshabilitar el formulario (se hará en el template)
+
+          // Cargar los datos completos de la publicación existente en el formulario
+          // Solo intentar cargar la publicación completa si es visible para el usuario
+          if (response.visible !== false) {
+            const existingId = response.publicationId;
+            this.publicationId = existingId;
+            this.isEditMode = false; // seguimos en flujo de importación, pero en modo solo-lectura
+
+            this.publicationService.getPublication(existingId).pipe(
+              catchError(err => {
+                console.error('Error loading existing publication from DOI:', err);
+                this.messageService.error('Error loading existing publication. Please try again later.');
+                return of(null);
+              })
+            ).subscribe(pub => {
+              if (pub) {
+                this.publication = pub;
+                // Sincronizar checkbox Basal
+                this.isBasal = pub.basal === 'S' || pub.basal === 's' || pub.basal === '1';
+              }
+            });
+          }
+
+          // Mostrar mensaje informativo no bloqueante
+          this.messageService.info(
+            'This publication already exists in the platform. You can view its information but cannot modify it.'
+          );
           return;
         }
         
@@ -1029,6 +1282,10 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
             if (pub.publicationDate) {
               this.publication.progressReport = this.calculateProgressReport(pub.publicationDate);
             }
+
+            // Producto asociado a Basal por defecto al cargar desde DOI
+            this.isBasal = true;
+            this.publication.basal = 'S';
             
             this.doiAutoFilled = true;
           }
@@ -1337,6 +1594,13 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
   }
 
   savePublication(): void {
+    // Asegurar que los índices seleccionados queden persistidos en `publication.indexs`
+    // antes de guardar o importar desde DOI.
+    this.updateIndexString();
+
+    // Asegurar que el funding multi-selección quede persistido en `publication.funding`.
+    this.updateFundingString();
+
     // Si estamos en modo preview, usar el endpoint de importación
     if (this.isPreviewMode && this.importRequest) {
       this.importFromDoi();
@@ -1493,6 +1757,12 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
   private updateImportRequestFromForm(): void {
     if (!this.importRequest) {
       return;
+    }
+
+    // Persistir selección de índices también en el flujo de importación desde DOI.
+    if (this.importRequest.publication) {
+      (this.importRequest.publication as any).indexs = this.publication.indexs;
+      (this.importRequest.publication as any).funding = this.publication.funding;
     }
 
     // Actualizar journal decision
@@ -1966,14 +2236,15 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
   
   /**
    * Calcula el progressReport basado en la fecha de inicio (publicationDate)
+   * y lo devuelve como string ("1"–"5") para alinearse con el backend.
    * Lógica:
-   * - Si fechaInicio <= "2022-07-31" → progressReport = 1
-   * - Si fechaInicio <= "2023-07-31" → progressReport = 2
-   * - Si fechaInicio <= "2024-07-31" → progressReport = 3
-   * - Si fechaInicio <= "2025-07-31" → progressReport = 4
-   * - Si fechaInicio > "2025-07-31" → progressReport = 5
+   * - Si fechaInicio <= "2022-07-31" → progressReport = "1"
+   * - Si fechaInicio <= "2023-07-31" → progressReport = "2"
+   * - Si fechaInicio <= "2024-07-31" → progressReport = "3"
+   * - Si fechaInicio <= "2025-07-31" → progressReport = "4"
+   * - Si fechaInicio > "2025-07-31" → progressReport = "5"
    */
-  private calculateProgressReport(publicationDate: string): number | undefined {
+  private calculateProgressReport(publicationDate: string): string | undefined {
     if (!publicationDate || publicationDate.trim() === '') {
       return undefined;
     }
@@ -1993,15 +2264,15 @@ export class PublicationEditComponent implements OnInit, OnDestroy {
       const cutoff4Only = new Date(cutoff4.getFullYear(), cutoff4.getMonth(), cutoff4.getDate());
       
       if (dateOnly <= cutoff1Only) {
-        return 1;
+        return '1';
       } else if (dateOnly <= cutoff2Only) {
-        return 2;
+        return '2';
       } else if (dateOnly <= cutoff3Only) {
-        return 3;
+        return '3';
       } else if (dateOnly <= cutoff4Only) {
-        return 4;
+        return '4';
       } else {
-        return 5;
+        return '5';
       }
     } catch (error) {
       console.error('Error calculating progressReport:', error);

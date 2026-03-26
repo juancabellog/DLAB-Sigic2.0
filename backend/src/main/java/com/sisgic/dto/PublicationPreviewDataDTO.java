@@ -15,6 +15,12 @@ public class PublicationPreviewDataDTO {
     private String lastPage;
     private String openAlexUrl;
     private String linkPDF; // Link al PDF descargado (formato "PDF:pdfs/uuid.pdf")
+
+    // JSON string with selected index types (same format as Publicacion.indexs)
+    private String indexs;
+
+    // JSON array (ids) with selected funding types (same format as Publicacion.funding)
+    private String funding;
     
     // Constructors
     public PublicationPreviewDataDTO() {}
@@ -98,6 +104,22 @@ public class PublicationPreviewDataDTO {
 
     public void setLinkPDF(String linkPDF) {
         this.linkPDF = linkPDF;
+    }
+
+    public String getIndexs() {
+        return indexs;
+    }
+
+    public void setIndexs(String indexs) {
+        this.indexs = indexs;
+    }
+
+    public String getFunding() {
+        return funding;
+    }
+
+    public void setFunding(String funding) {
+        this.funding = funding;
     }
 }
 

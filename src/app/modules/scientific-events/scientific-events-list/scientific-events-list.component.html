@@ -4,7 +4,7 @@
       <button mat-icon-button routerLink="/dashboard" matTooltip="Back to Dashboard">
         <mat-icon>arrow_back</mat-icon>
       </button>
-      <h1>Scientific Events Organization</h1>
+      <h1>Scientific Events</h1>
     </div>
     <div class="list-header-right">
       <button 
@@ -87,22 +87,47 @@
                 <span class="detail-label">Start Date:</span>
                 <span class="detail-value">{{ event.fechaInicio | date:'MMM yyyy' }}</span>
               </div>
+          <div class="detail-row" *ngIf="event.comentario">
+            <span class="detail-label">Title:</span>
+            <span
+              class="detail-value comments"
+              [matTooltip]="event.comentario"
+              matTooltipShowDelay="500">
+              {{ event.comentario }}
+            </span>
+          </div>
             </div>
           </mat-card-content>
           
           <mat-card-actions>
-            <button mat-button color="primary" (click)="viewEvent(event)">
-              <mat-icon>visibility</mat-icon>
-              View
-            </button>
-            <button mat-button (click)="editEvent(event)">
-              <mat-icon>edit</mat-icon>
-              Edit
-            </button>
-            <button mat-button color="warn" (click)="deleteEvent(event)">
-              <mat-icon>delete</mat-icon>
-              Delete
-            </button>
+            <div class="card-actions-left">
+              <button mat-button color="primary" (click)="viewEvent(event)">
+                <mat-icon>visibility</mat-icon>
+                View
+              </button>
+              <button mat-button (click)="editEvent(event)">
+                <mat-icon>edit</mat-icon>
+                Edit
+              </button>
+              <button mat-button (click)="copyEvent(event)" matTooltip="Duplicate event">
+                <mat-icon>content_copy</mat-icon>
+                Copy
+              </button>
+              <button mat-button color="warn" (click)="deleteEvent(event)">
+                <mat-icon>delete</mat-icon>
+                Delete
+              </button>
+            </div>
+            <div class="card-actions-right">
+              <button 
+                *ngIf="getPdfUrl(event)" 
+                mat-icon-button 
+                (click)="downloadPdf($event, event)"
+                matTooltip="Download PDF"
+                class="pdf-icon-button">
+                <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+              </button>
+            </div>
           </mat-card-actions>
         </mat-card>
       </div>
@@ -115,9 +140,20 @@
             class="list-cell title-cell sortable-header"
             [ngClass]="{ 'sortable-header-active': sortColumn === 'title' }"
             (click)="onSort('title')">
-            <span>Title</span>
+            <span>Name</span>
             <mat-icon>
               {{ sortColumn === 'title'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell comments-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'commentTitle' }"
+            (click)="onSort('commentTitle')">
+            <span>Title</span>
+            <mat-icon>
+              {{ sortColumn === 'commentTitle'
                   ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
                   : 'unfold_more' }}
             </mat-icon>
@@ -140,6 +176,17 @@
             <span>Location</span>
             <mat-icon>
               {{ sortColumn === 'location'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell organizer-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'organizer' }"
+            (click)="onSort('organizer')">
+            <span>Organizer</span>
+            <mat-icon>
+              {{ sortColumn === 'organizer'
                   ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
                   : 'unfold_more' }}
             </mat-icon>
@@ -190,8 +237,16 @@
               <div class="subtitle-text">{{ getEventType(event) }}</div>
             </div>
           </div>
+          <div
+            class="list-cell comments-cell"
+            [matTooltip]="event.comentario || ''"
+            [matTooltipDisabled]="!event.comentario"
+            matTooltipShowDelay="500">
+            {{ event.comentario || 'N/A' }}
+          </div>
           <div class="list-cell type-cell">{{ getEventType(event) }}</div>
           <div class="list-cell location-cell">{{ getEventLocation(event) }}</div>
+          <div class="list-cell organizer-cell">{{ event.organizer || 'N/A' }}</div>
           <div class="list-cell period-cell">{{ event.progressReport || 'N/A' }}</div>
           <div class="list-cell date-cell">{{ event.fechaInicio | date:'MMM yyyy' }}</div>
           <div class="list-cell status-cell">
@@ -200,6 +255,14 @@
             </mat-chip>
           </div>
           <div class="list-cell actions-cell">
+            <button 
+              *ngIf="getPdfUrl(event)" 
+              mat-icon-button 
+              (click)="downloadPdf($event, event)"
+              matTooltip="Download PDF"
+              class="action-button pdf-icon-button">
+              <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+            </button>
             <button 
               mat-icon-button 
               (click)="viewEvent(event)" 
@@ -213,6 +276,13 @@
               matTooltip="Edit"
               class="action-button">
               <mat-icon>edit</mat-icon>
+            </button>
+            <button 
+              mat-icon-button 
+              (click)="copyEvent(event)" 
+              matTooltip="Duplicate event"
+              class="action-button">
+              <mat-icon>content_copy</mat-icon>
             </button>
             <button 
               mat-icon-button 

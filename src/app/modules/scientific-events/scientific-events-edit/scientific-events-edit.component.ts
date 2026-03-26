@@ -12,8 +12,6 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { ParticipantManagerComponent, ParticipantDTO } from '../../../shared/components/participant-manager/participant-manager.component';
@@ -45,8 +43,6 @@ import { firstValueFrom } from 'rxjs';
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatCheckboxModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
     MatTooltipModule,
     ParticipantManagerComponent
   ],
@@ -69,6 +65,16 @@ export class ScientificEventsEditComponent implements OnInit {
   // Lista de participantes
   participants: ParticipantDTO[] = [];
 
+  // Opciones de clusters (1 a 5)
+  clusterOptions: { id: number; label: string }[] = [
+    { id: 1, label: 'Cluster I' },
+    { id: 2, label: 'Cluster II' },
+    { id: 3, label: 'Cluster III' },
+    { id: 4, label: 'Cluster IV' },
+    { id: 5, label: 'Cluster V' }
+  ];
+  selectedClusters: number[] = [];
+
   // Control del checkbox Basal
   isBasal: boolean = true;
 
@@ -78,6 +84,12 @@ export class ScientificEventsEditComponent implements OnInit {
 
   // Datos originales para detectar cambios
   originalEvent: any = null;
+
+  // Texto para importar información del evento (paste)
+  eventImportText: string = '';
+
+  // Control de ayuda para formato de descripción (paste)
+  showEventFormat: boolean = false;
 
   event: OrganizacionEventosCientificosDTO = {
     descripcion: '',
@@ -123,7 +135,22 @@ export class ScientificEventsEditComponent implements OnInit {
         // Cargar catálogos y luego inicializar nuevo evento
         this.loadCountries();
         this.loadEventTypes(() => {
-          this.initializeNewEvent();
+          const copyFromId = this.route.snapshot.queryParams['copyFrom'];
+          if (copyFromId) {
+            this.loading = true;
+            // Limpiar el query param de la URL
+            this.router.navigate([], {
+              relativeTo: this.route,
+              queryParams: {},
+              replaceUrl: true
+            });
+            // Cargar el evento a copiar después de que los catálogos se hayan cargado
+            setTimeout(() => {
+              this.loadEventForCopy(parseInt(copyFromId, 10));
+            }, 100);
+          } else {
+            this.initializeNewEvent();
+          }
         });
       }
     });
@@ -181,13 +208,16 @@ export class ScientificEventsEditComponent implements OnInit {
       codigoANID: '',
       progressReport: undefined,
       tipoProducto: { id: 5 },
-      fechaInicio: undefined, // Usuario debe ingresar la fecha
-      fechaTermino: undefined,
-      basal: 'N'
-    };
+      fechaInicio: null,
+      fechaTermino: null,
+      basal: 'N',
+      cluster: ''
+    };    
     this.isBasal = true;
     this.participants = [];
     this.originalEvent = null;
+    this.selectedClusters = [];
+    console.log('initializeNewEvent', this.event);
   }
 
   loadEventForEdit(id: number): void {
@@ -256,6 +286,116 @@ export class ScientificEventsEditComponent implements OnInit {
         } else {
           this.participants = [];
         }
+
+        // Cargar clusters seleccionados desde el string de backend
+        this.selectedClusters = [];
+        if (this.event.cluster) {
+          try {
+            this.selectedClusters = this.event.cluster
+              .split(',')
+              .map(id => parseInt(id.trim(), 10))
+              .filter(id => !isNaN(id));
+          } catch (e) {
+            this.selectedClusters = [];
+          }
+        }
+      } else {
+        this.messageService.error('Scientific event not found');
+        this.router.navigate(['/scientific-events']);
+      }
+    });
+  }
+
+  loadEventForCopy(id: number): void {
+    this.loading = true;
+
+    this.scientificEventsService.getScientificEvent(id).pipe(
+      catchError(error => {
+        console.error('Error loading scientific event for copy:', error);
+        this.messageService.error('Error loading scientific event to copy. Please try again later.');
+        this.router.navigate(['/scientific-events']);
+        return of(null);
+      }),
+      finalize(() => {
+        this.loading = false;
+      })
+    ).subscribe(event => {
+      if (event) {
+        // Normalizar tipo de evento contra el catálogo cargado
+        if (event.tipoEvento?.id && this.eventTypes.length > 0) {
+          const matchingEventType = this.eventTypes.find(et => et.id === event.tipoEvento!.id);
+          if (matchingEventType) {
+            event.tipoEvento = matchingEventType;
+          }
+        }
+
+        if (!event.tipoProducto) {
+          event.tipoProducto = { id: 5 };
+        } else if (event.tipoProducto.id !== 5) {
+          event.tipoProducto.id = 5;
+        }
+
+        // Limpiar identificadores para tratarlo como nuevo
+        event.id = undefined;
+        if (event.participantes) {
+          event.participantes = event.participantes.map(p => ({
+            ...p,
+            id: undefined
+          }));
+        }
+
+        this.event = event;
+        this.originalEvent = null;
+
+        // Basal puede ser "S", "s", "1" (todos significan true) o "N", "n", "0" (todos significan false)
+        this.isBasal = event.basal === 'S' || event.basal === 's' || event.basal === '1';
+
+        // Participantes: recargar con nombres
+        if (event.participantes && event.participantes.length > 0) {
+          const participantPromises = event.participantes.map(async (p, index) => {
+            const participant: ParticipantDTO = {
+              rrhhId: p.rrhhId || 0,
+              fullName: '',
+              participationTypeId: p.tipoParticipacionId || 0,
+              corresponding: p.corresponding || false,
+              order: p.orden || index + 1
+            };
+
+            if (p.rrhhId) {
+              try {
+                const researcher: RRHHDTO = await firstValueFrom(this.researcherService.getResearcher(p.rrhhId));
+                if (researcher) {
+                  participant.fullName = researcher.fullname || '';
+                  participant.idRecurso = researcher.idRecurso;
+                  participant.orcid = researcher.orcid;
+                }
+              } catch (error) {
+                console.error(`Error loading researcher ${p.rrhhId}:`, error);
+              }
+            }
+
+            return participant;
+          });
+
+          Promise.all(participantPromises).then(participants => {
+            this.participants = participants;
+          });
+        } else {
+          this.participants = [];
+        }
+
+        // Cargar clusters seleccionados desde el string de backend
+        this.selectedClusters = [];
+        if (this.event.cluster) {
+          try {
+            this.selectedClusters = this.event.cluster
+              .split(',')
+              .map(id => parseInt(id.trim(), 10))
+              .filter(id => !isNaN(id));
+          } catch (e) {
+            this.selectedClusters = [];
+          }
+        }
       } else {
         this.messageService.error('Scientific event not found');
         this.router.navigate(['/scientific-events']);
@@ -283,6 +423,21 @@ export class ScientificEventsEditComponent implements OnInit {
 
   onBasalChange(checked: boolean): void {
     this.event.basal = checked ? 'S' : 'N';
+  }
+
+  isClusterSelected(clusterId: number): boolean {
+    return this.selectedClusters.includes(clusterId);
+  }
+
+  onClusterChange(clusterId: number, checked: boolean): void {
+    if (checked) {
+      if (!this.selectedClusters.includes(clusterId)) {
+        this.selectedClusters.push(clusterId);
+      }
+    } else {
+      this.selectedClusters = this.selectedClusters.filter(id => id !== clusterId);
+    }
+    this.event.cluster = this.selectedClusters.join(',');
   }
 
   goBack(): void {
@@ -352,7 +507,8 @@ export class ScientificEventsEditComponent implements OnInit {
           fechaTermino: this.event.fechaTermino || undefined,
           linkPDF: this.event.linkPDF || undefined, // Asegurar que linkPDF se incluya explícitamente
           basal: this.isBasal ? 'S' : 'N',
-          participantes: participantesBackend.length > 0 ? participantesBackend : undefined
+          participantes: participantesBackend.length > 0 ? participantesBackend : undefined,
+          cluster: this.selectedClusters.join(',')
         };
 
         const saveOperation = this.isEditMode && this.eventId
@@ -460,12 +616,273 @@ export class ScientificEventsEditComponent implements OnInit {
   getEventName(): string {
     return this.event.descripcion || 'Scientific Event';
   }
-  
+
+  /**
+   * Parsea la descripción pegada y completa automáticamente los campos básicos del evento.
+   */
+  async onParseEventDescription(): Promise<void> {
+    const text = (this.eventImportText || '').trim();
+    if (!text) {
+      this.messageService.error('Event description is empty. Please paste an event description first.');
+      return;
+    }
+
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+    if (lines.length === 0) {
+      this.messageService.error('Event description format is not valid.');
+      return;
+    }
+
+    try {
+      // Name (line 1)
+      const nameLine = lines[0];
+      if (nameLine) {
+        this.event.descripcion = nameLine;
+      }
+
+      // Event Type (line 2, if present)
+      const typeLine = lines.length > 1 ? lines[1] : '';
+      if (typeLine) {
+        const matchedType = this.findEventTypeByText(typeLine);
+        if (matchedType) {
+          this.event.tipoEvento = matchedType;
+        }
+      }
+
+      // Participants: N
+      const participantsLine = lines.find(l => /^Participants\s*:/i.test(l));
+      if (participantsLine) {
+        const match = participantsLine.match(/Participants\s*:\s*(\d+)/i);
+        if (match) {
+          this.event.numParticipantes = parseInt(match[1], 10);
+        }
+      }
+
+      // City, Country
+      const locationLine = lines.find(l =>
+        /,/.test(l) &&
+        !/^Participants\s*:/i.test(l) &&
+        !/^BASAL\s+/i.test(l)
+      );
+      if (locationLine) {
+        const parts = locationLine.split(',');
+        const city = parts[0]?.trim() || '';
+        const countryText = parts.slice(1).join(',').trim();
+        if (city) {
+          this.event.ciudad = city;
+        }
+        if (countryText) {
+          const matchedCountry = this.findCountryByText(countryText);
+          if (matchedCountry) {
+            this.event.pais = matchedCountry;
+          }
+        }
+      }
+
+      // Dates line: dd/MM/yyyy - dd/MM/yyyy (con o sin espacios alrededor del "-")
+      const dateLine = lines.find(l => /\d{1,2}\/\d{1,2}\/\d{4}\s*-\s*\d{1,2}\/\d{1,2}\/\d{4}/.test(l));
+      if (dateLine) {
+        const dateTokens = dateLine.split(/\s*-\s*/).map(t => t.trim()).filter(t => t.length > 0);
+        const startStr = dateTokens[0];
+        const endStr = dateTokens[1];
+        this.event.fechaInicio = this.normalizeDateDMY(startStr) || this.event.fechaInicio;
+        this.event.fechaTermino = this.normalizeDateDMY(endStr) || this.event.fechaTermino;
+
+        // Actualizar progressReport basado en fechaInicio
+        if (this.event.fechaInicio) {
+          this.event.progressReport = this.progressReportService.calculateProgressReport(this.event.fechaInicio);
+        }
+      }
+
+      // BASAL Year periods (solo usamos los períodos, NO el estado "Finished / in progress")
+      const basalLine = lines.find(l => /BASAL\s+(?:Año|Year)/i.test(l));
+      if (basalLine) {
+        this.isBasal = true;
+        this.event.basal = 'S';
+
+        const basalRegex = /BASAL\s+(?:Año|Year)\s+([0-9,\s]+)/gi;
+        let match: RegExpExecArray | null;
+        const periods: number[] = [];
+        while ((match = basalRegex.exec(basalLine)) !== null) {
+          const list = match[1]
+            .split(',')
+            .map(p => p.trim())
+            .filter(p => p.length > 0);
+          list.forEach(p => {
+            const n = parseInt(p, 10);
+            if (!isNaN(n)) {
+              periods.push(n);
+            }
+          });
+        }
+        if (periods.length > 0) {
+          // Para eventos solo hay un progressReport: usar el mayor período
+          const maxPeriod = Math.max(...periods);
+          this.event.progressReport = String(maxPeriod);
+        }
+      }
+
+      // Organizer: <Name1>,<Name2>,...
+      const organizers: string[] = [];
+      const organizerLine = lines.find(l => /^Organizer\s*:/i.test(l));
+      if (organizerLine) {
+        const orgMatch = organizerLine.match(/^Organizer\s*:\s*(.+)$/i);
+        const rawOrganizers = orgMatch?.[1] || '';
+        rawOrganizers.split(',').forEach(o => {
+          const name = o.trim();
+          if (name && !/^N\/A$/i.test(name)) {
+            organizers.push(name);
+          }
+        });
+      }
+
+      // Speaker: Name1, Name2, ...
+      const speakers: string[] = [];
+      const speakerLine = lines.find(l => /^Speaker\s*:/i.test(l));
+      if (speakerLine) {
+        const spMatch = speakerLine.match(/^Speaker\s*:\s*(.+)$/i);
+        const rawSpeakers = spMatch?.[1] || '';
+        rawSpeakers.split(',').forEach(s => {
+          const name = s.trim();
+          if (name && !/^N\/A$/i.test(name)) {
+            speakers.push(name);
+          }
+        });
+      }
+
+      const participantPromises: Promise<void>[] = [];
+
+      // Organizer usa el rol 14 (mismo que el campo calculado organizer en backend)
+      for (const organizerName of organizers) {
+        participantPromises.push(this.addParticipantFromName(organizerName, 14));
+      }
+
+      // Speakers: rol específico 24
+      for (const speakerName of speakers) {
+        participantPromises.push(this.addParticipantFromName(speakerName, 24));
+      }
+
+      if (participantPromises.length > 0) {
+        await Promise.all(participantPromises);
+      }
+
+      this.messageService.success('Event description parsed successfully. Fields and participants have been populated.');
+    } catch (error) {
+      console.error('Error parsing event description:', error);
+      this.messageService.error('Could not parse the event description. Please verify the format.');
+    }
+  }
+
+  private findEventTypeByText(text: string): TipoEventoDTO | undefined {
+    if (!text || !this.eventTypes || this.eventTypes.length === 0) {
+      return undefined;
+    }
+    const normalized = this.normalizeText(text);
+    return this.eventTypes.find(et => this.normalizeText(et.descripcion || et.idDescripcion || '') === normalized);
+  }
+
+  private findCountryByText(text: string): PaisDTO | undefined {
+    if (!text || !this.countries || this.countries.length === 0) {
+      return undefined;
+    }
+    const normalized = this.normalizeText(text);
+    // Intentar por descripción y por código
+    return this.countries.find(c =>
+      this.normalizeText(c.idDescripcion || '') === normalized ||
+      this.normalizeText(c.codigo || '') === normalized
+    );
+  }
+
+  private normalizeText(text: string | undefined): string {
+    if (!text) return '';
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  }
+
+  private normalizeDateDMY(value?: string): string | undefined {
+    if (!value) return undefined;
+    const trimmed = value.trim();
+    if (!trimmed || /^N\/A$/i.test(trimmed)) return undefined;
+    const dmyMatch = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(trimmed);
+    if (!dmyMatch) return undefined;
+    const day = dmyMatch[1].padStart(2, '0');
+    const month = dmyMatch[2].padStart(2, '0');
+    const year = dmyMatch[3];
+    return `${year}-${month}-${day}`;
+  }
+
   /**
    * Maneja el cambio de fecha de inicio y calcula automáticamente el progressReport
    */
   onFechaInicioChange(): void {
     this.event.progressReport = this.progressReportService.calculateProgressReport(this.event.fechaInicio);
+  }
+
+  onEventStartDateChange(value: string | null): void {
+    this.event.fechaInicio = value || null;
+    this.onFechaInicioChange();
+  }
+
+  /**
+   * Agrega un participante a partir de su nombre, usando el servicio de matching avanzado.
+   */
+  private async addParticipantFromName(name: string, participationTypeId: number): Promise<void> {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      return;
+    }
+
+    try {
+      const searchName = this.cleanTitlePrefixes(trimmedName);
+
+      const candidates = await firstValueFrom(this.researcherService.matchResearcherByName(searchName));
+      if (!candidates || candidates.length === 0) {
+        console.warn(`No researcher match found for "${searchName}" (original: "${trimmedName}")`);
+        return;
+      }
+
+      const rrhh = candidates[0];
+      if (!rrhh || !rrhh.id) {
+        return;
+      }
+
+      // Evitar duplicados de mismo investigador y mismo rol
+      const alreadyExists = this.participants.some(
+        p => p.rrhhId === rrhh.id && p.participationTypeId === participationTypeId
+      );
+
+      if (alreadyExists) {
+        return;
+      }
+
+      const newParticipant: ParticipantDTO = {
+        rrhhId: rrhh.id,
+        fullName: rrhh.fullname || trimmedName,
+        idRecurso: rrhh.idRecurso,
+        orcid: rrhh.orcid,
+        participationTypeId: participationTypeId,
+        corresponding: false,
+        order: this.participants.length + 1
+      };
+
+      this.participants = [...this.participants, newParticipant];
+      this.onParticipantsChange(this.participants);
+    } catch (error) {
+      console.error(`Error searching researcher for "${name}":`, error);
+    }
+  }
+
+  /**
+   * Elimina prefijos de título como "Dr.", "Dra." al inicio del nombre.
+   */
+  private cleanTitlePrefixes(name: string): string {
+    if (!name) {
+      return '';
+    }
+    return name.replace(/^\s*(dr\.?\s+|dra\.?\s+)/i, '').trim();
   }
 }
 

@@ -240,9 +240,7 @@ public class PublicacionController {
                 }
                 // Actualizar linkPDF siempre (puede ser null para limpiarlo)
                 existingPublication.setLinkPDF(dto.getLinkPDF());
-                if (dto.getProgressReport() != null) {
-                    existingPublication.setProgressReport(dto.getProgressReport());
-                }
+                existingPublication.setProgressReport(dto.getProgressReport());
                 if (dto.getCodigoANID() != null) {
                     existingPublication.setCodigoANID(dto.getCodigoANID());
                 }
@@ -984,6 +982,8 @@ public class PublicacionController {
                     response.put("year", pub.getYearPublished() != null ? pub.getYearPublished() : "N/A");
                 } else {
                     // El usuario no puede ver la publicación
+                    // Igual devolvemos el ID para permitir una vista de solo lectura en el frontend
+                    response.put("publicationId", pub.getId());
                     response.put("visible", false);
                     response.put("message", "This publication already exists but is not available for your account.");
                 }
@@ -1315,7 +1315,8 @@ public class PublicacionController {
         dto.setFechaInicio(pubData.getPublicationDate());
         dto.setDoi(pubData.getDoi() != null ? pubData.getDoi().trim() : null);
         dto.setLinkVisualizacion(pubData.getDoi() != null ? "https://doi.org/" + pubData.getDoi().trim() : null);
-        dto.setProgressReport(openAlexService.calculateProgressReport(pubData.getPublicationDate()));
+        Integer pr = openAlexService.calculateProgressReport(pubData.getPublicationDate());
+        dto.setProgressReport(pr != null ? pr.toString() : null);
         dto.setBasal("N"); // Por defecto "N"
         
         // Datos específicos de publicación
@@ -1341,8 +1342,8 @@ public class PublicacionController {
         dto.setYearPublished(pubData.getPublicationYear());
         dto.setFirstpage(pubData.getFirstPage());
         dto.setLastpage(pubData.getLastPage());
-        dto.setIndexs("[]"); // Vacío por ahora
-        dto.setFunding("[]"); // Vacío por ahora
+        dto.setIndexs(pubData.getIndexs() != null ? pubData.getIndexs() : "[]");
+        dto.setFunding(pubData.getFunding() != null ? pubData.getFunding() : "[]");
         
         // Tipo de producto: 3 = Publicaciones
         TipoProductoDTO tipoProducto = new TipoProductoDTO();

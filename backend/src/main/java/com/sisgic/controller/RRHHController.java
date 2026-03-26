@@ -30,6 +30,9 @@ public class RRHHController {
     @Autowired
     private TipoRRHHRepository tipoRRHHRepository;
 
+    @Autowired
+    private com.sisgic.service.ResearcherMatchingService researcherMatchingService;
+
     @GetMapping
     @Transactional(readOnly = true)
     public ResponseEntity<Page<RRHHDTO>> getResearchers(
@@ -68,6 +71,36 @@ public class RRHHController {
         return ResponseEntity.ok(researchersDTO);
     }
 
+    /**
+     * Busca el mejor match de investigador usando ResearcherMatchingService.
+     * Devuelve a lo más un RRHHDTO (o lista vacía si no hay coincidencias claras).
+     */
+    @GetMapping("/match")
+    public ResponseEntity<List<RRHHDTO>> matchResearcher(@RequestParam String name) {
+        com.sisgic.service.ResearcherMatchingService.Resultado resultado =
+                researcherMatchingService.encontrarMejor(name);
+
+        if (resultado == null ||
+            resultado.estatus == com.sisgic.service.ResearcherMatchingService.Estatus.SIN_COINCIDENCIAS ||
+            (resultado.estatus == com.sisgic.service.ResearcherMatchingService.Estatus.MAS_DE_UNA
+                && resultado.getIdRRHH() == null)) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        Long idRRHH = resultado.getIdRRHH();
+        if (idRRHH == null) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        RRHH rrhh = rrhhRepository.findByIdWithTipoRRHH(idRRHH);
+        if (rrhh == null) {
+            return ResponseEntity.ok(List.of());
+        }
+
+        RRHHDTO dto = convertToDTO(rrhh);
+        return ResponseEntity.ok(List.of(dto));
+    }
+
     @GetMapping("/stats")
     public ResponseEntity<Object> getResearcherStats() {
         long totalResearchers = rrhhRepository.count();
@@ -97,6 +130,13 @@ public class RRHHController {
         // Validar campos requeridos
         if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
             return ResponseEntity.badRequest().body("Error: Full name is required");
+        }
+        if (request.getGender() == null || request.getGender().trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Error: Gender is required");
+        }
+        String gender = request.getGender().trim().toUpperCase();
+        if (!"M".equals(gender) && !"F".equals(gender)) {
+            return ResponseEntity.badRequest().body("Error: Gender must be 'M' or 'F'");
         }
         
         // Validar formato de email si se proporciona
@@ -163,6 +203,7 @@ public class RRHHController {
         nuevoRRHH.setIdRecurso(request.getRut() != null && !request.getRut().trim().isEmpty() ? request.getRut().trim() : null);
         nuevoRRHH.setEmail(request.getEmail() != null && !request.getEmail().trim().isEmpty() ? request.getEmail().trim() : null);
         nuevoRRHH.setOrcid(request.getOrcid() != null && !request.getOrcid().trim().isEmpty() ? normalizeOrcid(request.getOrcid()) : null);
+        nuevoRRHH.setCodigoGenero(gender);
         
         nuevoRRHH = rrhhRepository.save(nuevoRRHH);
         
@@ -274,6 +315,7 @@ public class RRHHController {
         private String orcid;
         private String rut;
         private Long rrhhTypeId;
+        private String gender;
         
         // Getters and Setters
         public String getFullName() { return fullName; }
@@ -286,6 +328,8 @@ public class RRHHController {
         public void setRut(String rut) { this.rut = rut; }
         public Long getRrhhTypeId() { return rrhhTypeId; }
         public void setRrhhTypeId(Long rrhhTypeId) { this.rrhhTypeId = rrhhTypeId; }
+        public String getGender() { return gender; }
+        public void setGender(String gender) { this.gender = gender; }
     }
 
     // Clase interna para las estadísticas

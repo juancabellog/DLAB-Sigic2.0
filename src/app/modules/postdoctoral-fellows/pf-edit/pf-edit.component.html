@@ -81,6 +81,17 @@
             {{ fundingType.idDescripcion }}
           </mat-checkbox>
         </div>
+
+        <div class="form-row" *ngIf="hasOtherFundingType()">
+          <mat-form-field class="full-width">
+            <mat-label>Other funding source</mat-label>
+            <input
+              matInput
+              [(ngModel)]="fundingOtherText"
+              (ngModelChange)="updateFundingSourceString()"
+              placeholder="Enter funding source description">
+          </mat-form-field>
+        </div>
       </div>
       
       <mat-divider></mat-divider>
@@ -101,32 +112,67 @@
       </div>
       
       <mat-divider></mat-divider>
+
+      <div class="form-section">
+        <div class="section-title">Clusters</div>
+        <div class="form-row">
+          <div class="full-width cluster">
+            <div class="checkbox-group">
+              <mat-checkbox
+                *ngFor="let cluster of clusterOptions"
+                [checked]="isClusterSelected(cluster.id)"
+                (change)="onClusterChange(cluster.id, $event.checked)"
+                color="primary">
+                {{ cluster.label }}
+              </mat-checkbox>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
       
       <div class="form-section">
         <div class="section-title">Product Information</div>
         
-        <div class="form-row">
-          <mat-form-field class="half-width">
-            <mat-label>Progress Report (Period)</mat-label>
-            <mat-select [(ngModel)]="fellow.progressReport">
-              <mat-option [value]="1">Period 1</mat-option>
-              <mat-option [value]="2">Period 2</mat-option>
-              <mat-option [value]="3">Period 3</mat-option>
-              <mat-option [value]="4">Period 4</mat-option>
-              <mat-option [value]="5">Period 5</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field class="half-width">
-            <mat-label>ANID Code</mat-label>
-            <input matInput [(ngModel)]="fellow.codigoANID" placeholder="Enter ANID code">
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
+        <div class="form-row progress-basal-row">
           <mat-checkbox [(ngModel)]="isBasal" (change)="onBasalChange($event.checked)" color="primary">
             Product associated with Basal funding
           </mat-checkbox>
+        </div>
+
+        <div class="form-row">
+          <div class="full-width">
+            <div class="progress-periods-label">Progress Reports Submitted</div>
+            <div class="progress-periods-help">Select the periods for which progress reports have been delivered</div>
+            <div class="progress-periods-grid">
+              <div class="progress-periods-row">
+                <mat-checkbox
+                  *ngFor="let period of periodOptions.slice(0, 3)"
+                  [checked]="isPeriodSelected(period.id)"
+                  (change)="onPeriodChange(period.id, $event.checked)"
+                  color="primary">
+                  {{ period.label }}
+                </mat-checkbox>
+              </div>
+              <div class="progress-periods-row">
+                <mat-checkbox
+                  *ngFor="let period of periodOptions.slice(3)"
+                  [checked]="isPeriodSelected(period.id)"
+                  (change)="onPeriodChange(period.id, $event.checked)"
+                  color="primary">
+                  {{ period.label }}
+                </mat-checkbox>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field class="half-width">
+            <mat-label>ANID Code</mat-label>
+            <input matInput [(ngModel)]="fellow.codigoANID" placeholder="Enter ANID code" [readonly]="true">
+          </mat-form-field>
         </div>
         
         <div class="form-row">

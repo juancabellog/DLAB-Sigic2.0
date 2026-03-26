@@ -38,6 +38,8 @@ public class InvestigatorProductivityService {
     private static final int COL_CB_GRADIENT = 79;
     private static final int COL_CC_GRADIENT = 80;
     private static final int COL_CD_GRADIENT = 81;
+    private static final int COL_CE_GRADIENT = 82;
+    private static final int COL_CF_GRADIENT = 83;
 
     // Columnas por período
     private static final int P1_COL_A_PPAL = 4;
@@ -76,14 +78,15 @@ public class InvestigatorProductivityService {
     private static final int P5_COL_TESIS_TERMINADAS_TUTOR = 70;
     private static final int P5_COL_TESIS_POSTDOCTORAL_TUTOR = 71;
     private static final int P5_COL_TESIS_COTUTOR = 73;
-    private static final int COL_TOTAL_TESIS_TUTOR = 85;
-    private static final int COL_TOTAL_TESIS_COTUTOR = 86;
+    private static final int COL_TOTAL_TESIS_TUTOR = 87;
+    private static final int COL_TOTAL_TESIS_COTUTOR = 88;
 
     // Proyectos
-    private static final int COL_PROYECTOS_CANT_NACIONAL = 88;
-    private static final int COL_PROYECTOS_CANT_INTERNACIONAL = 89;
-    private static final int COL_PROYECTOS_MONTO_NACIONAL = 91;
-    private static final int COL_PROYECTOS_MONTO_INTERNACIONAL = 92;
+    private static final int COL_PROYECTOS_CANT_NACIONAL = 90;
+    private static final int COL_PROYECTOS_CANT_INTERNACIONAL = 91;
+    private static final int COL_PROYECTOS_MONTO_NACIONAL = 93;
+    private static final int COL_PROYECTOS_MONTO_INTERNACIONAL = 94;
+
 
     // Proyectos Excel
     private static final String SHEET_PROYECTOS = "Proyectos";
@@ -98,6 +101,7 @@ public class InvestigatorProductivityService {
     private static final String GRADIENT_VERDE_OSCURO_HEX = "006100";
     private static final String GRADIENT_GRIS_HEX = "D3D3D3";
     private static final double GRADIENT_NEUTRAL_EPSILON = 1e-9;
+
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -344,18 +348,31 @@ public class InvestigatorProductivityService {
                     continue;
                 }
 
-                // Parsear período
-                int periodo;
+                // Parsear período(s) - progressReport puede venir como "1,2,3"
+                Set<Integer> periodosSet = new LinkedHashSet<>();
                 try {
                     if (periodoObj instanceof Number) {
-                        periodo = ((Number) periodoObj).intValue();
-                    } else {
-                        periodo = Integer.parseInt(periodoObj.toString());
+                        int p = ((Number) periodoObj).intValue();
+                        if (p >= 1 && p <= 5) {
+                            periodosSet.add(p);
+                        }
+                    } else if (periodoObj != null) {
+                        String raw = periodoObj.toString();
+                        for (String part : raw.split(",")) {
+                            if (part == null) continue;
+                            // Extraer solo dígitos (soporta casos tipo "5.." o "2023,5..")
+                            String digits = part.replaceAll("\\D+", "");
+                            if (digits == null || digits.isEmpty()) continue;
+                            int p = Integer.parseInt(digits);
+                            if (p >= 1 && p <= 5) {
+                                periodosSet.add(p);
+                            }
+                        }
                     }
-                    if (periodo < 1 || periodo > 5) {
-                        continue;
-                    }
-                } catch (NumberFormatException e) {
+                } catch (Exception ignored) {
+                    // Si no se puede parsear, periodosSet quedará vacío y se hará continue
+                }
+                if (periodosSet.isEmpty()) {
                     continue;
                 }
 
@@ -395,48 +412,50 @@ public class InvestigatorProductivityService {
                 boolean isTutor = (tipo == 12);
                 boolean isCotutor = (tipo == 13);
 
-                if (periodo == 4) {
-                    // Período 4: lógica especial
-                    if (isTutor) {
-                        if (estado == 2) { // En progreso
-                            stats.enCursoTutor++;
-                        } else if (estado == 1) { // Terminada
-                            stats.terminadasTutor++;
+                for (int periodo : periodosSet) {
+                    if (periodo == 4) {
+                        // Período 4: lógica especial
+                        if (isTutor) {
+                            if (estado == 2) { // En progreso
+                                stats.enCursoTutor++;
+                            } else if (estado == 1) { // Terminada
+                                stats.terminadasTutor++;
+                            }
+                            if (grado == 3) { // Postdoctoral
+                                stats.postdoctoralesTutor++;
+                            }
+                            stats.uniqueTutorThesisIds.add(idTesis);
+                        } else if (isCotutor) {
+                            stats.cotutor++;
+                            stats.uniqueCotutorThesisIds.add(idTesis);
                         }
-                        if (grado == 3) { // Postdoctoral
-                            stats.postdoctoralesTutor++;
+                    } else if (periodo == 5) {
+                        // Período 5: mismo desglose que P4
+                        if (isTutor) {
+                            if (estado == 2) { // En progreso
+                                stats.enCursoTutorP5++;
+                            } else if (estado == 1) { // Terminada
+                                stats.terminadasTutorP5++;
+                            }
+                            if (grado == 3) { // Postdoctoral
+                                stats.postdoctoralesTutorP5++;
+                            }
+                            stats.uniqueTutorThesisIds.add(idTesis);
+                        } else if (isCotutor) {
+                            stats.cotutorP5++;
+                            stats.uniqueCotutorThesisIds.add(idTesis);
                         }
-                        stats.uniqueTutorThesisIds.add(idTesis);
-                    } else if (isCotutor) {
-                        stats.cotutor++;
-                        stats.uniqueCotutorThesisIds.add(idTesis);
-                    }
-                } else if (periodo == 5) {
-                    // Período 5: mismo desglose que P4
-                    if (isTutor) {
-                        if (estado == 2) { // En progreso
-                            stats.enCursoTutorP5++;
-                        } else if (estado == 1) { // Terminada
-                            stats.terminadasTutorP5++;
+                    } else {
+                        // Períodos 1-3: contar tutor y cotutor por período
+                        if (isTutor) {
+                            stats.tutorCountByPeriod.put(periodo,
+                                stats.tutorCountByPeriod.getOrDefault(periodo, 0) + 1);
+                            stats.uniqueTutorThesisIds.add(idTesis);
+                        } else if (isCotutor) {
+                            stats.cotutorCountByPeriod.put(periodo,
+                                stats.cotutorCountByPeriod.getOrDefault(periodo, 0) + 1);
+                            stats.uniqueCotutorThesisIds.add(idTesis);
                         }
-                        if (grado == 3) { // Postdoctoral
-                            stats.postdoctoralesTutorP5++;
-                        }
-                        stats.uniqueTutorThesisIds.add(idTesis);
-                    } else if (isCotutor) {
-                        stats.cotutorP5++;
-                        stats.uniqueCotutorThesisIds.add(idTesis);
-                    }
-                } else {
-                    // Períodos 1-3: contar tutor y cotutor por período
-                    if (isTutor) {
-                        stats.tutorCountByPeriod.put(periodo,
-                            stats.tutorCountByPeriod.getOrDefault(periodo, 0) + 1);
-                        stats.uniqueTutorThesisIds.add(idTesis);
-                    } else if (isCotutor) {
-                        stats.cotutorCountByPeriod.put(periodo,
-                            stats.cotutorCountByPeriod.getOrDefault(periodo, 0) + 1);
-                        stats.uniqueCotutorThesisIds.add(idTesis);
                     }
                 }
 
@@ -733,22 +752,26 @@ public class InvestigatorProductivityService {
             }
 
             // Formato condicional por gradiente: primera tabla
-            applyGradientToColumn(sheet, workbook, evaluator, PRODUCTIVITY_DATA_START_ROW, totalRowIndex, COL_BX_GRADIENT, 5.0);
-            applyGradientToColumn(sheet, workbook, evaluator, PRODUCTIVITY_DATA_START_ROW, totalRowIndex, COL_BY_GRADIENT, 30.0);
-            applyGradientToColumn(sheet, workbook, evaluator, PRODUCTIVITY_DATA_START_ROW, totalRowIndex, COL_BZ_GRADIENT, 10.0);
-            applyGradientToColumn(sheet, workbook, evaluator, PRODUCTIVITY_DATA_START_ROW, totalRowIndex, COL_CA_GRADIENT, 60.0);
-            applyGradientToColumn(sheet, workbook, evaluator, PRODUCTIVITY_DATA_START_ROW, totalRowIndex, COL_CB_GRADIENT, 15.0);
-            applyGradientToColumn(sheet, workbook, evaluator, PRODUCTIVITY_DATA_START_ROW, totalRowIndex, COL_CC_GRADIENT, 6.0);
-            applyGradientToColumn(sheet, workbook, evaluator, PRODUCTIVITY_DATA_START_ROW, totalRowIndex, COL_CD_GRADIENT, 90.0);
+            applyGradientToColumn(sheet, workbook, evaluator, PRODUCTIVITY_DATA_START_ROW, totalRowIndex, COL_BX_GRADIENT);
+            applyGradientToColumn(sheet, workbook, evaluator, PRODUCTIVITY_DATA_START_ROW, totalRowIndex, COL_BY_GRADIENT);
+            applyGradientToColumn(sheet, workbook, evaluator, PRODUCTIVITY_DATA_START_ROW, totalRowIndex, COL_BZ_GRADIENT);
+            applyGradientToColumn(sheet, workbook, evaluator, PRODUCTIVITY_DATA_START_ROW, totalRowIndex, COL_CA_GRADIENT);
+            applyGradientToColumn(sheet, workbook, evaluator, PRODUCTIVITY_DATA_START_ROW, totalRowIndex, COL_CB_GRADIENT);
+            applyGradientToColumn(sheet, workbook, evaluator, PRODUCTIVITY_DATA_START_ROW, totalRowIndex, COL_CC_GRADIENT);
+            applyGradientToColumn(sheet, workbook, evaluator, PRODUCTIVITY_DATA_START_ROW, totalRowIndex, COL_CD_GRADIENT);
+            applyGradientToColumn(sheet, workbook, evaluator, PRODUCTIVITY_DATA_START_ROW, totalRowIndex, COL_CE_GRADIENT);
+            applyGradientToColumn(sheet, workbook, evaluator, PRODUCTIVITY_DATA_START_ROW, totalRowIndex, COL_CF_GRADIENT);
 
             // Aplicar gradientes de nuevo a la tabla copiada
-            applyGradientToColumn(sheet, workbook, evaluator, copyStartRow, secondTableEnd, COL_BX_GRADIENT, 5.0);
-            applyGradientToColumn(sheet, workbook, evaluator, copyStartRow, secondTableEnd, COL_BY_GRADIENT, 30.0);
-            applyGradientToColumn(sheet, workbook, evaluator, copyStartRow, secondTableEnd, COL_BZ_GRADIENT, 10.0);
-            applyGradientToColumn(sheet, workbook, evaluator, copyStartRow, secondTableEnd, COL_CA_GRADIENT, 60.0);
-            applyGradientToColumn(sheet, workbook, evaluator, copyStartRow, secondTableEnd, COL_CB_GRADIENT, 15.0);
-            applyGradientToColumn(sheet, workbook, evaluator, copyStartRow, secondTableEnd, COL_CC_GRADIENT, 6.0);
-            applyGradientToColumn(sheet, workbook, evaluator, copyStartRow, secondTableEnd, COL_CD_GRADIENT, 90.0);
+            applyGradientToColumn(sheet, workbook, evaluator, copyStartRow, secondTableEnd, COL_BX_GRADIENT);
+            applyGradientToColumn(sheet, workbook, evaluator, copyStartRow, secondTableEnd, COL_BY_GRADIENT);
+            applyGradientToColumn(sheet, workbook, evaluator, copyStartRow, secondTableEnd, COL_BZ_GRADIENT);
+            applyGradientToColumn(sheet, workbook, evaluator, copyStartRow, secondTableEnd, COL_CA_GRADIENT);
+            applyGradientToColumn(sheet, workbook, evaluator, copyStartRow, secondTableEnd, COL_CB_GRADIENT);
+            applyGradientToColumn(sheet, workbook, evaluator, copyStartRow, secondTableEnd, COL_CC_GRADIENT);
+            applyGradientToColumn(sheet, workbook, evaluator, copyStartRow, secondTableEnd, COL_CD_GRADIENT);
+            applyGradientToColumn(sheet, workbook, evaluator, copyStartRow, secondTableEnd, COL_CE_GRADIENT);
+            applyGradientToColumn(sheet, workbook, evaluator, copyStartRow, secondTableEnd, COL_CF_GRADIENT);
 
             // Guardar archivo
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -820,7 +843,7 @@ public class InvestigatorProductivityService {
             if (tipo != null) tipo = tipo.trim();
             RowSnapshot snap = readRowSnapshot(sheet, row, r);
             snap.tipo = tipo;
-            Double cdValue = getCellValueAsDouble(row, COL_CD_GRADIENT, evaluator);
+            Double cdValue = getCellValueAsDouble(row, COL_CF_GRADIENT, evaluator);
             snap.sortKeyCD = cdValue != null ? cdValue : Double.MIN_VALUE;
             snapshots.add(snap);
             if (row.getLastCellNum() > maxCol) maxCol = row.getLastCellNum();
@@ -1279,7 +1302,7 @@ public class InvestigatorProductivityService {
     }
 
     private void applyGradientToColumn(Sheet sheet, Workbook workbook, FormulaEvaluator evaluator,
-                                      int firstRow, int lastRowExclusive, int colIndex, double neutralValue) {
+                                      int firstRow, int lastRowExclusive, int colIndex) {
         if (!(workbook instanceof XSSFWorkbook)) return;
 
         List<Double> values = new ArrayList<>();
@@ -1292,12 +1315,13 @@ public class InvestigatorProductivityService {
 
         if (values.isEmpty()) return;
 
-        double minBelow = values.stream().filter(v -> v < neutralValue - GRADIENT_NEUTRAL_EPSILON).min(Double::compareTo).orElse(neutralValue - 1.0);
-        double maxAbove = values.stream().filter(v -> v > neutralValue + GRADIENT_NEUTRAL_EPSILON).max(Double::compareTo).orElse(neutralValue + 1.0);
-        double spanBelow = neutralValue - minBelow;
-        double spanAbove = maxAbove - neutralValue;
-        if (spanBelow <= 0) spanBelow = 1.0;
-        if (spanAbove <= 0) spanAbove = 1.0;
+        // Especificación ANID:
+        // - mínimo de la columna => gris
+        // - máximo de la columna => verde oscuro
+        // - intermedio => gradiente lineal entre gris y verde oscuro
+        double minVal = values.stream().min(Double::compareTo).orElse(0.0);
+        double maxVal = values.stream().max(Double::compareTo).orElse(0.0);
+        double span = maxVal - minVal;
 
         Map<String, CellStyle> styleCache = new HashMap<>();
         for (int r = firstRow; r < lastRowExclusive; r++) {
@@ -1307,16 +1331,20 @@ public class InvestigatorProductivityService {
             if (value == null) continue;
 
             String hex;
-            if (Math.abs(value - neutralValue) <= GRADIENT_NEUTRAL_EPSILON) {
-                hex = GRADIENT_NEUTRAL_HEX;
-            } else if (value > neutralValue) {
-                double ratio = (value - neutralValue) / spanAbove;
-                ratio = Math.min(1.0, Math.max(0.0, ratio));
-                hex = interpolateHexColor(GRADIENT_NEUTRAL_HEX, GRADIENT_VERDE_OSCURO_HEX, ratio);
+            double ratio;
+            if (span <= GRADIENT_NEUTRAL_EPSILON) {
+                ratio = 0.0; // todos iguales => color mínimo (gris)
             } else {
-                double ratio = (value - minBelow) / spanBelow;
+                ratio = (value - minVal) / span;
                 ratio = Math.min(1.0, Math.max(0.0, ratio));
-                hex = interpolateHexColor(GRADIENT_GRIS_HEX, GRADIENT_NEUTRAL_HEX, ratio);
+            }
+            // Dos tramos para que el color "neutral" aparezca en el punto medio (ratio=0.5)
+            if (ratio <= 0.5) {
+                double t = ratio * 2.0; // 0..1
+                hex = interpolateHexColor(GRADIENT_GRIS_HEX, GRADIENT_NEUTRAL_HEX, t);
+            } else {
+                double t = (ratio - 0.5) * 2.0; // 0..1
+                hex = interpolateHexColor(GRADIENT_NEUTRAL_HEX, GRADIENT_VERDE_OSCURO_HEX, t);
             }
 
             CellStyle style = getOrCreateGradientStyle((XSSFWorkbook) workbook, hex, styleCache);
@@ -1378,6 +1406,9 @@ public class InvestigatorProductivityService {
         XSSFColor color = new XSSFColor(rgb, null);
         style.setFillForegroundColor(color);
         style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        // Importante: al cambiar a un nuevo CellStyle se pierde el formato numérico original del template.
+        // Forzamos que los valores se rendericen con 1 decimal (ej: 1.0), tal como pide ANID/template.
+        style.setDataFormat(workbook.createDataFormat().getFormat("0.0"));
         cache.put(hex, style);
         return style;
     }

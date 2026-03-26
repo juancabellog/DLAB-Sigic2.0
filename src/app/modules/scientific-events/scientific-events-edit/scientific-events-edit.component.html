@@ -19,12 +19,84 @@
     </mat-card-header>
     
     <mat-card-content>
+      <!-- Import section (separate from the real form) -->
+      <div class="form-section">
+        <div class="section-title">Import Event Information</div>
+        
+        <mat-form-field class="full-width" appearance="fill">
+          <mat-label>Event Information</mat-label>
+          <textarea
+            matInput
+            [(ngModel)]="eventImportText"
+            placeholder="Paste event information here"
+            rows="3"
+            aria-describedby="event-description-helper event-description-format"></textarea>
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="onParseEventDescription()">
+            <mat-icon>content_paste</mat-icon>
+          </button>
+          <mat-hint id="event-description-helper" align="start">
+            Paste an event description to automatically populate event information.
+          </mat-hint>
+        </mat-form-field>
+
+        <div class="event-description-help" id="event-description-format">
+          <button
+            mat-button
+            type="button"
+            class="event-description-toggle"
+            (click)="showEventFormat = !showEventFormat">
+            <mat-icon class="event-description-toggle-icon">
+              {{ showEventFormat ? 'expand_less' : 'expand_more' }}
+            </mat-icon>
+            View event format
+          </button>
+
+          <div *ngIf="showEventFormat" class="event-description-panel">
+            <div class="event-description-panel-title">Expected format</div>
+            <pre class="event-description-format-text">
+Name of the event
+Event type (e.g. Course/Conference/Workshop/National Congress/International Congress/Other)
+Participants: &lt;number&gt;
+&lt;City&gt;, &lt;Country&gt;
+&lt;Start Date&gt; - &lt;End Date&gt;
+Organizer: &lt;Name1&gt;,&lt;Name2&gt;,...,&lt;NameN&gt;
+Speaker: &lt;Name1&gt;,&lt;Name2&gt;,...,&lt;NameN&gt;
+BASAL Year &lt;period&gt;
+
+Note: dates use the dd/mm/yyyy format.
+            </pre>
+
+            <div class="event-description-panel-title">Example</div>
+            <pre class="event-description-format-text">
+International Conference on Molecular Biology
+International Congress
+Participants: 120
+Santiago, Chile
+01/12/2025 - 10/12/2025
+Organizer: Alfonso Gonzalez, Maria Perez
+Speaker: Andrea Soza, John Smith
+BASAL Year 1
+            </pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real form starts here -->
       <div class="form-section">
         <div class="section-title">Basic Information</div>
-        
+
         <mat-form-field class="full-width">
-          <mat-label>Description</mat-label>
-          <input matInput [(ngModel)]="event.descripcion" placeholder="Enter event description" required>
+          <mat-label>Name</mat-label>
+          <input matInput [(ngModel)]="event.descripcion" placeholder="Enter event name" required>
+        </mat-form-field>
+
+        <mat-form-field class="full-width">
+          <mat-label>Title</mat-label>
+          <textarea matInput [(ngModel)]="event.comentario" rows="3" placeholder="Enter additional comments"></textarea>
         </mat-form-field>
         
         <div class="form-row">
@@ -72,39 +144,69 @@
         <div class="form-row">
           <mat-form-field class="half-width">
             <mat-label>Start Date</mat-label>
-            <input matInput type="date" [(ngModel)]="event.fechaInicio" (ngModelChange)="onFechaInicioChange()" required>
+            <input
+              matInput
+              type="date"
+              [(ngModel)]="event.fechaInicio"
+              (ngModelChange)="onEventStartDateChange($event)"
+              required>
           </mat-form-field>
           
           <mat-form-field class="half-width">
             <mat-label>End Date</mat-label>
-            <input matInput type="date" [(ngModel)]="event.fechaTermino">
+            <input
+              matInput
+              type="date"
+              [(ngModel)]="event.fechaTermino"
+              [value]="event.fechaTermino ? event.fechaTermino : ''">
           </mat-form-field>
         </div>
-        
-        <div class="form-row">
-          <mat-form-field class="half-width">
-            <mat-label>Progress Report (Period)</mat-label>
-            <mat-select [(ngModel)]="event.progressReport">
-              <mat-option [value]="1">Period 1</mat-option>
-              <mat-option [value]="2">Period 2</mat-option>
-              <mat-option [value]="3">Period 3</mat-option>
-              <mat-option [value]="4">Period 4</mat-option>
-              <mat-option [value]="5">Period 5</mat-option>
-            </mat-select>
-          </mat-form-field>
-          
-          <mat-form-field class="half-width">
-            <mat-label>ANID Code</mat-label>
-            <input matInput [(ngModel)]="event.codigoANID" placeholder="Enter ANID code">
-          </mat-form-field>
-        </div>
-        
+
         <div class="form-row">
           <mat-checkbox [(ngModel)]="isBasal" (change)="onBasalChange($event.checked)" color="primary">
             Product associated with Basal funding
           </mat-checkbox>
         </div>
         
+        <div class="form-row">
+          <mat-form-field class="half-width">
+            <mat-label>Progress Report (Period)</mat-label>
+            <mat-select [(ngModel)]="event.progressReport">
+              <mat-option value="1">Period 1</mat-option>
+              <mat-option value="2">Period 2</mat-option>
+              <mat-option value="3">Period 3</mat-option>
+              <mat-option value="4">Period 4</mat-option>
+              <mat-option value="5">Period 5</mat-option>
+            </mat-select>
+          </mat-form-field>
+          
+          <mat-form-field class="half-width">
+            <mat-label>ANID Code</mat-label>
+            <input matInput [(ngModel)]="event.codigoANID" placeholder="Enter ANID code" [readonly]="true">
+          </mat-form-field>
+        </div>
+        
+        <mat-divider></mat-divider>
+
+        <div class="form-section">
+          <div class="section-title">Clusters</div>
+          <div class="form-row">
+            <div class="full-width cluster">
+              <div class="checkbox-group">
+                <mat-checkbox
+                  *ngFor="let cluster of clusterOptions"
+                  [checked]="isClusterSelected(cluster.id)"
+                  (change)="onClusterChange(cluster.id, $event.checked)"
+                  color="primary">
+                  {{ cluster.label }}
+                </mat-checkbox>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider style="margin-top: 0px !important;"></mat-divider>
+                
         <div class="form-row">
           <div class="full-width pdf-upload-field">
             <label class="pdf-upload-label">PDF Document</label>
@@ -152,10 +254,6 @@
           </div>
         </div>
         
-        <mat-form-field class="full-width">
-          <mat-label>Comments</mat-label>
-          <textarea matInput [(ngModel)]="event.comentario" rows="3" placeholder="Enter additional comments"></textarea>
-        </mat-form-field>
       </div>
       
       <mat-divider></mat-divider>

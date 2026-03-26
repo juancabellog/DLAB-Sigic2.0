@@ -48,4 +48,6 @@ logging:
     org.springframework.security: DEBUG
 
 
+app:
+  version: "2025.03.19-02"
 

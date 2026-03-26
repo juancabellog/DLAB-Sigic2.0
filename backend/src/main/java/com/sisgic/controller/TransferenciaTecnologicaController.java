@@ -203,9 +203,7 @@ public class TransferenciaTecnologicaController {
                 }
                 // Actualizar linkPDF siempre (puede ser null para limpiarlo)
                 existingTransfer.setLinkPDF(dto.getLinkPDF());
-                if (dto.getProgressReport() != null) {
-                    existingTransfer.setProgressReport(dto.getProgressReport());
-                }
+                existingTransfer.setProgressReport(dto.getProgressReport());
                 if (dto.getCodigoANID() != null) {
                     existingTransfer.setCodigoANID(dto.getCodigoANID());
                 }
@@ -222,6 +220,9 @@ public class TransferenciaTecnologicaController {
                 }
                 if (dto.getLineasInvestigacion() != null) {
                     existingTransfer.setLineasInvestigacion(dto.getLineasInvestigacion());
+                }
+                if (dto.getCluster() != null) {
+                    existingTransfer.setCluster(dto.getCluster());
                 }
 
                 // Actualizar relaciones de ProductoCientifico
@@ -390,6 +391,7 @@ public class TransferenciaTecnologicaController {
             dto.setBasal(null);
         }
         dto.setLineasInvestigacion(transfer.getLineasInvestigacion());
+        dto.setCluster(transfer.getCluster());
         dto.setParticipantesNombres(transfer.getParticipantesNombres());
         dto.setCreatedAt(transfer.getCreatedAt() != null ? transfer.getCreatedAt().toString() : null);
         dto.setUpdatedAt(transfer.getUpdatedAt() != null ? transfer.getUpdatedAt().toString() : null);
@@ -487,6 +489,7 @@ public class TransferenciaTecnologicaController {
             transfer.setBasal('S');
         }
         transfer.setLineasInvestigacion(dto.getLineasInvestigacion());
+        transfer.setCluster(dto.getCluster());
 
         // Relaciones de ProductoCientifico
         if (dto.getTipoProducto() != null && dto.getTipoProducto().getId() != null) {

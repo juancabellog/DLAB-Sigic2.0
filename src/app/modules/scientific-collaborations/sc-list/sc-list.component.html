@@ -81,6 +81,10 @@
                 <span class="detail-label">Start Date:</span>
                 <span class="detail-value">{{ collaboration.fechaInicio | date:'MMM yyyy' }}</span>
               </div>
+              <div class="detail-row" *ngIf="collaboration.progressReport">
+                <span class="detail-label">Period:</span>
+                <span class="detail-value">{{ collaboration.progressReport }}</span>
+              </div>
             </div>
           </mat-card-content>
           
@@ -173,6 +177,17 @@
             </mat-icon>
           </div>
           <div
+            class="list-cell period-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'period' }"
+            (click)="onSort('period')">
+            <span>Period</span>
+            <mat-icon>
+              {{ sortColumn === 'period'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
             class="list-cell date-cell sortable-header"
             [ngClass]="{ 'sortable-header-active': sortColumn === 'date' }"
             (click)="onSort('date')">
@@ -200,6 +215,7 @@
           <div class="list-cell institution-cell">{{ collaboration.institucion?.descripcion || collaboration.institucion?.idDescripcion || 'N/A' }}</div>
           <div class="list-cell origin-cell">{{ getOrigin(collaboration) }}</div>
           <div class="list-cell destination-cell">{{ getDestination(collaboration) }}</div>
+          <div class="list-cell period-cell">{{ collaboration.progressReport || 'N/A' }}</div>
           <div class="list-cell date-cell">{{ collaboration.fechaInicio | date:'MMM yyyy' }}</div>
           <div class="list-cell actions-cell">
             <button 

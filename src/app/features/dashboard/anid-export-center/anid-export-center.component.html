@@ -1,0 +1,72 @@
+<ng-container *ngIf="isAnidExportCenterVisible">
+  <mat-card class="anid-export-card">
+    <mat-card-content class="content">
+      <div class="header">
+        <div class="icon">
+          <mat-icon>assignment</mat-icon>
+        </div>
+        <div class="text">
+          <h2 class="title">ANID Export Center</h2>
+          <p class="subtitle">Prepare supporting files for ANID submission.</p>
+          <p class="helper">
+            Generate a ZIP with PDFs organized by product type, or create a single Excel workbook with a
+            <strong>Summary</strong> sheet and separate tabs for each product category.
+          </p>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="actions">
+        <!-- Download ZIP -->
+        <button
+          mat-raised-button
+          color="primary"
+          class="action-button"
+          [disabled]="!isAnidExportCenterVisible || isZipLoading || isAnyLoading"
+          (click)="onDownloadZip()">
+          <mat-icon class="btn-icon">picture_as_pdf</mat-icon>
+          <span *ngIf="zipState !== 'loading'">Download PDFs ZIP</span>
+          <span *ngIf="zipState === 'loading'">Preparing ZIP...</span>
+          <mat-progress-spinner
+            *ngIf="zipState === 'loading'"
+            class="spinner"
+            [diameter]="18"
+            mode="indeterminate">
+          </mat-progress-spinner>
+        </button>
+
+        <!-- Generate Excel -->
+        <button
+          mat-stroked-button
+          class="action-button"
+          color="primary"
+          [disabled]="!isAnidExportCenterVisible || isExcelLoading || isAnyLoading"
+          (click)="onGenerateExcel()">
+          <mat-icon class="btn-icon">table_chart</mat-icon>
+          <span *ngIf="excelState !== 'loading'">Generate Excel Workbook</span>
+          <span *ngIf="excelState === 'loading'">Generating workbook...</span>
+          <mat-progress-spinner
+            *ngIf="excelState === 'loading'"
+            class="spinner"
+            [diameter]="18"
+            mode="indeterminate">
+          </mat-progress-spinner>
+        </button>
+      </div>
+
+      <div class="status" *ngIf="errorMessage || successMessage">
+        <div class="error" *ngIf="errorMessage">{{ errorMessage }}</div>
+        <div class="success" *ngIf="!errorMessage && successMessage">{{ successMessage }}</div>
+      </div>
+
+      <div class="state-hint" *ngIf="zipState === 'empty'">
+        No supporting PDFs were found.
+      </div>
+      <div class="state-hint" *ngIf="excelState === 'empty'">
+        No data found to generate the workbook.
+      </div>
+    </mat-card-content>
+  </mat-card>
+</ng-container>
+

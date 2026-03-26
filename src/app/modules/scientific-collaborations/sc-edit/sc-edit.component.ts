@@ -73,6 +73,16 @@ export class ScEditComponent implements OnInit {
   // Lista de participantes
   participants: ParticipantDTO[] = [];
 
+  // Opciones de clusters (1 a 5)
+  clusterOptions: { id: number; label: string }[] = [
+    { id: 1, label: 'Cluster I' },
+    { id: 2, label: 'Cluster II' },
+    { id: 3, label: 'Cluster III' },
+    { id: 4, label: 'Cluster IV' },
+    { id: 5, label: 'Cluster V' }
+  ];
+  selectedClusters: number[] = [];
+
   // País de destino seleccionado (para el formulario)
   paisDestino: PaisDTO | null = null;
 
@@ -85,6 +95,16 @@ export class ScEditComponent implements OnInit {
 
   // Datos originales para detectar cambios
   originalCollaboration: ColaboracionDTO | null = null;
+
+  // Opciones de períodos (1 a 5) para progressReport múltiple
+  periodOptions: { id: string; label: string }[] = [
+    { id: '1', label: 'Period 1' },
+    { id: '2', label: 'Period 2' },
+    { id: '3', label: 'Period 3' },
+    { id: '4', label: 'Period 4' },
+    { id: '5', label: 'Period 5' }
+  ];
+  selectedPeriods: string[] = [];
 
   collaboration: ColaboracionDTO = {
     descripcion: '',
@@ -205,12 +225,15 @@ export class ScEditComponent implements OnInit {
       tipoProducto: { id: 12 },
       fechaInicio: undefined,
       fechaTermino: undefined,
-      basal: 'N'
+      basal: 'N',
+      cluster: ''
     };
     this.paisDestino = null;
     this.isBasal = true;
     this.participants = [];
     this.originalCollaboration = null;
+    this.selectedClusters = [];
+    this.selectedPeriods = [];
   }
 
   loadCollaborationForEdit(id: number): void {
@@ -280,8 +303,34 @@ export class ScEditComponent implements OnInit {
           this.paisDestino = null;
         }
 
+        // Cargar períodos seleccionados desde el string de backend (progressReport, ej: "1,2")
+        this.selectedPeriods = [];
+        if (collaboration.progressReport) {
+          try {
+            this.selectedPeriods = collaboration.progressReport
+              .split(',')
+              .map(p => p.trim())
+              .filter(p => p.length > 0);
+          } catch (e) {
+            this.selectedPeriods = [];
+          }
+        }
+
         this.collaboration = collaboration;
         this.originalCollaboration = JSON.parse(JSON.stringify(collaboration));
+
+        // Cargar clusters seleccionados desde el string de backend
+        this.selectedClusters = [];
+        if (this.collaboration.cluster) {
+          try {
+            this.selectedClusters = this.collaboration.cluster
+              .split(',')
+              .map(id => parseInt(id.trim(), 10))
+              .filter(id => !isNaN(id));
+          } catch (e) {
+            this.selectedClusters = [];
+          }
+        }
       } else {
         this.messageService.error('Scientific collaboration not found');
         this.router.navigate(['/scientific-collaborations']);
@@ -322,6 +371,36 @@ export class ScEditComponent implements OnInit {
   onBasalChange(checked: boolean): void {
     this.isBasal = checked;
     this.collaboration.basal = checked ? 'S' : 'N';
+  }
+
+  isPeriodSelected(periodId: string): boolean {
+    return this.selectedPeriods.includes(periodId);
+  }
+
+  onPeriodChange(periodId: string, checked: boolean): void {
+    if (checked) {
+      if (!this.selectedPeriods.includes(periodId)) {
+        this.selectedPeriods.push(periodId);
+      }
+    } else {
+      this.selectedPeriods = this.selectedPeriods.filter(id => id !== periodId);
+    }
+    this.collaboration.progressReport = this.selectedPeriods.length > 0 ? this.selectedPeriods.join(',') : undefined;
+  }
+
+  isClusterSelected(clusterId: number): boolean {
+    return this.selectedClusters.includes(clusterId);
+  }
+
+  onClusterChange(clusterId: number, checked: boolean): void {
+    if (checked) {
+      if (!this.selectedClusters.includes(clusterId)) {
+        this.selectedClusters.push(clusterId);
+      }
+    } else {
+      this.selectedClusters = this.selectedClusters.filter(id => id !== clusterId);
+    }
+    this.collaboration.cluster = this.selectedClusters.join(',');
   }
 
   onDestinationCountryChange(country: PaisDTO | null): void {
@@ -434,7 +513,8 @@ export class ScEditComponent implements OnInit {
           linkPDF: this.collaboration.linkPDF || undefined, // Asegurar que linkPDF se incluya explícitamente
           participantes: participantes,
           basal: this.isBasal ? 'S' : 'N',
-          codigoPaisDestino: this.paisDestino?.codigo || undefined
+          codigoPaisDestino: this.paisDestino?.codigo || undefined,
+          cluster: this.selectedClusters.join(',')
         };
 
         const saveOperation = this.isEditMode && this.collaborationId

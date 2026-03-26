@@ -18,11 +18,12 @@ public class DifusionDTO {
     private String urlDocumento;
     private String linkVisualizacion;
     private String linkPDF;
-    private Integer progressReport;
+    private String progressReport;
     private EstadoProductoDTO estadoProducto;
     private String codigoANID;
     private String basal; // Character como string
     private String lineasInvestigacion; // JSON string
+    private String cluster; // Lista de IDs de cluster separados por comas
     private String participantesNombres; // Nombres de participantes concatenados por coma (campo calculado)
     private String createdAt;
     private String updatedAt;
@@ -63,8 +64,8 @@ public class DifusionDTO {
     public void setLinkVisualizacion(String linkVisualizacion) { this.linkVisualizacion = linkVisualizacion; }
     public String getLinkPDF() { return linkPDF; }
     public void setLinkPDF(String linkPDF) { this.linkPDF = linkPDF; }
-    public Integer getProgressReport() { return progressReport; }
-    public void setProgressReport(Integer progressReport) { this.progressReport = progressReport; }
+    public String getProgressReport() { return progressReport; }
+    public void setProgressReport(String progressReport) { this.progressReport = progressReport; }
     public EstadoProductoDTO getEstadoProducto() { return estadoProducto; }
     public void setEstadoProducto(EstadoProductoDTO estadoProducto) { this.estadoProducto = estadoProducto; }
     public String getCodigoANID() { return codigoANID; }
@@ -73,6 +74,8 @@ public class DifusionDTO {
     public void setBasal(String basal) { this.basal = basal; }
     public String getLineasInvestigacion() { return lineasInvestigacion; }
     public void setLineasInvestigacion(String lineasInvestigacion) { this.lineasInvestigacion = lineasInvestigacion; }
+    public String getCluster() { return cluster; }
+    public void setCluster(String cluster) { this.cluster = cluster; }
     public String getCreatedAt() { return createdAt; }
     public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
     public String getUpdatedAt() { return updatedAt; }

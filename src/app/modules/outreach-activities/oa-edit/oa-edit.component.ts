@@ -71,6 +71,16 @@ export class OaEditComponent implements OnInit {
   // Lista de participantes
   participants: ParticipantDTO[] = [];
 
+  // Opciones de clusters (1 a 5)
+  clusterOptions: { id: number; label: string }[] = [
+    { id: 1, label: 'Cluster I' },
+    { id: 2, label: 'Cluster II' },
+    { id: 3, label: 'Cluster III' },
+    { id: 4, label: 'Cluster IV' },
+    { id: 5, label: 'Cluster V' }
+  ];
+  selectedClusters: number[] = [];
+
   // Control del checkbox Basal
   isBasal: boolean = true;
 
@@ -211,6 +221,8 @@ export class OaEditComponent implements OnInit {
     this.participants = [];
     this.selectedTargetAudiences = [];
     this.originalActivity = null;
+    this.selectedClusters = [];
+    this.activity.cluster = '';
   }
 
   loadActivityForEdit(id: number): void {
@@ -274,6 +286,19 @@ export class OaEditComponent implements OnInit {
 
         this.activity = activity;
         this.originalActivity = JSON.parse(JSON.stringify(activity));
+
+        // Cargar clusters seleccionados desde el string de backend
+        this.selectedClusters = [];
+        if (this.activity.cluster) {
+          try {
+            this.selectedClusters = this.activity.cluster
+              .split(',')
+              .map(id => parseInt(id.trim(), 10))
+              .filter(id => !isNaN(id));
+          } catch {
+            this.selectedClusters = [];
+          }
+        }
       } else {
         this.messageService.error('Outreach activity not found');
         this.router.navigate(['/outreach-activities']);
@@ -314,6 +339,21 @@ export class OaEditComponent implements OnInit {
   onBasalChange(checked: boolean): void {
     this.isBasal = checked;
     this.activity.basal = checked ? 'S' : 'N';
+  }
+
+  isClusterSelected(clusterId: number): boolean {
+    return this.selectedClusters.includes(clusterId);
+  }
+
+  onClusterChange(clusterId: number, checked: boolean): void {
+    if (checked) {
+      if (!this.selectedClusters.includes(clusterId)) {
+        this.selectedClusters.push(clusterId);
+      }
+    } else {
+      this.selectedClusters = this.selectedClusters.filter(id => id !== clusterId);
+    }
+    this.activity.cluster = this.selectedClusters.join(',');
   }
 
   onTargetAudienceChange(audience: PublicoObjetivoDTO, checked: boolean): void {
@@ -420,7 +460,8 @@ export class OaEditComponent implements OnInit {
           linkPDF: this.activity.linkPDF || undefined, // Asegurar que linkPDF se incluya explícitamente
           participantes: participantes,
           basal: this.isBasal ? 'S' : 'N',
-          publicoObjetivo: this.selectedTargetAudiences.map(ta => ta.id).join(',')
+          publicoObjetivo: this.selectedTargetAudiences.map(ta => ta.id).join(','),
+          cluster: this.selectedClusters.join(',')
         };
 
         const saveOperation = this.isEditMode && this.activityId

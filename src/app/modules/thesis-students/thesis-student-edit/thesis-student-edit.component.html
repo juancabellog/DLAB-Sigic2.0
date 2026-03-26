@@ -22,10 +22,62 @@
       <div class="form-section">
         <div class="section-title">Basic Information</div>
         
-        <mat-form-field class="full-width">
-          <mat-label>Description</mat-label>
-          <input matInput [(ngModel)]="thesis.descripcion" placeholder="Enter thesis description">
+        <mat-form-field class="full-width" appearance="fill">
+          <mat-label>Thesis Citation</mat-label>
+          <textarea
+            matInput
+            [(ngModel)]="thesis.descripcion"
+            placeholder="John Smith. Machine Learning Models for Climate Prediction. PhD Program in Engineering, University of Chile. 01/03/2020 - 15/03/2020 - 20/12/2024"
+            rows="3"
+            aria-describedby="thesis-citation-helper thesis-citation-format"
+            required></textarea>
+          <button
+            mat-icon-button
+            matSuffix
+            type="button"
+            (click)="onParseDescription()">
+            <mat-icon>content_paste</mat-icon>
+          </button>
+          <mat-hint id="thesis-citation-helper" align="start">
+            Paste a full thesis citation to automatically populate thesis information.
+          </mat-hint>
         </mat-form-field>
+
+        <div class="thesis-citation-help" id="thesis-citation-format">
+          <button
+            mat-button
+            type="button"
+            class="thesis-citation-toggle"
+            (click)="showCitationFormat = !showCitationFormat">
+            <mat-icon class="thesis-citation-toggle-icon">
+              {{ showCitationFormat ? 'expand_less' : 'expand_more' }}
+            </mat-icon>
+            View citation format
+          </button>
+
+          <div *ngIf="showCitationFormat" class="thesis-citation-panel">
+            <div class="thesis-citation-panel-title">Expected format</div>
+            <pre class="thesis-citation-format-text">
+&lt;Student&gt;. &lt;Thesis Title&gt;. &lt;PhD Program/Master Program/Degree Program&gt;, &lt;Institution&gt;.
+&lt;Program Start Date&gt; - &lt;Thesis Start Date&gt; - &lt;Thesis End Date&gt;
+
+Thesis Supervisor: &lt;Supervisor Name&gt;, Co-supervisor: &lt;Co-supervisor Name&gt;
+
+BASAL Year &lt;periods&gt; (in progress / Finished)
+
+Note: dates use the dd/mm/yyyy format.
+            </pre>
+
+            <div class="thesis-citation-panel-title">Example</div>
+            <pre class="thesis-citation-example-text">
+Ariel Vivero. Machine Learning Models for Climate Prediction.
+PhD Program in Engineering, Universidad San Sebastian.
+01/03/2020 - 15/03/2020 - 20/12/2024
+Thesis Supervisor: Cheril Tapia
+BASAL Year 3,4,5 (Finished)
+            </pre>
+          </div>
+        </div>
 
         <mat-form-field class="full-width">
           <mat-label>Thesis Title (Full Name)</mat-label>
@@ -64,7 +116,7 @@
         <div class="form-row">
           <div class="half-width">
             <app-institution-search
-              label="Student Institution"
+              label="Institution where the thesis was conducted"
               placeholder="Search institution by name..."
               [selectedInstitution]="thesis.institucion || null"
               [disabled]="loadingInstitutions"
@@ -90,19 +142,30 @@
         <div class="form-row">
           <mat-form-field class="half-width">
             <mat-label>Program Start Date</mat-label>
-            <input matInput type="date" [(ngModel)]="thesis.fechaInicioPrograma">
+            <input
+              matInput
+              type="date"
+              [(ngModel)]="thesis.fechaInicioPrograma">
           </mat-form-field>
 
           <mat-form-field class="half-width">
-            <mat-label>Start Date</mat-label>
-            <input matInput type="date" [(ngModel)]="thesis.fechaInicio" (ngModelChange)="onFechaInicioChange()" required>
+            <mat-label>{{ isPhDThesis ? 'Qualifying Exam Date' : 'Start Date' }}</mat-label>
+            <input
+              matInput
+              type="date"
+              [(ngModel)]="thesis.fechaInicio"
+              (ngModelChange)="onExamDateChange($event)"
+              required>
           </mat-form-field>
         </div>
 
         <div class="form-row">
           <mat-form-field class="half-width">
-            <mat-label>End Date</mat-label>
-            <input matInput type="date" [(ngModel)]="thesis.fechaTermino">
+            <mat-label>{{ isPhDThesis ? 'Degree Award Date' : 'End Date' }}</mat-label>
+            <input
+              matInput
+              type="date"
+              [(ngModel)]="thesis.fechaTermino">
           </mat-form-field>
         </div>
       </div>
@@ -122,34 +185,69 @@
           </mat-checkbox>
         </div>
       </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="form-section">
+        <div class="section-title">Clusters</div>
+        <div class="form-row">
+          <div class="full-width cluster">
+            <div class="checkbox-group">
+              <mat-checkbox
+                *ngFor="let cluster of clusterOptions"
+                [checked]="isClusterSelected(cluster.id)"
+                (change)="onClusterChange(cluster.id, $event.checked)"
+                color="primary">
+                {{ cluster.label }}
+              </mat-checkbox>
+            </div>
+          </div>
+        </div>
+      </div>
       
       <mat-divider></mat-divider>
       
       <div class="form-section">
         <div class="section-title">Product Information</div>
         
-        <div class="form-row">
-          <mat-form-field class="half-width">
-            <mat-label>Progress Report (Period)</mat-label>
-            <mat-select [(ngModel)]="thesis.progressReport">
-              <mat-option [value]="1">Period 1</mat-option>
-              <mat-option [value]="2">Period 2</mat-option>
-              <mat-option [value]="3">Period 3</mat-option>
-              <mat-option [value]="4">Period 4</mat-option>
-              <mat-option [value]="5">Period 5</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field class="half-width">
-            <mat-label>ANID Code</mat-label>
-            <input matInput [(ngModel)]="thesis.codigoANID" placeholder="Enter ANID code">
-          </mat-form-field>
-        </div>
-
-        <div class="form-row">
+        <div class="form-row progress-basal-row">
           <mat-checkbox [(ngModel)]="isBasal" (change)="onBasalChange($event.checked)" color="primary">
             Product associated with Basal funding
           </mat-checkbox>
+        </div>
+
+        <div class="form-row">
+          <div class="full-width">
+            <div class="progress-periods-label">Progress Reports Submitted</div>
+            <div class="progress-periods-help">Select the periods for which progress reports have been delivered</div>
+            <div class="progress-periods-grid">
+              <div class="progress-periods-row">
+                <mat-checkbox
+                  *ngFor="let period of periodOptions.slice(0, 3)"
+                  [checked]="isPeriodSelected(period.id)"
+                  (change)="onPeriodChange(period.id, $event.checked)"
+                  color="primary">
+                  {{ period.label }}
+                </mat-checkbox>
+              </div>
+              <div class="progress-periods-row">
+                <mat-checkbox
+                  *ngFor="let period of periodOptions.slice(3)"
+                  [checked]="isPeriodSelected(period.id)"
+                  (change)="onPeriodChange(period.id, $event.checked)"
+                  color="primary">
+                  {{ period.label }}
+                </mat-checkbox>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field class="anid-code-field">
+            <mat-label>ANID Code</mat-label>
+            <input matInput [(ngModel)]="thesis.codigoANID" placeholder="Enter ANID code" [readonly]="true">
+          </mat-form-field>
         </div>
         
         <div class="form-row">

@@ -24,7 +24,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.stream.Collectors;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/api/thesis")
@@ -57,6 +61,9 @@ public class TesisController {
 
     @Autowired
     private ParticipacionProductoRepository participacionProductoRepository;
+
+    @Autowired
+    private TipoSectorRepository tipoSectorRepository;
 
     @Autowired
     private TextosService textosService;
@@ -105,6 +112,285 @@ public class TesisController {
         Page<TesisDTO> tesisDTO = tesis.map(t -> convertToDTOWithoutParticipants(t, textosMap));
 
         return ResponseEntity.ok(tesisDTO);
+    }
+
+    /**
+     * Exporta las tesis visibles a Excel (usa los mismos filtros básicos de visibilidad)
+     */
+    @GetMapping("/export")
+    @Transactional(readOnly = true)
+    public void exportThesisToExcel(
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            HttpServletResponse response) {
+
+        try {
+            Sort sort = sortDir.equalsIgnoreCase("desc") ?
+                Sort.by(sortBy).descending() :
+                Sort.by(sortBy).ascending();
+
+            Long idRRHH = userService.getCurrentUserIdRRHH().orElse(null);
+            String userName = userService.getCurrentUsername().orElse(null);
+            List<Tesis> tesisList = tesisRepository
+                .findVisibleByUserIdRRHH(idRRHH, userName, Pageable.unpaged(sort))
+                .getContent();
+
+            // Mapear tipos de sector (id -> descripción)
+            Map<Long, String> sectorDescriptions = new HashMap<>();
+            tipoSectorRepository.findAll().forEach(ts -> {
+                if (ts.getId() != null && ts.getIdDescripcion() != null) {
+                    String desc = textosService
+                        .getTextValue(ts.getIdDescripcion(), 2, "us")
+                        .orElse(ts.getIdDescripcion());
+                    sectorDescriptions.put(ts.getId(), desc);
+                }
+            });
+
+            Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("Thesis Students");
+
+            int rowIdx = 0;
+            Row header = sheet.createRow(rowIdx++);
+            header.createCell(0).setCellValue("Id");
+            header.createCell(1).setCellValue("Title");
+            header.createCell(2).setCellValue("Citation");
+            header.createCell(3).setCellValue("Degree Granting Institution");
+            header.createCell(4).setCellValue("Academic Degree");
+            header.createCell(5).setCellValue("Host Institution");
+            header.createCell(6).setCellValue("Thesis Status");
+            header.createCell(7).setCellValue("Program Start Date");
+            header.createCell(8).setCellValue("QE Date");
+            header.createCell(9).setCellValue("Degree Award Date");
+            header.createCell(10).setCellValue("Sector Types");
+            header.createCell(11).setCellValue("Clusters");
+            header.createCell(12).setCellValue("Basal");
+            header.createCell(13).setCellValue("Period");
+            header.createCell(14).setCellValue("ANID Code");
+            header.createCell(15).setCellValue("Principal Supervisor Name");
+            header.createCell(16).setCellValue("Principal Supervisor Gender");
+            header.createCell(17).setCellValue("Principal Supervisor Type");
+            header.createCell(18).setCellValue("Supervisor Name");
+            header.createCell(19).setCellValue("Supervisor Gender");
+            header.createCell(20).setCellValue("Supervisor Type");
+            header.createCell(21).setCellValue("Student Name");
+            header.createCell(22).setCellValue("Student Gender");
+            header.createCell(23).setCellValue("Student Type");
+
+            Map<String, String> textosMap = Map.of();
+
+            for (Tesis tesis : tesisList) {
+                TesisDTO dto = convertToDTOBase(tesis, textosMap);
+                Row row = sheet.createRow(rowIdx++);
+
+                // ID (id interno)
+                row.createCell(0).setCellValue(dto.getId() != null ? dto.getId().toString() : "");
+
+                // Title
+                row.createCell(1).setCellValue(
+                    dto.getNombreCompletoTitulo() != null ? dto.getNombreCompletoTitulo() :
+                    (dto.getDescripcion() != null ? dto.getDescripcion() : "")
+                );
+
+                // Citation (descripcion)
+                row.createCell(2).setCellValue(dto.getDescripcion() != null ? dto.getDescripcion() : "");
+
+                // Degree Granting Institution (institucionOG)
+                String degreeGrantingInst = "";
+                if (dto.getInstitucionOG() != null) {
+                    if (dto.getInstitucionOG().getDescripcion() != null) {
+                        degreeGrantingInst = dto.getInstitucionOG().getDescripcion();
+                    } else if (dto.getInstitucionOG().getIdDescripcion() != null) {
+                        degreeGrantingInst = dto.getInstitucionOG().getIdDescripcion();
+                    }
+                }
+                row.createCell(3).setCellValue(degreeGrantingInst);
+
+                // Academic Degree (gradoAcademico)
+                String academicDegree = "";
+                if (dto.getGradoAcademico() != null) {
+                    if (dto.getGradoAcademico().getDescripcion() != null) {
+                        academicDegree = dto.getGradoAcademico().getDescripcion();
+                    } else if (dto.getGradoAcademico().getIdDescripcion() != null) {
+                        academicDegree = dto.getGradoAcademico().getIdDescripcion();
+                    }
+                }
+                row.createCell(4).setCellValue(academicDegree);
+
+                // Host Institution (institucion)
+                String hostInst = "";
+                if (dto.getInstitucion() != null) {
+                    if (dto.getInstitucion().getDescripcion() != null) {
+                        hostInst = dto.getInstitucion().getDescripcion();
+                    } else if (dto.getInstitucion().getIdDescripcion() != null) {
+                        hostInst = dto.getInstitucion().getIdDescripcion();
+                    }
+                }
+                row.createCell(5).setCellValue(hostInst);
+
+                // Thesis Status (estadoTesis.descripcion)
+                String status = "";
+                if (dto.getEstadoTesis() != null && dto.getEstadoTesis().getDescripcion() != null) {
+                    status = dto.getEstadoTesis().getDescripcion();
+                }
+                row.createCell(6).setCellValue(status);
+
+                // Program Start Date (fechaInicioPrograma)
+                row.createCell(7).setCellValue(dto.getFechaInicioPrograma() != null ? dto.getFechaInicioPrograma() : "");
+
+                // QE Date (fechaInicio)
+                row.createCell(8).setCellValue(dto.getFechaInicio() != null ? dto.getFechaInicio() : "");
+
+                // Degree Award Date (fechaTermino)
+                row.createCell(9).setCellValue(dto.getFechaTermino() != null ? dto.getFechaTermino() : "");
+
+                // Sector Types (descripciones separadas por coma)
+                String sectorTypes = "";
+                if (dto.getTipoSector() != null && !dto.getTipoSector().isEmpty()) {
+                    String[] ids = dto.getTipoSector().split(",");
+                    sectorTypes = java.util.Arrays.stream(ids)
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .map(s -> {
+                            try {
+                                Long id = Long.parseLong(s);
+                                return sectorDescriptions.getOrDefault(id, "");
+                            } catch (NumberFormatException e) {
+                                return "";
+                            }
+                        })
+                        .filter(s -> s != null && !s.isEmpty())
+                        .collect(Collectors.joining(", "));
+                }
+                row.createCell(10).setCellValue(sectorTypes);
+
+                // Clusters (números romanos separados por coma)
+                String clusters = "";
+                if (dto.getCluster() != null && !dto.getCluster().isEmpty()) {
+                    clusters = java.util.Arrays.stream(dto.getCluster().split(","))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty())
+                        .map(s -> {
+                            switch (s) {
+                                case "1": return "I";
+                                case "2": return "II";
+                                case "3": return "III";
+                                case "4": return "IV";
+                                case "5": return "V";
+                                default: return s;
+                            }
+                        })
+                        .collect(Collectors.joining(", "));
+                }
+                row.createCell(11).setCellValue(clusters);
+
+                // Basal (Si/No)
+                String basal = "";
+                if (dto.getBasal() != null) {
+                    basal = (dto.getBasal().equalsIgnoreCase("S") || dto.getBasal().equals("1")) ? "Si" : "No";
+                }
+                row.createCell(12).setCellValue(basal);
+
+                // Period (solo número)
+                if (dto.getProgressReport() != null) {
+                    row.createCell(13).setCellValue(dto.getProgressReport());
+                } else {
+                    row.createCell(13).setCellValue("");
+                }
+
+                // ANID Code
+                row.createCell(14).setCellValue(dto.getCodigoANID() != null ? dto.getCodigoANID() : "");
+
+                // --- Participantes por tipo de participación ---
+                String principalNames = "";
+                String principalGenders = "";
+                String principalTypes = "";
+
+                String supervisorNames = "";
+                String supervisorGenders = "";
+                String supervisorTypes = "";
+
+                String studentNames = "";
+                String studentGenders = "";
+                String studentTypes = "";
+
+                List<ParticipacionProducto> participaciones = participacionProductoRepository.findByProductoId(tesis.getId());
+                for (ParticipacionProducto pp : participaciones) {
+                    RRHH rrhh = pp.getRrhh();
+                    TipoParticipacion tp = pp.getTipoParticipacion();
+                    if (rrhh == null || tp == null) {
+                        continue;
+                    }
+
+                    Long roleId = tp.getId();
+                    String role = tp.getDescripcion() != null ? tp.getDescripcion().trim() : "";
+                    String name = rrhh.getFullname() != null ? rrhh.getFullname() : "";
+                    String gender = rrhh.getCodigoGenero() != null ? rrhh.getCodigoGenero() : "";
+                    String tipoRRHH = "";
+                    if (rrhh.getTipoRRHH() != null) {
+                        if (rrhh.getTipoRRHH().getDescripcion() != null) {
+                            tipoRRHH = rrhh.getTipoRRHH().getDescripcion();
+                        } else if (rrhh.getTipoRRHH().getCodigoDescripcion() != null) {
+                            tipoRRHH = rrhh.getTipoRRHH().getCodigoDescripcion();
+                        }
+                    }
+
+                    // Clasificación robusta por ID (preferente) y por descripción (fallback)
+                    boolean isPrincipalSupervisor =
+                        (roleId != null && roleId == 12L) ||
+                        role.equalsIgnoreCase("Principal Supervisor");
+
+                    boolean isSupervisor =
+                        (roleId != null && roleId == 13L) ||
+                        role.equalsIgnoreCase("Supervisor");
+
+                    boolean isStudent =
+                        (roleId != null && roleId == 7L) ||
+                        role.equalsIgnoreCase("Student") ||
+                        role.equalsIgnoreCase("Estudiante");
+
+                    if (isPrincipalSupervisor) {
+                        principalNames = appendWithSeparator(principalNames, name);
+                        principalGenders = appendWithSeparator(principalGenders, gender);
+                        principalTypes = appendWithSeparator(principalTypes, tipoRRHH);
+                    } else if (isSupervisor) {
+                        supervisorNames = appendWithSeparator(supervisorNames, name);
+                        supervisorGenders = appendWithSeparator(supervisorGenders, gender);
+                        supervisorTypes = appendWithSeparator(supervisorTypes, tipoRRHH);
+                    } else if (isStudent) {
+                        studentNames = appendWithSeparator(studentNames, name);
+                        studentGenders = appendWithSeparator(studentGenders, gender);
+                        studentTypes = appendWithSeparator(studentTypes, tipoRRHH);
+                    }
+                }
+
+                // Principal Supervisor columns
+                row.createCell(15).setCellValue(principalNames);
+                row.createCell(16).setCellValue(principalGenders);
+                row.createCell(17).setCellValue(principalTypes);
+
+                // Supervisor columns
+                row.createCell(18).setCellValue(supervisorNames);
+                row.createCell(19).setCellValue(supervisorGenders);
+                row.createCell(20).setCellValue(supervisorTypes);
+
+                // Student columns
+                row.createCell(21).setCellValue(studentNames);
+                row.createCell(22).setCellValue(studentGenders);
+                row.createCell(23).setCellValue(studentTypes);
+            }
+
+            for (int i = 0; i <= 23; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=thesis-students.xlsx");
+            workbook.write(response.getOutputStream());
+            workbook.close();
+            response.flushBuffer();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -194,9 +480,7 @@ public class TesisController {
                 }
                 // Actualizar linkPDF siempre (puede ser null para limpiarlo)
                 existingTesis.setLinkPDF(dto.getLinkPDF());
-                if (dto.getProgressReport() != null) {
-                    existingTesis.setProgressReport(dto.getProgressReport());
-                }
+                existingTesis.setProgressReport(dto.getProgressReport());
                 if (dto.getCodigoANID() != null) {
                     existingTesis.setCodigoANID(dto.getCodigoANID());
                 }
@@ -213,6 +497,9 @@ public class TesisController {
                 }
                 if (dto.getLineasInvestigacion() != null) {
                     existingTesis.setLineasInvestigacion(dto.getLineasInvestigacion());
+                }
+                if (dto.getCluster() != null) {
+                    existingTesis.setCluster(dto.getCluster());
                 }
 
                 // Actualizar relaciones de ProductoCientifico
@@ -377,6 +664,7 @@ public class TesisController {
             dto.setBasal(null);
         }
         dto.setLineasInvestigacion(tesis.getLineasInvestigacion());
+        dto.setCluster(tesis.getCluster());
         dto.setParticipantesNombres(tesis.getParticipantesNombres());
         dto.setCreatedAt(tesis.getCreatedAt() != null ? tesis.getCreatedAt().toString() : null);
         dto.setUpdatedAt(tesis.getUpdatedAt() != null ? tesis.getUpdatedAt().toString() : null);
@@ -484,6 +772,7 @@ public class TesisController {
             tesis.setBasal('S');
         }
         tesis.setLineasInvestigacion(dto.getLineasInvestigacion());
+        tesis.setCluster(dto.getCluster());
 
         // Relaciones de ProductoCientifico
         if (dto.getTipoProducto() != null && dto.getTipoProducto().getId() != null) {
@@ -578,6 +867,19 @@ public class TesisController {
                 participacionProductoRepository.save(participacion);
             }
         }
+    }
+
+    /**
+     * Helper para concatenar valores con separador "; "
+     */
+    private String appendWithSeparator(String existing, String toAdd) {
+        if (toAdd == null || toAdd.trim().isEmpty()) {
+            return existing != null ? existing : "";
+        }
+        if (existing == null || existing.isEmpty()) {
+            return toAdd;
+        }
+        return existing + "; " + toAdd;
     }
 }
 

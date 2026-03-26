@@ -44,6 +44,14 @@ export class PostdoctoralFellowsService {
   deletePostdoctoralFellow(id: number): Observable<boolean> {
     return this.baseHttp.delete<boolean>(`/postdoctoral-fellows/${id}`);
   }
+
+  /**
+   * Exporta los becarios postdoctorales visibles a Excel
+   */
+  exportPostdoctoralFellowsToExcel(params: { sort: string; direction: 'ASC' | 'DESC' }): Observable<Blob> {
+    const { sort, direction } = params;
+    return this.baseHttp.getFile(`/postdoctoral-fellows/export?sortBy=${sort}&sortDir=${direction}`);
+  }
 }
 
 

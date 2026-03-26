@@ -18,6 +18,7 @@ public interface ParticipacionProductoRepository extends JpaRepository<Participa
      */
     @Query("SELECT pp FROM ParticipacionProducto pp " +
            "LEFT JOIN FETCH pp.rrhh " +
+           "LEFT JOIN FETCH pp.rrhh.tipoRRHH " +
            "LEFT JOIN FETCH pp.tipoParticipacion " +
            "WHERE pp.producto.id = :productoId " +
            "ORDER BY pp.orden ASC")

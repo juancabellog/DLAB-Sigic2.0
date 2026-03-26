@@ -43,11 +43,12 @@ export class PFListComponent implements OnInit, OnDestroy {
   loading: boolean = false;
   basalOnly: boolean = false;
   finalFilteredCount: number | null = null;
+  exportLoading: boolean = false;
   private searchResults: BecariosPostdoctoralesDTO[] = [];
   private viewModeSubscription?: Subscription;
 
   // Sorting state for list view
-  sortColumn: 'topic' | 'institution' | 'sector' | 'name' | 'date' | null = null;
+  sortColumn: 'topic' | 'institution' | 'sector' | 'name' | 'period' | 'date' | 'endDate' | null = null;
   sortDirection: 'asc' | 'desc' = 'asc';
 
   constructor(
@@ -126,6 +127,40 @@ export class PFListComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
+  onExportRequested(): void {
+    if (this.filteredFellows.length === 0) {
+      this.messageService.info('There are no results to export.');
+      return;
+    }
+    this.exportLoading = true;
+    this.postdoctoralFellowsService.exportPostdoctoralFellowsToExcel({
+      sort: this.sortColumn || 'id',
+      direction: this.sortDirection === 'asc' ? 'ASC' : 'DESC'
+    }).pipe(
+      catchError(error => {
+        console.error('Error exporting postdoctoral fellows to Excel:', error);
+        this.messageService.error('Error exporting postdoctoral fellows. Please try again later.');
+        return of(null as any);
+      }),
+      finalize(() => {
+        this.exportLoading = false;
+      })
+    ).subscribe(blob => {
+      if (!blob) {
+        return;
+      }
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'postdoctoral-fellows.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      this.messageService.success('Export started. Your download should begin shortly.');
+    });
+  }
+
   private applyFilters(): void {
     let filtered = [...this.searchResults];
     
@@ -158,7 +193,7 @@ export class PFListComponent implements OnInit, OnDestroy {
     return fellow.tipoSector?.idDescripcion || 'N/A';
   }
 
-  onSort(column: 'topic' | 'institution' | 'sector' | 'name' | 'date'): void {
+  onSort(column: 'topic' | 'institution' | 'sector' | 'name' | 'period' | 'date' | 'endDate'): void {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
@@ -189,9 +224,17 @@ export class PFListComponent implements OnInit, OnDestroy {
         valueA = (a.postdoctoralFellowName || 'N/A').toLowerCase();
         valueB = (b.postdoctoralFellowName || 'N/A').toLowerCase();
         break;
+      case 'period':
+        valueA = a.progressReport || '';
+        valueB = b.progressReport || '';
+        break;
       case 'date':
         valueA = a.fechaInicio || '';
         valueB = b.fechaInicio || '';
+        break;
+      case 'endDate':
+        valueA = a.fechaTermino || '';
+        valueB = b.fechaTermino || '';
         break;
       default:
         return 0;

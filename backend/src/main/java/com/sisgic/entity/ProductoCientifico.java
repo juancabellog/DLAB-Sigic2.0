@@ -48,7 +48,7 @@ public abstract class ProductoCientifico {
     private String linkPDF;
     
     @Column(name = "progressReport")
-    private Integer progressReport;
+    private String progressReport;
     
     @ManyToOne
     @JoinColumn(name = "idEstadoProducto")
@@ -168,11 +168,11 @@ public abstract class ProductoCientifico {
         this.linkPDF = linkPDF;
     }
     
-    public Integer getProgressReport() {
+    public String getProgressReport() {
         return progressReport;
     }
     
-    public void setProgressReport(Integer progressReport) {
+    public void setProgressReport(String progressReport) {
         this.progressReport = progressReport;
     }
     

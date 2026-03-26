@@ -19,6 +19,7 @@ import com.sisgic.dto.TipoDifusionDTO;
 import com.sisgic.dto.PublicoObjetivoDTO;
 import com.sisgic.dto.TipoColaboracionDTO;
 import com.sisgic.dto.TipoRRHHDTO;
+import com.sisgic.dto.IndexTypeDTO;
 import com.sisgic.entity.TipoParticipacion;
 import com.sisgic.entity.TipoProducto;
 import com.sisgic.entity.TipoEvento;
@@ -35,6 +36,7 @@ import com.sisgic.entity.FundingType;
 import com.sisgic.entity.TipoDifusion;
 import com.sisgic.entity.PublicoObjetivo;
 import com.sisgic.entity.TipoColaboracion;
+import com.sisgic.entity.VIndexType;
 import com.sisgic.repository.TipoParticipacionRepository;
 import com.sisgic.repository.TipoProductoRepository;
 import com.sisgic.repository.TipoEventoRepository;
@@ -52,6 +54,7 @@ import com.sisgic.repository.TipoDifusionRepository;
 import com.sisgic.repository.PublicoObjetivoRepository;
 import com.sisgic.repository.TipoColaboracionRepository;
 import com.sisgic.repository.TipoRRHHRepository;
+import com.sisgic.repository.VIndexTypeRepository;
 import com.sisgic.entity.TipoRRHH;
 import com.sisgic.service.TextosService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,6 +121,9 @@ public class CatalogController {
     
     @Autowired
     private com.sisgic.service.CatalogService catalogService;
+
+    @Autowired
+    private VIndexTypeRepository vIndexTypeRepository;
     
     @GetMapping("/participation-types")
     public ResponseEntity<List<TipoParticipacionDTO>> getAllParticipationTypes() {
@@ -442,6 +448,26 @@ public class CatalogController {
         return catalogService.getJournalById(id, "us")
             .map(journal -> ResponseEntity.ok(journal))
             .orElse(ResponseEntity.notFound().build());
+    }
+
+    // ========================================
+    // INDEX TYPES ENDPOINTS
+    // ========================================
+
+    @GetMapping("/index-types")
+    public ResponseEntity<List<IndexTypeDTO>> getAllIndexTypes() {
+        List<VIndexType> results = vIndexTypeRepository.findAllByOrderByIdAsc();
+        List<IndexTypeDTO> dtos = results.stream()
+            .map(this::convertIndexTypeToDTO)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
+    private IndexTypeDTO convertIndexTypeToDTO(VIndexType indexType) {
+        return new IndexTypeDTO(
+            indexType.getId(),
+            indexType.getDescripcion()
+        );
     }
     
     // ========================================

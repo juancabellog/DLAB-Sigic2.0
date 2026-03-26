@@ -44,6 +44,7 @@ export class OAListComponent implements OnInit, OnDestroy {
   loading: boolean = false;
   basalOnly: boolean = false;
   finalFilteredCount: number | null = null;
+  exportLoading: boolean = false;
   private searchResults: DifusionDTO[] = [];
   private viewModeSubscription?: Subscription;
 
@@ -126,6 +127,40 @@ export class OAListComponent implements OnInit, OnDestroy {
     this.basalOnly = basalOnly;
     this.listStateService.saveState('outreach-activities', { basalOnly });
     this.applyFilters();
+  }
+
+  onExportRequested(): void {
+    if (this.filteredActivities.length === 0) {
+      this.messageService.info('There are no results to export.');
+      return;
+    }
+    this.exportLoading = true;
+    this.outreachActivitiesService.exportOutreachActivitiesToExcel({
+      sort: this.sortColumn || 'id',
+      direction: this.sortDirection === 'asc' ? 'ASC' : 'DESC'
+    }).pipe(
+      catchError(error => {
+        console.error('Error exporting outreach activities to Excel:', error);
+        this.messageService.error('Error exporting outreach activities. Please try again later.');
+        return of(null as any);
+      }),
+      finalize(() => {
+        this.exportLoading = false;
+      })
+    ).subscribe(blob => {
+      if (!blob) {
+        return;
+      }
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'outreach-activities.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      this.messageService.success('Export started. Your download should begin shortly.');
+    });
   }
 
   private applyFilters(): void {

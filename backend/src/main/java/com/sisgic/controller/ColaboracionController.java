@@ -214,9 +214,7 @@ public class ColaboracionController {
                 }
                 // Actualizar linkPDF siempre (puede ser null para limpiarlo)
                 existingColaboracion.setLinkPDF(dto.getLinkPDF());
-                if (dto.getProgressReport() != null) {
-                    existingColaboracion.setProgressReport(dto.getProgressReport());
-                }
+                existingColaboracion.setProgressReport(dto.getProgressReport());
                 if (dto.getCodigoANID() != null) {
                     existingColaboracion.setCodigoANID(dto.getCodigoANID());
                 }
@@ -232,6 +230,9 @@ public class ColaboracionController {
                 }
                 if (dto.getLineasInvestigacion() != null) {
                     existingColaboracion.setLineasInvestigacion(dto.getLineasInvestigacion());
+                }
+                if (dto.getCluster() != null) {
+                    existingColaboracion.setCluster(dto.getCluster());
                 }
 
                 // Actualizar campos específicos de Colaboracion
@@ -385,6 +386,7 @@ public class ColaboracionController {
             dto.setBasal(null);
         }
         dto.setLineasInvestigacion(colaboracion.getLineasInvestigacion());
+        dto.setCluster(colaboracion.getCluster());
         dto.setParticipantesNombres(colaboracion.getParticipantesNombres());
         dto.setCreatedAt(colaboracion.getCreatedAt() != null ? colaboracion.getCreatedAt().toString() : null);
         dto.setUpdatedAt(colaboracion.getUpdatedAt() != null ? colaboracion.getUpdatedAt().toString() : null);
@@ -478,6 +480,7 @@ public class ColaboracionController {
             colaboracion.setBasal('S');
         }
         colaboracion.setLineasInvestigacion(dto.getLineasInvestigacion());
+        colaboracion.setCluster(dto.getCluster());
 
         // Relaciones de ProductoCientifico
         if (dto.getTipoProducto() != null && dto.getTipoProducto().getId() != null) {

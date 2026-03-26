@@ -46,6 +46,7 @@ public interface OrganizacionEventosCientificosRepository extends JpaRepository<
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
            "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
            "pr.username, " +
+           "f_getParticipantByRol(o.id, 14) as organizer, " +
            "f_getRRHHProducto(o.id) as participantesNombres " +
            "FROM organizacioneventoscientificos o " +
            "INNER JOIN producto pr ON o.id = pr.id " +
@@ -67,6 +68,7 @@ public interface OrganizacionEventosCientificosRepository extends JpaRepository<
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
            "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
            "pr.username, " +
+           "f_getParticipantByRol(o.id, 14) as organizer, " +
            "f_getRRHHProducto(o.id) as participantesNombres " +
            "FROM organizacioneventoscientificos o " +
            "INNER JOIN producto pr ON o.id = pr.id " +

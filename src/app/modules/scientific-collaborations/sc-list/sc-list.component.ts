@@ -48,7 +48,7 @@ export class SCListComponent implements OnInit, OnDestroy {
   private viewModeSubscription?: Subscription;
 
   // Sorting state for list view
-  sortColumn: 'description' | 'type' | 'institution' | 'origin' | 'destination' | 'date' | null = null;
+  sortColumn: 'description' | 'type' | 'institution' | 'origin' | 'destination' | 'period' | 'date' | null = null;
   sortDirection: 'asc' | 'desc' = 'asc';
 
   constructor(
@@ -200,7 +200,7 @@ export class SCListComponent implements OnInit, OnDestroy {
     return 'N/A';
   }
 
-  onSort(column: 'description' | 'type' | 'institution' | 'origin' | 'destination' | 'date'): void {
+  onSort(column: 'description' | 'type' | 'institution' | 'origin' | 'destination' | 'period' | 'date'): void {
     if (this.sortColumn === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
@@ -234,6 +234,10 @@ export class SCListComponent implements OnInit, OnDestroy {
       case 'destination':
         valueA = (this.getDestination(a) || '').toLowerCase();
         valueB = (this.getDestination(b) || '').toLowerCase();
+        break;
+      case 'period':
+        valueA = a.progressReport || '';
+        valueB = b.progressReport || '';
         break;
       case 'date':
         valueA = a.fechaInicio || '';

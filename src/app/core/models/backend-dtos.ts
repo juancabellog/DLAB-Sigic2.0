@@ -7,13 +7,13 @@ export interface ProductoCientificoDTO {
   id?: number;
   descripcion?: string;
   comentario?: string;
-  fechaInicio?: string; // LocalDate como string
-  fechaTermino?: string; // LocalDate como string
+  fechaInicio?: string | null; // LocalDate como string
+  fechaTermino?: string | null; // LocalDate como string
   tipoProducto?: TipoProductoDTO;
   urlDocumento?: string;
   linkVisualizacion?: string;
   linkPDF?: string;
-  progressReport?: number;
+  progressReport?: string;
   estadoProducto?: EstadoProductoDTO;
   codigoANID?: string;
   basal?: string; // Character como string
@@ -82,6 +82,7 @@ export interface OrganizacionEventosCientificosDTO extends ProductoCientificoDTO
   pais?: PaisDTO;
   ciudad?: string;
   numParticipantes?: number;
+  organizer?: string; // Campo calculado: nombre del organizador (rol 14)
   participantes?: ParticipanteDTO[]; // Participantes en formato backend
 }
 
@@ -409,6 +410,8 @@ export interface PublicationPreviewDataDTO {
   lastPage?: string;
   openAlexUrl?: string;
   linkPDF?: string; // Link al PDF descargado (formato "PDF:pdfs/uuid.pdf")
+  indexs?: string; // JSON string with selected index types
+  funding?: string; // JSON array of ids with selected funding types
 }
 
 export interface JournalPreviewDTO {

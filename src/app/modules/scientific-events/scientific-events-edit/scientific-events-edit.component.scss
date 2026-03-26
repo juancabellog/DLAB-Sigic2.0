@@ -72,6 +72,77 @@
   margin-bottom: 16px;
 }
 
+.event-description-help {
+  margin-top: 4px;
+  margin-bottom: 16px;
+}
+
+.event-description-toggle {
+  padding-left: 0;
+}
+
+.event-description-toggle-icon {
+  margin-right: 4px;
+}
+
+.event-description-panel {
+  margin-top: 8px;
+  padding: 12px 12px 8px;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.event-description-panel-title {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.event-description-format-text {
+  margin: 0 0 8px;
+  font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+.event-import-helper {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.7);
+  margin-bottom: 8px;
+}
+
+.event-import-actions {
+  margin-bottom: 8px;
+}
+
+.event-import-toggle {
+  padding-left: 0;
+}
+
+.event-import-toggle-icon {
+  margin-right: 4px;
+}
+
+.event-import-panel {
+  margin-top: 8px;
+  padding: 12px 12px 8px;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.event-import-panel-title {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.event-import-format-text {
+  margin: 0 0 8px;
+  font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
 .action-buttons {
   display: flex;
   justify-content: flex-end;

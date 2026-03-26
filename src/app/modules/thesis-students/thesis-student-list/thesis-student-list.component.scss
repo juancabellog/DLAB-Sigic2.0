@@ -43,7 +43,7 @@
   
   .list-header-row {
     display: grid;
-    grid-template-columns: 48px 2fr 1.2fr 1.2fr 1.5fr 120px 100px 240px;
+    grid-template-columns: 48px 2fr 1.2fr 1.2fr 1.5fr 120px 90px 100px 240px;
     gap: 16px;
     padding: 16px;
     background-color: #f5f5f5;
@@ -59,7 +59,7 @@
 
   .list-item-row {
     display: grid;
-    grid-template-columns: 48px 2fr 1.2fr 1.2fr 1.5fr 120px 100px 240px;
+    grid-template-columns: 48px 2fr 1.2fr 1.2fr 1.5fr 120px 90px 100px 240px;
     gap: 16px;
     padding: 16px;
     border-bottom: 1px solid #e0e0e0;
@@ -135,6 +135,13 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+
+  .period-cell {
+    width: 90px;
+    min-width: 90px;
+    max-width: 90px;
+    justify-content: center;
   }
 
   .status-cell {

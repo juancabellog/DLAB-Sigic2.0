@@ -12,7 +12,7 @@ export class ProgressReportService {
    * Calcula el progressReport basado en la fecha de inicio
    * 
    * @param fechaInicio Fecha de inicio en formato string (YYYY-MM-DD)
-   * @returns Número del período (1-5) o undefined si la fecha es inválida
+   * @returns String del período ("1"-"5") o undefined si la fecha es inválida
    * 
    * Lógica:
    * - Period 1: fecha <= 2022-07-31
@@ -21,7 +21,7 @@ export class ProgressReportService {
    * - Period 4: fecha <= 2025-07-31
    * - Period 5: fecha > 2025-07-31
    */
-  calculateProgressReport(fechaInicio: string | null | undefined): number | undefined {
+  calculateProgressReport(fechaInicio: string | null | undefined): string | undefined {
     if (!fechaInicio || fechaInicio.trim() === '') {
       return undefined;
     }
@@ -41,15 +41,15 @@ export class ProgressReportService {
       const cutoff4Only = new Date(cutoff4.getFullYear(), cutoff4.getMonth(), cutoff4.getDate());
       
       if (dateOnly <= cutoff1Only) {
-        return 1;
+        return '1';
       } else if (dateOnly <= cutoff2Only) {
-        return 2;
+        return '2';
       } else if (dateOnly <= cutoff3Only) {
-        return 3;
+        return '3';
       } else if (dateOnly <= cutoff4Only) {
-        return 4;
+        return '4';
       } else {
-        return 5;
+        return '5';
       }
     } catch (e) {
       console.error('Error calculating progressReport:', e);

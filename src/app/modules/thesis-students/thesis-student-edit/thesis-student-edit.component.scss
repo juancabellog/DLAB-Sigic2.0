@@ -115,6 +115,74 @@
   }
 }
 
+.progress-basal-row {
+  margin-bottom: 24px;
+}
+
+.progress-periods-label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: #333;
+}
+
+.progress-periods-help {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 8px;
+}
+
+.progress-periods-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.progress-periods-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.anid-code-field {
+  width: 100%;
+  max-width: 260px;
+}
+
+.thesis-citation-help {
+  margin-top: 4px;
+  margin-bottom: 16px;
+}
+
+.thesis-citation-toggle {
+  padding-left: 0;
+}
+
+.thesis-citation-toggle-icon {
+  margin-right: 4px;
+}
+
+.thesis-citation-panel {
+  margin-top: 8px;
+  padding: 12px 12px 8px;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.thesis-citation-panel-title {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.thesis-citation-format-text,
+.thesis-citation-example-text {
+  margin: 0 0 8px;
+  font-family: Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
 @media (max-width: 768px) {
   .form-row {
     flex-direction: column;

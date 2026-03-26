@@ -24,6 +24,9 @@
     [items]="thesis"
     [showBasalFilter]="true"
     [readonly]="true"
+    [showExportButton]="true"
+    exportLabel="Export Excel"
+    [exportLoading]="exportLoading"
     [currentViewMode]="viewMode"
     [finalFilteredCount]="finalFilteredCount"
     itemType="thesis"
@@ -31,7 +34,8 @@
     (searchResults)="onSearchResults($event)"
     (searchTermChange)="onSearchTermChange($event)"
     (viewModeChange)="onViewModeChange($event)"
-    (basalFilterChange)="onBasalFilterChange($event)">
+    (basalFilterChange)="onBasalFilterChange($event)"
+    (exportRequested)="onExportRequested()">
   </app-list-controls>
 
   <div *ngIf="loading" class="loading-container">
@@ -56,7 +60,7 @@
         <mat-card *ngFor="let thesisItem of filteredThesis" class="list-card">
           <mat-card-header>
             <mat-card-title>{{ getThesisTitle(thesisItem) }}</mat-card-title>
-            <mat-card-subtitle>{{ thesisItem.gradoAcademico?.descripcion || 'N/A' }} - {{ getProgressReport(thesisItem) }}</mat-card-subtitle>
+            <mat-card-subtitle>{{ thesisItem.gradoAcademico?.descripcion || 'N/A' }}</mat-card-subtitle>
           </mat-card-header>
           
           <mat-card-content>
@@ -71,9 +75,13 @@
                   {{ getThesisStatus(thesisItem) }}
                 </mat-chip>
               </div>
-              <div class="detail-row" *ngIf="thesisItem.fechaInicioPrograma">
-                <span class="detail-label">Program Start:</span>
-                <span class="detail-value">{{ thesisItem.fechaInicioPrograma | date:'MMM yyyy' }}</span>
+              <div class="detail-row" *ngIf="thesisItem.progressReport != null">
+                <span class="detail-label">Period:</span>
+                <span class="detail-value">{{ getProgressReport(thesisItem) }}</span>
+              </div>
+              <div class="detail-row" *ngIf="thesisItem.fechaInicio">
+                <span class="detail-label">QE Date:</span>
+                <span class="detail-value">{{ thesisItem.fechaInicio | date:'MMM yyyy' }}</span>
               </div>
               <div class="detail-row" *ngIf="thesisItem.estudiante">
                 <span class="detail-label">Student:</span>
@@ -163,10 +171,21 @@
             </mat-icon>
           </div>
           <div
+            class="list-cell period-cell sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'period' }"
+            (click)="onSort('period')">
+            <span>Period</span>
+            <mat-icon>
+              {{ sortColumn === 'period'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
             class="list-cell date-cell sortable-header"
             [ngClass]="{ 'sortable-header-active': sortColumn === 'date' }"
             (click)="onSort('date')">
-            <span>Date</span>
+            <span>QE Date</span>
             <mat-icon>
               {{ sortColumn === 'date'
                   ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
@@ -183,7 +202,6 @@
           <div class="list-cell title-cell">
             <div class="title-text">
               <div class="title">{{ getThesisTitle(thesisItem) }}</div>
-              <div class="subtitle-text">{{ getProgressReport(thesisItem) }}</div>
             </div>
           </div>
           <div class="list-cell degree-cell">{{ thesisItem.gradoAcademico?.descripcion || 'N/A' }}</div>
@@ -194,7 +212,8 @@
               {{ getThesisStatus(thesisItem) }}
             </mat-chip>
           </div>
-          <div class="list-cell date-cell">{{ thesisItem.fechaInicioPrograma | date:'MMM yyyy' }}</div>
+          <div class="list-cell period-cell">{{ getProgressReport(thesisItem) }}</div>
+          <div class="list-cell date-cell">{{ thesisItem.fechaInicio | date:'MMM yyyy' }}</div>
           <div class="list-cell actions-cell">
             <button 
               mat-icon-button 

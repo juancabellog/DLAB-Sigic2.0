@@ -18,7 +18,7 @@ public class PublicacionDTO {
     private String urlDocumento;
     private String linkVisualizacion;
     private String linkPDF;
-    private Integer progressReport;
+    private String progressReport;
     private EstadoProductoDTO estadoProducto;
     private String codigoANID;
     private String basal; // Character como string
@@ -120,11 +120,11 @@ public class PublicacionDTO {
         this.linkPDF = linkPDF;
     }
     
-    public Integer getProgressReport() {
+    public String getProgressReport() {
         return progressReport;
     }
     
-    public void setProgressReport(Integer progressReport) {
+    public void setProgressReport(String progressReport) {
         this.progressReport = progressReport;
     }
     

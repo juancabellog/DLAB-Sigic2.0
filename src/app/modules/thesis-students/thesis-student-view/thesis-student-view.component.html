@@ -31,7 +31,7 @@
           <h3>Basic Information</h3>
           <div class="detail-grid">
             <div class="detail-item">
-              <strong>Description:</strong>
+              <strong>Citation:</strong>
               <span>{{ thesis.descripcion || 'N/A' }}</span>
             </div>
             <div class="detail-item">
@@ -47,7 +47,7 @@
               <span>{{ thesis.gradoAcademico?.descripcion || thesis.gradoAcademico?.idDescripcion || 'N/A' }}</span>
             </div>
             <div class="detail-item">
-              <strong>Student Institution:</strong>
+              <strong>Host Institution:</strong>
               <span>{{ thesis.institucion?.descripcion || thesis.institucion?.idDescripcion || 'N/A' }}</span>
             </div>
             <div class="detail-item">
@@ -61,11 +61,11 @@
               <span>{{ thesis.fechaInicioPrograma | date:'MMM dd, yyyy' }}</span>
             </div>
             <div class="detail-item" *ngIf="thesis.fechaInicio">
-              <strong>Start Date:</strong>
+              <strong>Qualifying Exam Date:</strong>
               <span>{{ thesis.fechaInicio | date:'MMM dd, yyyy' }}</span>
             </div>
             <div class="detail-item" *ngIf="thesis.fechaTermino">
-              <strong>End Date:</strong>
+              <strong>Degree Award Date:</strong>
               <span>{{ thesis.fechaTermino | date:'MMM dd, yyyy' }}</span>
             </div>
           </div>

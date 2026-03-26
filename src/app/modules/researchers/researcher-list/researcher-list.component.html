@@ -9,16 +9,16 @@
   </div>
 
   <!-- List Controls -->
-          <app-list-controls
-            searchPlaceholder="Search researchers..."
-            addButtonLabel="Add Researcher"
-            addRoute="/researchers/new"
-            [items]="filteredResearchers"
-            [readonly]="true"
-            (searchResults)="onSearchResults($event)"
-            (searchTermChange)="onSearchTermChange($event)"
-            (viewModeChange)="onViewModeChange($event)">
-          </app-list-controls>
+  <app-list-controls
+    searchPlaceholder="Search researchers..."
+    addButtonLabel="Add Researcher"
+    addRoute="/researchers/new"
+    [items]="researchers"
+    [readonly]="true"
+    (searchResults)="onSearchResults($event)"
+    (searchTermChange)="onSearchTermChange($event)"
+    (viewModeChange)="onViewModeChange($event)">
+  </app-list-controls>
 
 
         <!-- Researchers List -->

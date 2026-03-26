@@ -9,8 +9,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSelectModule } from '@angular/material/select';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
@@ -42,8 +40,6 @@ import { TesisDTO, InstitucionDTO, GradoAcademicoDTO, EstadoTesisDTO, TipoSector
     MatIconModule,
     MatDividerModule,
     MatSelectModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
     MatCheckboxModule,
     MatProgressSpinnerModule,
     MatChipsModule,
@@ -77,8 +73,31 @@ export class ThesisStudentEditComponent implements OnInit {
   // Lista de participantes (estudiantes y tutores)
   participants: ParticipantDTO[] = [];
 
+  // Opciones de clusters (1 a 5)
+  clusterOptions: { id: number; label: string }[] = [
+    { id: 1, label: 'Cluster I' },
+    { id: 2, label: 'Cluster II' },
+    { id: 3, label: 'Cluster III' },
+    { id: 4, label: 'Cluster IV' },
+    { id: 5, label: 'Cluster V' }
+  ];
+  selectedClusters: number[] = [];
+
+  // Opciones de períodos (1 a 5) para progressReport múltiple
+  periodOptions: { id: string; label: string }[] = [
+    { id: '1', label: 'Period 1' },
+    { id: '2', label: 'Period 2' },
+    { id: '3', label: 'Period 3' },
+    { id: '4', label: 'Period 4' },
+    { id: '5', label: 'Period 5' }
+  ];
+  selectedPeriods: string[] = [];
+
   // Control del checkbox Basal
   isBasal: boolean = true;
+
+  // Control de ayuda expandible para formato de cita
+  showCitationFormat: boolean = false;
 
   // Control de carga de PDF
   selectedPdfFile: File | null = null;
@@ -94,7 +113,7 @@ export class ThesisStudentEditComponent implements OnInit {
     codigoANID: '',
     progressReport: undefined,
     tipoSector: '',
-    tipoProducto: { id: 4 } // ID 4 para Thesis según DataInitializer
+    tipoProducto: { id: 11 } // ID 11 para Thesis (backend default)
   };
 
   // Tipos de sector seleccionados (para el formulario)
@@ -174,6 +193,10 @@ export class ThesisStudentEditComponent implements OnInit {
     return 'Back to List';
   }
 
+  get isPhDThesis(): boolean {
+    return this.thesis.gradoAcademico?.id === 3;
+  }
+
   loadInstitutions(): void {
     this.loadingInstitutions = true;
     this.baseHttp.get<InstitucionDTO[]>('/catalogs/institutions').pipe(
@@ -238,19 +261,22 @@ export class ThesisStudentEditComponent implements OnInit {
     this.thesis = {
       descripcion: '',
       nombreCompletoTitulo: '',
-      fechaInicioPrograma: undefined,
+      fechaInicioPrograma: '',
       codigoANID: '',
       progressReport: undefined,
       tipoSector: '',
-      tipoProducto: { id: 4 },
-      fechaInicio: undefined,
-      fechaTermino: undefined,
-      basal: 'N'
+      tipoProducto: { id: 11 },
+      fechaInicio: '',
+      fechaTermino: '',
+      basal: 'N',
+      cluster: ''
     };
     this.isBasal = true;
     this.participants = [];
     this.selectedSectorTypes = [];
     this.originalThesis = null;
+    this.selectedClusters = [];
+    this.selectedPeriods = [];
   }
 
   loadThesisForEdit(id: number): void {
@@ -314,6 +340,34 @@ export class ThesisStudentEditComponent implements OnInit {
 
         this.thesis = thesis;
         this.originalThesis = JSON.parse(JSON.stringify(thesis));
+
+        // Cargar clusters seleccionados desde el string de backend
+        this.selectedClusters = [];
+        if (this.thesis.cluster) {
+          try {
+            this.selectedClusters = this.thesis.cluster
+              .split(',')
+              .map(id => parseInt(id.trim(), 10))
+              .filter(id => !isNaN(id));
+          } catch {
+            this.selectedClusters = [];
+          }
+        }
+
+        // Cargar períodos seleccionados desde el string de backend (progressReport, ej: "1,2")
+        this.selectedPeriods = [];
+        if (this.thesis.progressReport) {
+          try {
+            this.selectedPeriods = this.thesis.progressReport
+              .split(',')
+              .map(p => p.trim())
+              .filter(p => p !== '');
+            this.selectedPeriods = this.sanitizePeriodIds(this.selectedPeriods);
+          } catch {
+            this.selectedPeriods = [];
+          }
+        }
+
       } else {
         this.messageService.error('Thesis not found');
         this.router.navigate(['/thesis-students']);
@@ -365,10 +419,11 @@ export class ThesisStudentEditComponent implements OnInit {
           progressReport: undefined, // No copiar el progressReport
           estadoProducto: undefined, // No copiar el estado (se establecerá como Draft o Pending)
           estadoTesis: undefined, // No copiar el estado de tesis
-          tipoProducto: thesis.tipoProducto || { id: 4 }
+          tipoProducto: thesis.tipoProducto || { id: 11 }
         };
         
         this.originalThesis = null; // No hay original porque es una nueva tesis
+        this.selectedPeriods = [];
         this.messageService.info('Thesis data loaded. You can now edit and save as a new thesis.');
       } else {
         this.messageService.error('Thesis not found');
@@ -410,6 +465,47 @@ export class ThesisStudentEditComponent implements OnInit {
   onBasalChange(checked: boolean): void {
     this.isBasal = checked;
     this.thesis.basal = checked ? 'S' : 'N';
+  }
+
+  isClusterSelected(clusterId: number): boolean {
+    return this.selectedClusters.includes(clusterId);
+  }
+
+  onClusterChange(clusterId: number, checked: boolean): void {
+    if (checked) {
+      if (!this.selectedClusters.includes(clusterId)) {
+        this.selectedClusters.push(clusterId);
+      }
+    } else {
+      this.selectedClusters = this.selectedClusters.filter(id => id !== clusterId);
+    }
+    this.thesis.cluster = this.selectedClusters.join(',');
+  }
+
+  isPeriodSelected(periodId: string): boolean {
+    return this.selectedPeriods.includes(periodId);
+  }
+
+  private isValidPeriodId(periodId: string): boolean {
+    return this.periodOptions.some(opt => opt.id === periodId);
+  }
+
+  private sanitizePeriodIds(periods: string[]): string[] {
+    const unique = Array.from(new Set(periods.map(p => p.trim()).filter(p => p !== '')));
+    return unique.filter(p => this.isValidPeriodId(p));
+  }
+
+  onPeriodChange(periodId: string, checked: boolean): void {
+    if (checked) {
+      if (!this.selectedPeriods.includes(periodId)) {
+        this.selectedPeriods.push(periodId);
+      }
+    } else {
+      this.selectedPeriods = this.selectedPeriods.filter(id => id !== periodId);
+    }
+    this.selectedPeriods = this.sanitizePeriodIds(this.selectedPeriods);
+    // Guardar como string separado por comas, o undefined si no hay selección
+    this.thesis.progressReport = this.selectedPeriods.length > 0 ? this.selectedPeriods.join(',') : undefined;
   }
 
   onSectorTypeChange(sector: TipoSectorDTO, checked: boolean): void {
@@ -486,6 +582,21 @@ export class ThesisStudentEditComponent implements OnInit {
       this.messageService.error('Start Date is required');
       return false;
     }
+    // Cross-validation between end date and "Finished" status (id = 1)
+    const finishedId = 1;
+    const isFinishedStatus = this.thesis.estadoTesis?.id === finishedId;
+    const hasEndDate = !!this.thesis.fechaTermino;
+
+    if (hasEndDate && !isFinishedStatus) {
+      this.messageService.error('If an end date is set, the thesis status must be "Finished".');
+      return false;
+    }
+
+    if (isFinishedStatus && !hasEndDate) {
+      this.messageService.error('If the thesis status is "Finished", an end date is required.');
+      return false;
+    }
+
     return true;
   }
 
@@ -524,12 +635,17 @@ export class ThesisStudentEditComponent implements OnInit {
     // Después de subir el PDF (si había uno), guardar el registro
     uploadPdfObservable.pipe(
       switchMap((uploadResult) => {
+        const sanitizedPeriods = this.sanitizePeriodIds(this.selectedPeriods);
         const thesisData: TesisDTO = {
           ...this.thesis,
           linkPDF: this.thesis.linkPDF || undefined, // Asegurar que linkPDF se incluya explícitamente
           participantes: participantes,
           basal: this.isBasal ? 'S' : 'N',
-          tipoSector: this.selectedSectorTypes.map(st => st.id).join(',')
+          tipoSector: this.selectedSectorTypes.map(st => st.id).join(','),
+          cluster: this.selectedClusters.join(','),
+          progressReport: sanitizedPeriods.length > 0
+            ? sanitizedPeriods.join(',')
+            : undefined
         };
 
         const saveOperation = this.isEditMode && this.thesisId
@@ -598,9 +714,333 @@ export class ThesisStudentEditComponent implements OnInit {
   }
   
   /**
-   * Maneja el cambio de fecha de inicio y calcula automáticamente el progressReport
+   * Maneja el cambio de fecha de inicio y calcula automáticamente el progressReport (un solo período).
+   * Siempre actualiza la selección automática; el usuario luego puede ajustar manualmente los períodos.
    */
   onFechaInicioChange(): void {
-    this.thesis.progressReport = this.progressReportService.calculateProgressReport(this.thesis.fechaInicio);
+    const pr = this.progressReportService.calculateProgressReport(this.thesis.fechaInicio);
+    this.selectedPeriods = this.sanitizePeriodIds(pr ? [pr] : []);
+    this.thesis.progressReport = this.selectedPeriods.length > 0 ? this.selectedPeriods.join(',') : undefined;
+  }
+
+  onExamDateChange(value: string | null): void {
+    this.thesis.fechaInicio = value || undefined;
+    this.onFechaInicioChange();
+  }
+
+  /**
+   * Parsea la cita pegada en el campo descripción y rellena automáticamente
+   * varios campos de la tesis (título, fechas, programa, institución, estado,
+   * períodos y participantes Estudiante/Director/Codirector).
+   */
+  async onParseDescription(): Promise<void> {
+    const description = (this.thesis.descripcion || '').trim();
+
+    if (!description) {
+      this.messageService.error('Citation is empty. Please paste the thesis citation first.');
+      return;
+    }
+
+    try {
+      const lines = description.split(/\r?\n/).map(l => l.trim()).filter(l => l.length > 0);
+      if (lines.length === 0) {
+        this.messageService.error('Citation format is not valid.');
+        return;
+      }
+
+      const firstLine = lines[0];
+      const basalLine = lines.find(l => /BASAL\s+(?:Año|Year)/i.test(l)) || lines[lines.length - 1];
+
+      // Línea 1: <Estudiante>. <Titulo>. [opcional: <Programa>, <Institucion>. <Fechas>]
+      const firstParts = firstLine.split('.').map(p => p.trim()).filter(p => p.length > 0);
+      const studentName = firstParts[0] || '';
+      const titlePart = firstParts.length > 1 ? firstParts[1] : '';
+      let restAfterTitle = firstParts.length > 2 ? firstParts.slice(2).join('.').trim() : '';
+
+      if (!studentName || !titlePart) {
+        console.warn('Unexpected citation format in first line:', firstLine);
+      }
+
+      // Si después del título no viene programa+institución en la misma línea,
+      // intentar tomarlos de la siguiente línea no vacía (caso multi-línea).
+      if (!restAfterTitle && lines.length > 1) {
+        // Buscar la primera línea siguiente que contenga una coma (Programa, Institución)
+        const programLine = lines.slice(1).find(l => l.includes(','));
+        if (programLine) {
+          restAfterTitle = programLine.trim();
+        }
+      }
+
+      // <Programa>, <Institucion>. [<Fechas> si están en la misma línea]
+      const programInstitutionSplit = restAfterTitle ? restAfterTitle.split(',') : [];
+      const programText = programInstitutionSplit[0]?.trim() || '';
+      const institutionAndRest = programInstitutionSplit.slice(1).join(',').trim();
+
+      let institutionText = '';
+      let datesPart = '';
+
+      const lastPeriodIdx = institutionAndRest.lastIndexOf('.');
+      if (lastPeriodIdx >= 0) {
+        institutionText = institutionAndRest.substring(0, lastPeriodIdx).trim();
+        datesPart = institutionAndRest.substring(lastPeriodIdx + 1).trim();
+      } else {
+        institutionText = institutionAndRest;
+      }
+
+      // Si las fechas no están al final de la línea 1, buscar una línea con formato "x - y - z"
+      if (!datesPart) {
+        const dateLine = lines.find(l => /^\S.*\s-\s.*\s-\s/.test(l));
+        if (dateLine) {
+          datesPart = dateLine.trim();
+        }
+      }
+
+      // Separar por "-" con o sin espacios para soportar "dd/MM/yyyy-..." y "dd/MM/yyyy - ..."
+      const dateTokens = datesPart.split(/\s*-\s*/).map(t => t.trim()).filter(t => t.length > 0);
+      const fechaInicioProgramaStr = dateTokens[0];
+      const fechaInicioStr = dateTokens[1];
+      const fechaTerminoStr = dateTokens[2];
+      // Asignar título y fechas
+      if (titlePart) {
+        this.thesis.nombreCompletoTitulo = titlePart;
+      }
+      this.thesis.fechaInicioPrograma = this.normalizeDate(fechaInicioProgramaStr);
+      this.thesis.fechaInicio = this.normalizeDate(fechaInicioStr);
+      this.thesis.fechaTermino = this.normalizeDate(fechaTerminoStr);
+
+      // Detectar grado académico a partir del texto del programa
+      const detectedDegree = this.detectAcademicDegree(programText);
+      if (detectedDegree) {
+        this.thesis.gradoAcademico = detectedDegree;
+      }
+
+      // Intentar asociar institución otorgante usando el texto parseado
+      const matchedInstitution = this.findInstitutionByName(institutionText);
+      if (matchedInstitution) {
+        this.thesis.institucionOG = matchedInstitution;
+      }
+
+      // Línea de Director / Co-supervisor: buscar la línea que contenga "Supervisor" o "Director"
+      let directorName: string | undefined;
+      let coDirectorName: string | undefined;
+      const directorLine = lines.find(l => /Thesis Supervisor|Director de Tesis|Co-supervisor|Codirector/i.test(l));
+      if (directorLine) {
+        const directorMatch = directorLine.match(/(?:Thesis Supervisor|Director de Tesis):\s*([^,]+?)(?=,|$)/i);
+        const coDirectorMatch = directorLine.match(/Co-?supervisor:\s*([^,]+?)(?=,|$)/i);
+        const d = directorMatch?.[1]?.trim();
+        const c = coDirectorMatch?.[1]?.trim();
+        directorName = d && !/^N\/A$/i.test(d) ? d : undefined;
+        coDirectorName = c && !/^N\/A$/i.test(c) ? c : undefined;
+      }
+
+      // Línea BASAL: períodos y estado de tesis
+      if (basalLine) {
+        this.isBasal = /BASAL/i.test(basalLine);
+        this.thesis.basal = this.isBasal ? 'S' : 'N';
+
+        const periodSet = new Set<string>();
+        // Aceptar "Año" o "Year" (ej. "BASAL Year 5" o "BASAL Año 1,2,5")
+        const basalRegex = /BASAL\s+(?:Año|Year)\s+([0-9,\s]+)/gi;
+        let match: RegExpExecArray | null;
+        while ((match = basalRegex.exec(basalLine)) !== null) {
+          const list = match[1]
+            .split(',')
+            .map(p => p.trim())
+            .filter(p => p.length > 0);
+          list.forEach(p => periodSet.add(p));
+        }
+
+        // Asegurar período si aparece "BASAL Año/Year 5" sin captura en la lista
+        if (/BASAL\s+(?:Año|Year)\s*5\b/i.test(basalLine)) {
+          periodSet.add('5');
+        }
+
+        this.selectedPeriods = this.sanitizePeriodIds(Array.from(periodSet).sort());
+        this.thesis.progressReport = this.selectedPeriods.length > 0 ? this.selectedPeriods.join(',') : undefined;
+
+        // Estado de tesis: (in progress) / (In Progress) => id=2, (Finished) => id=1
+        const hasFinished = /\(Finished\)/i.test(basalLine);
+        const hasInProgress = /\(in progress\)/i.test(basalLine) || /\(In Progress\)/i.test(basalLine);
+
+        let targetStatusId: number | undefined;
+        if (hasFinished) {
+          targetStatusId = 1;
+        } else if (hasInProgress) {
+          targetStatusId = 2;
+        }
+
+        if (targetStatusId && this.thesisStatuses && this.thesisStatuses.length > 0) {
+          const status = this.thesisStatuses.find(s => s.id === targetStatusId);
+          if (status) {
+            this.thesis.estadoTesis = status;
+          }
+        }
+      }
+
+      // Crear participantes a partir de los nombres detectados
+      const participantPromises: Promise<void>[] = [];
+
+      if (studentName) {
+        participantPromises.push(this.addParticipantFromName(studentName, 7)); // Estudiante
+      }
+      if (directorName) {
+        participantPromises.push(this.addParticipantFromName(directorName, 12)); // Director de tesis
+      }
+      if (coDirectorName) {
+        participantPromises.push(this.addParticipantFromName(coDirectorName, 13)); // Codirector de tesis
+      }
+
+      if (participantPromises.length > 0) {
+        await Promise.all(participantPromises);
+      }
+
+      // Recalcular orden de participantes
+      this.participants.forEach((p, index) => {
+        p.order = index + 1;
+      });
+
+      this.messageService.success('Citation parsed successfully. Fields have been populated.');
+    } catch (error) {
+      console.error('Error parsing thesis citation:', error);
+      this.messageService.error('Could not parse the citation. Please verify the format.');
+    }
+  }
+
+  private normalizeDate(value?: string): string | undefined {
+    if (!value) return undefined;
+    const trimmed = value.trim();
+    if (!trimmed || /^N\/A$/i.test(trimmed)) return undefined;
+
+    // Formato explícito dd/MM/yyyy (ej: 01/03/2017)
+    const dmyMatch = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(trimmed);
+    if (dmyMatch) {
+      const day = dmyMatch[1];
+      const month = dmyMatch[2];
+      const year = dmyMatch[3];
+      return `${year}-${month}-${day}`;
+    }
+
+    // Si ya viene en formato ISO yyyy-MM-dd, retornarlo tal cual
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+
+    // Reemplazar '/' por '-' y dejar que Date intente parsear
+    const normalized = trimmed.replace(/\//g, '-');
+    const parsed = new Date(normalized);
+    if (isNaN(parsed.getTime())) {
+      return undefined;
+    }
+
+    const year = parsed.getFullYear();
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const day = String(parsed.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private detectAcademicDegree(programText?: string): GradoAcademicoDTO | undefined {
+    if (!programText) {
+      return undefined;
+    }
+
+    const text = programText.toLowerCase();
+    let targetId: number | undefined;
+
+    if (text.includes('doctorado')) {
+      targetId = 3;
+    } else if (text.includes('magister')) {
+      targetId = 2;
+    } else {
+      targetId = 1;
+    }
+
+    if (!this.academicDegrees || this.academicDegrees.length === 0) {
+      return undefined;
+    }
+
+    return this.academicDegrees.find(d => d.id === targetId);
+  }
+
+  private findInstitutionByName(name?: string): InstitucionDTO | undefined {
+    if (!name || !this.institutions || this.institutions.length === 0) {
+      return undefined;
+    }
+
+    const normalizedName = this.normalizeText(name);
+
+    // Buscar coincidencia que contenga el texto (ignorando acentos y mayúsculas/minúsculas)
+    const exactMatch = this.institutions.find(inst => {
+      const instName = this.normalizeText(inst.descripcion || inst.idDescripcion || '');
+      return instName.includes(normalizedName);
+    });
+
+    return exactMatch || undefined;
+  }
+
+  private normalizeText(text: string): string {
+    return text
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  }
+
+  /**
+   * Elimina prefijos de título como "Dr.", "Dra.", "Dr ", "Dra " (case-insensitive)
+   * al inicio del nombre, para facilitar la búsqueda de RRHH.
+   */
+  private cleanTitlePrefixes(name: string): string {
+    if (!name) {
+      return '';
+    }
+    return name.replace(/^\s*(dr\.?\s+|dra\.?\s+)/i, '').trim();
+  }
+
+  private async addParticipantFromName(name: string, participationTypeId: number): Promise<void> {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      return;
+    }
+
+    try {
+      // Eliminar prefijos de título (Dr., Dra., etc.) para mejorar el match
+      const searchName = this.cleanTitlePrefixes(trimmedName);
+
+      // Usar el servicio avanzado de matching en backend (ResearcherMatchingService)
+      const candidates = await firstValueFrom(this.researcherService.matchResearcherByName(searchName));
+      if (!candidates || candidates.length === 0) {
+        console.warn(`No researcher match found for "${searchName}" (original: "${trimmedName}")`);
+        return;
+      }
+
+      const rrhh = candidates[0];
+      if (!rrhh || !rrhh.id) {
+        return;
+      }
+
+      // Evitar duplicados de mismo investigador y mismo rol
+      const alreadyExists = this.participants.some(
+        p => p.rrhhId === rrhh.id && p.participationTypeId === participationTypeId
+      );
+
+      if (alreadyExists) {
+        return;
+      }
+
+      const newParticipant: ParticipantDTO = {
+        rrhhId: rrhh.id,
+        fullName: rrhh.fullname || trimmedName,
+        idRecurso: rrhh.idRecurso,
+        orcid: rrhh.orcid,
+        participationTypeId,
+        corresponding: false,
+        order: this.participants.length + 1
+      };
+
+      this.participants = [...this.participants, newParticipant];
+      this.onParticipantsChange(this.participants);
+    } catch (error) {
+      console.error(`Error searching researcher for "${trimmedName}":`, error);
+    }
   }
 }

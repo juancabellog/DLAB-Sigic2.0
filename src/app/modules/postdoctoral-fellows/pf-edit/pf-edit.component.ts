@@ -77,6 +77,16 @@ export class PfEditComponent implements OnInit {
   // Lista de participantes
   participants: ParticipantDTO[] = [];
 
+  // Opciones de clusters (1 a 5)
+  clusterOptions: { id: number; label: string }[] = [
+    { id: 1, label: 'Cluster I' },
+    { id: 2, label: 'Cluster II' },
+    { id: 3, label: 'Cluster III' },
+    { id: 4, label: 'Cluster IV' },
+    { id: 5, label: 'Cluster V' }
+  ];
+  selectedClusters: number[] = [];
+
   // Control del checkbox Basal
   isBasal: boolean = true;
 
@@ -101,6 +111,19 @@ export class PfEditComponent implements OnInit {
 
   // Tipos de financiamiento seleccionados (para el formulario)
   selectedFundingTypes: FundingTypeDTO[] = [];
+
+  // Texto libre para "Other" funding source (id = 7)
+  fundingOtherText: string = '';
+
+  // Opciones de períodos (1 a 5) para progressReport múltiple
+  periodOptions: { id: string; label: string }[] = [
+    { id: '1', label: 'Period 1' },
+    { id: '2', label: 'Period 2' },
+    { id: '3', label: 'Period 3' },
+    { id: '4', label: 'Period 4' },
+    { id: '5', label: 'Period 5' }
+  ];
+  selectedPeriods: string[] = [];
 
   constructor(
     private route: ActivatedRoute,
@@ -229,13 +252,16 @@ export class PfEditComponent implements OnInit {
       tipoProducto: { id: 14 },
       fechaInicio: undefined,
       fechaTermino: undefined,
-      basal: 'N'
+      basal: 'N',
+      cluster: ''
     };
     this.isBasal = true;
     this.participants = [];
     this.selectedResources = [];
     this.selectedFundingTypes = [];
+    this.selectedPeriods = [];
     this.originalFellow = null;
+    this.selectedClusters = [];
   }
 
   loadFellowForEdit(id: number): void {
@@ -273,15 +299,46 @@ export class PfEditComponent implements OnInit {
         }
 
         // Cargar tipos de financiamiento seleccionados
+        this.selectedFundingTypes = [];
+        this.fundingOtherText = '';
         if (fellow.fundingSource) {
           try {
-            const fundingIds = fellow.fundingSource.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
-            this.selectedFundingTypes = this.fundingTypes.filter(ft => fundingIds.includes(ft.id!));
+            const raw = fellow.fundingSource.trim();
+            if (raw.startsWith('[')) {
+              // Nuevo formato JSON: [{"id":7,"text":"Volkswagen"},{"id":1}]
+              const arr: any[] = JSON.parse(raw);
+              const ids: number[] = [];
+              arr.forEach(item => {
+                if (item && typeof item.id === 'number') {
+                  ids.push(item.id);
+                  if (item.id === 7 && item.text) {
+                    this.fundingOtherText = item.text;
+                  }
+                }
+              });
+              this.selectedFundingTypes = this.fundingTypes.filter(ft => ids.includes(ft.id!));
+            } else {
+              // Formato antiguo: "1,2,3"
+              const fundingIds = raw.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+              this.selectedFundingTypes = this.fundingTypes.filter(ft => fundingIds.includes(ft.id!));
+            }
           } catch (e) {
             this.selectedFundingTypes = [];
+            this.fundingOtherText = '';
           }
-        } else {
-          this.selectedFundingTypes = [];
+        }
+
+        // Cargar períodos seleccionados desde el string de backend (progressReport, ej: "1,2")
+        this.selectedPeriods = [];
+        if (fellow.progressReport) {
+          try {
+            this.selectedPeriods = fellow.progressReport
+              .split(',')
+              .map(p => p.trim())
+              .filter(p => p.length > 0);
+          } catch {
+            this.selectedPeriods = [];
+          }
         }
 
         // Configurar checkbox Basal
@@ -314,6 +371,19 @@ export class PfEditComponent implements OnInit {
 
         this.fellow = fellow;
         this.originalFellow = JSON.parse(JSON.stringify(fellow));
+
+        // Cargar clusters seleccionados desde el string de backend
+        this.selectedClusters = [];
+        if (this.fellow.cluster) {
+          try {
+            this.selectedClusters = this.fellow.cluster
+              .split(',')
+              .map(id => parseInt(id.trim(), 10))
+              .filter(id => !isNaN(id));
+          } catch (e) {
+            this.selectedClusters = [];
+          }
+        }
       } else {
         this.messageService.error('Postdoctoral fellow not found');
         this.router.navigate(['/postdoctoral-fellows']);
@@ -356,6 +426,21 @@ export class PfEditComponent implements OnInit {
     this.fellow.basal = checked ? 'S' : 'N';
   }
 
+  isClusterSelected(clusterId: number): boolean {
+    return this.selectedClusters.includes(clusterId);
+  }
+
+  onClusterChange(clusterId: number, checked: boolean): void {
+    if (checked) {
+      if (!this.selectedClusters.includes(clusterId)) {
+        this.selectedClusters.push(clusterId);
+      }
+    } else {
+      this.selectedClusters = this.selectedClusters.filter(id => id !== clusterId);
+    }
+    this.fellow.cluster = this.selectedClusters.join(',');
+  }
+
   onResourceChange(resource: ResourceDTO, checked: boolean): void {
     if (checked) {
       if (!this.selectedResources.find(r => r.id === resource.id)) {
@@ -379,13 +464,46 @@ export class PfEditComponent implements OnInit {
       }
     } else {
       this.selectedFundingTypes = this.selectedFundingTypes.filter(ft => ft.id !== fundingType.id);
+      // Si deseleccionan "Other", limpiamos el texto asociado
+      if (fundingType.id === 7) {
+        this.fundingOtherText = '';
+      }
     }
-    // Actualizar el string de fundingSource
-    this.fellow.fundingSource = this.selectedFundingTypes.map(ft => ft.id).join(',');
+    this.updateFundingSourceString();
   }
 
   isFundingTypeSelected(fundingType: FundingTypeDTO): boolean {
     return this.selectedFundingTypes.some(ft => ft.id === fundingType.id);
+  }
+
+  hasOtherFundingType(): boolean {
+    return this.selectedFundingTypes.some(ft => ft.id === 7);
+  }
+
+  updateFundingSourceString(): void {
+    const payload = this.selectedFundingTypes.map(ft => {
+      if (ft.id === 7) {
+        return { id: ft.id, text: this.fundingOtherText || '' };
+      }
+      return { id: ft.id };
+    });
+    this.fellow.fundingSource = JSON.stringify(payload);
+  }
+
+  isPeriodSelected(periodId: string): boolean {
+    return this.selectedPeriods.includes(periodId);
+  }
+
+  onPeriodChange(periodId: string, checked: boolean): void {
+    if (checked) {
+      if (!this.selectedPeriods.includes(periodId)) {
+        this.selectedPeriods.push(periodId);
+      }
+    } else {
+      this.selectedPeriods = this.selectedPeriods.filter(id => id !== periodId);
+    }
+    // Guardar como string separado por comas, o undefined si no hay selección
+    this.fellow.progressReport = this.selectedPeriods.length > 0 ? this.selectedPeriods.join(',') : undefined;
   }
 
   compareInstitutions(inst1: InstitucionDTO | null, inst2: InstitucionDTO | null): boolean {
@@ -484,8 +602,8 @@ export class PfEditComponent implements OnInit {
           linkPDF: this.fellow.linkPDF || undefined, // Asegurar que linkPDF se incluya explícitamente
           participantes: participantes,
           basal: this.isBasal ? 'S' : 'N',
-          fundingSource: this.selectedFundingTypes.map(ft => ft.id).join(','),
-          resources: this.selectedResources.map(r => r.id).join(',')
+          resources: this.selectedResources.map(r => r.id).join(','),
+          cluster: this.selectedClusters.join(',')
         };
 
         const saveOperation = this.isEditMode && this.fellowId

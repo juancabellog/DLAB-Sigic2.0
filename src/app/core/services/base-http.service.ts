@@ -91,6 +91,23 @@ export class BaseHttpService {
   }
 
   /**
+   * Realiza una petición GET que devuelve un archivo (Blob)
+   */
+  getFile(endpoint: string, params?: any): Observable<Blob> {
+    const httpParams = this.buildHttpParams(params);
+    const token = this.getToken();
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    return this.http.get(`${this.baseUrl}${endpoint}`, {
+      params: httpParams,
+      headers,
+      responseType: 'blob'
+    }).pipe(catchError(this.handleError));
+  }
+
+  /**
    * Construye los parámetros HTTP
    */
   private buildHttpParams(params: any): HttpParams {

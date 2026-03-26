@@ -44,6 +44,13 @@ export class ThesisService {
   deleteThesis(id: number): Observable<boolean> {
     return this.baseHttp.delete<boolean>(`/thesis/${id}`);
   }
+
+  /**
+   * Exporta las tesis actuales a Excel según filtros
+   */
+  exportThesisToExcel(filters?: SearchFiltersDTO): Observable<Blob> {
+    return this.baseHttp.getFile('/thesis/export', filters);
+  }
 }
 
 
