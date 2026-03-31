@@ -56,8 +56,8 @@ export class ScientificEventsViewComponent implements OnInit {
     this.loading = true;
     this.scientificEventsService.getScientificEvent(id).pipe(
       catchError(error => {
-        console.error('Error loading scientific event:', error);
-        this.messageService.error('Error loading scientific event. Please try again later.');
+        console.error('Error loading organization of scientific events:', error);
+        this.messageService.error('Error loading organization of scientific events. Please try again later.');
         this.goBack();
         return of(null);
       })
@@ -66,7 +66,7 @@ export class ScientificEventsViewComponent implements OnInit {
       this.loading = false;
       
       if (!event) {
-        this.messageService.error('Scientific event not found');
+        this.messageService.error('Organization of scientific events not found');
         this.goBack();
       }
     });
@@ -121,13 +121,13 @@ export class ScientificEventsViewComponent implements OnInit {
               this.goBack();
             },
             error: (error) => {
-              console.error('Error deleting scientific event:', error);
-              this.messageService.error('Error deleting scientific event. Please try again.');
+              console.error('Error deleting organization of scientific events:', error);
+              this.messageService.error('Error deleting organization of scientific events. Please try again.');
             }
           });
         }
       },
-      'Delete Scientific Event'
+      'Delete Organization of Scientific Events'
     );
   }
 

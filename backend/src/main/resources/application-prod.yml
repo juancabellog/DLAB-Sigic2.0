@@ -49,5 +49,5 @@ logging:
 
 
 app:
-  version: "2025.03.19-02"
+  version: "2025.03.30-01"
 

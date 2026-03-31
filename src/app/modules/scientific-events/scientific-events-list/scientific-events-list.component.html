@@ -4,7 +4,7 @@
       <button mat-icon-button routerLink="/dashboard" matTooltip="Back to Dashboard">
         <mat-icon>arrow_back</mat-icon>
       </button>
-      <h1>Scientific Events</h1>
+      <h1>Organization of Scientific Events</h1>
     </div>
     <div class="list-header-right">
       <button 
@@ -13,17 +13,20 @@
         routerLink="/scientific-events/new"
         class="add-button">
         <mat-icon>add</mat-icon>
-        Add Scientific Event
+        Add Organization of Scientific Events
       </button>
     </div>
   </div>
 
   <!-- List Controls -->
   <app-list-controls
-    searchPlaceholder="Search scientific events..."
+    searchPlaceholder="Search organization of scientific events..."
     [items]="events"
     [showBasalFilter]="true"
     [readonly]="true"
+    [showExportButton]="true"
+    exportLabel="Export Excel"
+    [exportLoading]="exportLoading"
     [currentViewMode]="viewMode"
     [finalFilteredCount]="finalFilteredCount"
     itemType="event"
@@ -31,23 +34,24 @@
     (searchResults)="onSearchResults($event)"
     (searchTermChange)="onSearchTermChange($event)"
     (viewModeChange)="onViewModeChange($event)"
-    (basalFilterChange)="onBasalFilterChange($event)">
+    (basalFilterChange)="onBasalFilterChange($event)"
+    (exportRequested)="onExportRequested()">
   </app-list-controls>
 
   <mat-card>
     <mat-card-content>
       <div *ngIf="loading" class="loading-container">
         <mat-spinner></mat-spinner>
-        <p>Loading scientific events...</p>
+        <p>Loading organization of scientific events...</p>
       </div>
 
       <div *ngIf="!loading && filteredEvents.length === 0 && !isSearching" class="empty-state">
         <mat-icon>event</mat-icon>
-        <h3>No scientific events found</h3>
+        <h3>No organization of scientific events found</h3>
         <p>Start by adding your first scientific event organization.</p>
         <button mat-raised-button color="primary" routerLink="/scientific-events/new">
           <mat-icon>add</mat-icon>
-          Add Scientific Event
+          Add Organization of Scientific Events
         </button>
       </div>
 

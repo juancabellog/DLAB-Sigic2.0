@@ -44,6 +44,14 @@ export class ScientificEventsService {
   deleteScientificEvent(id: number): Observable<boolean> {
     return this.baseHttp.delete<boolean>(`/scientific-events/${id}`);
   }
+
+  /**
+   * Exporta los eventos científicos visibles a Excel
+   */
+  exportScientificEventsToExcel(params: { sort: string; direction: 'ASC' | 'DESC' }): Observable<Blob> {
+    const { sort, direction } = params;
+    return this.baseHttp.getFile(`/scientific-events/export?sortBy=${sort}&sortDir=${direction}`);
+  }
 }
 
 

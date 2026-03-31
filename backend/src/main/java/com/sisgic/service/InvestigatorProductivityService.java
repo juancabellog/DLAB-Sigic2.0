@@ -31,61 +31,112 @@ public class InvestigatorProductivityService {
     private static final int COL_CORRELATIVO = 1; // Columna B
     private static final int COL_INVESTIGADOR = 2; // Columna C
     private static final int COL_TIPO_INVESTIGADOR = 3; // Columna D: Principal / Asociado
-    private static final int COL_BX_GRADIENT = 75;
-    private static final int COL_BY_GRADIENT = 76;
-    private static final int COL_BZ_GRADIENT = 77;
-    private static final int COL_CA_GRADIENT = 78;
-    private static final int COL_CB_GRADIENT = 79;
-    private static final int COL_CC_GRADIENT = 80;
-    private static final int COL_CD_GRADIENT = 81;
-    private static final int COL_CE_GRADIENT = 82;
-    private static final int COL_CF_GRADIENT = 83;
+    private static final int COL_BX_GRADIENT = 119;
+    private static final int COL_BY_GRADIENT = 120;
+    private static final int COL_BZ_GRADIENT = 121;
+    private static final int COL_CA_GRADIENT = 122;
+    private static final int COL_CB_GRADIENT = 123;
+    private static final int COL_CC_GRADIENT = 124;
+    private static final int COL_CD_GRADIENT = 125;
+    private static final int COL_CE_GRADIENT = 126;
+    private static final int COL_CF_GRADIENT = 127;
 
     // Columnas por período
     private static final int P1_COL_A_PPAL = 4;
     private static final int P1_COL_IMP_PPAL = 5;
     private static final int P1_COL_A_SEC = 6;
     private static final int P1_COL_IMP_SEC = 7;
-    private static final int P2_COL_A_PPAL = 17;
-    private static final int P2_COL_IMP_PPAL = 18;
-    private static final int P2_COL_A_SEC = 19;
-    private static final int P2_COL_IMP_SEC = 20;
-    private static final int P3_COL_A_PPAL = 30;
-    private static final int P3_COL_IMP_PPAL = 31;
-    private static final int P3_COL_A_SEC = 32;
-    private static final int P3_COL_IMP_SEC = 33;
-    private static final int P4_COL_A_PPAL = 43;
-    private static final int P4_COL_IMP_PPAL = 44;
-    private static final int P4_COL_A_SEC = 45;
-    private static final int P4_COL_IMP_SEC = 46;
-    private static final int P5_COL_A_PPAL = 59;
-    private static final int P5_COL_IMP_PPAL = 60;
-    private static final int P5_COL_A_SEC = 61;
-    private static final int P5_COL_IMP_SEC = 62;
+
+    // Columnas por período
+    private static final int P2_COL_A_PPAL = 27;
+    private static final int P2_COL_IMP_PPAL = 28;
+    private static final int P2_COL_A_SEC = 29;
+    private static final int P2_COL_IMP_SEC = 30;
+    private static final int P3_COL_A_PPAL = 50;
+    private static final int P3_COL_IMP_PPAL = 51;
+    private static final int P3_COL_A_SEC = 52;
+    private static final int P3_COL_IMP_SEC = 53;
+    private static final int P4_COL_A_PPAL = 73;
+    private static final int P4_COL_IMP_PPAL = 74;
+    private static final int P4_COL_A_SEC = 75;
+    private static final int P4_COL_IMP_SEC = 76;
+    private static final int P5_COL_A_PPAL = 96;
+    private static final int P5_COL_IMP_PPAL = 97;
+    private static final int P5_COL_A_SEC = 98;
+    private static final int P5_COL_IMP_SEC = 99;
 
     // Columnas de tesis por período
-    private static final int P1_COL_TESIS_TUTOR = 14;
-    private static final int P1_COL_TESIS_COTUTOR = 15;
-    private static final int P2_COL_TESIS_TUTOR = 27;
-    private static final int P2_COL_TESIS_COTUTOR = 28;
-    private static final int P3_COL_TESIS_TUTOR = 40;
-    private static final int P3_COL_TESIS_COTUTOR = 41;
-    private static final int P4_COL_TESIS_EN_CURSO_TUTOR = 53;
-    private static final int P4_COL_TESIS_TERMINADAS_TUTOR = 54;
-    private static final int P4_COL_TESIS_POSTDOCTORAL_TUTOR = 55;
-    private static final int P4_COL_TESIS_COTUTOR = 57;
-    private static final int P5_COL_TESIS_EN_CURSO_TUTOR = 69;
-    private static final int P5_COL_TESIS_TERMINADAS_TUTOR = 70;
-    private static final int P5_COL_TESIS_POSTDOCTORAL_TUTOR = 71;
-    private static final int P5_COL_TESIS_COTUTOR = 73;
-    private static final int COL_TOTAL_TESIS_TUTOR = 87;
-    private static final int COL_TOTAL_TESIS_COTUTOR = 88;
+    private static final int P1_COL_MAGPREG_TUTOR_EPR = 14;
+    private static final int P1_COL_MAGPREG_TUTOR_TER = 15;
+    private static final int P1_COL_DOCTORA_TUTOR_EPR = 16;
+    private static final int P1_COL_DOCTORA_TUTOR_TER = 17;
+    private static final int P1_COL_MAGPREG_COTUTOR_EPR = 18;
+    private static final int P1_COL_MAGPREG_COTUTOR_TER = 19;
+    private static final int P1_COL_DOCTORA_COTUTOR_EPR = 20;
+    private static final int P1_COL_DOCTORA_COTUTOR_TER = 21;
+    /** Después de las 8 columnas de tesis del período 1 (14–21). */
+    private static final int P1_COL_POSTDOCTO_TUTOR = 22;
+    private static final int P1_COL_POSTDOCTO_COTUTOR = 23;
 
+    private static final int P2_COL_MAGPREG_TUTOR_EPR = 37;
+    private static final int P2_COL_MAGPREG_TUTOR_TER = 38;
+    private static final int P2_COL_DOCTORA_TUTOR_EPR = 39;
+    private static final int P2_COL_DOCTORA_TUTOR_TER = 40;
+    private static final int P2_COL_MAGPREG_COTUTOR_EPR = 41;
+    private static final int P2_COL_MAGPREG_COTUTOR_TER = 42;
+    private static final int P2_COL_DOCTORA_COTUTOR_EPR = 43;
+    private static final int P2_COL_DOCTORA_COTUTOR_TER = 44;
+    private static final int P2_COL_POSTDOCTO_TUTOR = 45;
+    private static final int P2_COL_POSTDOCTO_COTUTOR = 46;
+
+    private static final int P3_COL_MAGPREG_TUTOR_EPR = 60;
+    private static final int P3_COL_MAGPREG_TUTOR_TER = 61;
+    private static final int P3_COL_DOCTORA_TUTOR_EPR = 62;
+    private static final int P3_COL_DOCTORA_TUTOR_TER = 63;
+    private static final int P3_COL_MAGPREG_COTUTOR_EPR = 64;
+    private static final int P3_COL_MAGPREG_COTUTOR_TER = 65;
+    private static final int P3_COL_DOCTORA_COTUTOR_EPR = 66;
+    private static final int P3_COL_DOCTORA_COTUTOR_TER = 67;
+    private static final int P3_COL_POSTDOCTO_TUTOR = 68;
+    private static final int P3_COL_POSTDOCTO_COTUTOR = 69;
+
+    private static final int P4_COL_MAGPREG_TUTOR_EPR = 83;
+    private static final int P4_COL_MAGPREG_TUTOR_TER = 84;
+    private static final int P4_COL_DOCTORA_TUTOR_EPR = 85;
+    private static final int P4_COL_DOCTORA_TUTOR_TER = 86;
+    private static final int P4_COL_MAGPREG_COTUTOR_EPR = 87;
+    private static final int P4_COL_MAGPREG_COTUTOR_TER = 88;
+    private static final int P4_COL_DOCTORA_COTUTOR_EPR = 89;
+    private static final int P4_COL_DOCTORA_COTUTOR_TER = 90;
+    private static final int P4_COL_POSTDOCTO_TUTOR = 91;
+    private static final int P4_COL_POSTDOCTO_COTUTOR = 92;
+
+    private static final int P5_COL_MAGPREG_TUTOR_EPR = 106;
+    private static final int P5_COL_MAGPREG_TUTOR_TER = 107;
+    private static final int P5_COL_DOCTORA_TUTOR_EPR = 108;
+    private static final int P5_COL_DOCTORA_TUTOR_TER = 109;
+    private static final int P5_COL_MAGPREG_COTUTOR_EPR = 110;
+    private static final int P5_COL_MAGPREG_COTUTOR_TER = 111;
+    private static final int P5_COL_DOCTORA_COTUTOR_EPR = 112;
+    private static final int P5_COL_DOCTORA_COTUTOR_TER = 113;
+    private static final int P5_COL_POSTDOCTO_TUTOR = 114;
+    private static final int P5_COL_POSTDOCTO_COTUTOR = 115;
+
+    private static final int COL_TOTAL_MAGPREG_TUTOR_EPR = 131;
+    private static final int COL_TOTAL_MAGPREG_TUTOR_TER = 132;
+    private static final int COL_TOTAL_DOCTORA_TUTOR_EPR = 133;
+    private static final int COL_TOTAL_DOCTORA_TUTOR_TER = 134;
+    private static final int COL_TOTAL_MAGPREG_COTUTOR_EPR = 135;
+    private static final int COL_TOTAL_MAGPREG_COTUTOR_TER = 136;
+    private static final int COL_TOTAL_DOCTORA_COTUTOR_EPR = 137;
+    private static final int COL_TOTAL_DOCTORA_COTUTOR_TER = 138;
+    private static final int COL_TOTAL_POSTDOCTO_TUTOR = 139;
+    private static final int COL_TOTAL_POSTDOCTO_COTUTOR = 140;
     // Proyectos
-    private static final int COL_PROYECTOS_CANT_NACIONAL = 90;
-    private static final int COL_PROYECTOS_CANT_INTERNACIONAL = 91;
-    private static final int COL_PROYECTOS_MONTO_NACIONAL = 93;
-    private static final int COL_PROYECTOS_MONTO_INTERNACIONAL = 94;
+    private static final int COL_PROYECTOS_CANT_NACIONAL = 144;
+    private static final int COL_PROYECTOS_CANT_INTERNACIONAL = 145;
+    private static final int COL_PROYECTOS_MONTO_NACIONAL = 147;
+    private static final int COL_PROYECTOS_MONTO_INTERNACIONAL = 148;
 
 
     // Proyectos Excel
@@ -124,19 +175,42 @@ public class InvestigatorProductivityService {
         }
     }
 
+    /** Conteo por período: magíster/pregrado vs doctorado × en curso vs terminada × tutor vs cotutor. */
+    private static class ThesisPeriodBreakdown {
+        int magpregTutorEpr;
+        int magpregTutorTer;
+        int doctoraTutorEpr;
+        int doctoraTutorTer;
+        int magpregCotutorEpr;
+        int magpregCotutorTer;
+        int doctoraCotutorEpr;
+        int doctoraCotutorTer;
+    }
+
+    private static final ThesisPeriodBreakdown EMPTY_THESIS_BREAKDOWN = new ThesisPeriodBreakdown();
+
     private static class ThesisStats {
-        Map<Integer, Integer> tutorCountByPeriod = new HashMap<>();
-        Map<Integer, Integer> cotutorCountByPeriod = new HashMap<>();
-        int enCursoTutor = 0;
-        int terminadasTutor = 0;
-        int postdoctoralesTutor = 0;
-        int cotutor = 0;
-        int enCursoTutorP5 = 0;
-        int terminadasTutorP5 = 0;
-        int postdoctoralesTutorP5 = 0;
-        int cotutorP5 = 0;
-        Set<String> uniqueTutorThesisIds = new HashSet<>();
-        Set<String> uniqueCotutorThesisIds = new HashSet<>();
+        /** Períodos 1–5. */
+        Map<Integer, ThesisPeriodBreakdown> thesisByPeriod = new HashMap<>();
+        /** Supervisión postdoctoral: idTipoParticipación 17 (tutor principal), por período. */
+        final int[] postdocTutorByPeriod = new int[6];
+        /** Supervisión postdoctoral: idTipoParticipación 18 (supervisor), por período. */
+        final int[] postdocCotutorByPeriod = new int[6];
+        /** Totales únicos por registro (sin duplicar por múltiples períodos). */
+        int totalMagpregTutorEpr = 0;
+        int totalMagpregTutorTer = 0;
+        int totalDoctoraTutorEpr = 0;
+        int totalDoctoraTutorTer = 0;
+        int totalMagpregCotutorEpr = 0;
+        int totalMagpregCotutorTer = 0;
+        int totalDoctoraCotutorEpr = 0;
+        int totalDoctoraCotutorTer = 0;
+        int totalPostdoctoTutor = 0;
+        int totalPostdoctoCotutor = 0;
+
+        ThesisPeriodBreakdown periodThesis(int periodo) {
+            return thesisByPeriod.computeIfAbsent(periodo, k -> new ThesisPeriodBreakdown());
+        }
     }
 
     private static class ProjectStats {
@@ -187,6 +261,8 @@ public class InvestigatorProductivityService {
         // 2. Obtener datos de thesis_report directamente desde SQL
         System.out.println("Obteniendo datos de tesis desde thesis_report...");
         Map<String, ThesisStats> thesisStats = loadThesisDataFromSQL();
+        System.out.println("Obteniendo datos de postdoctorado desde postdoctoral_report...");
+        loadPostdoctoralDataFromSQL(thesisStats);
 
         // 3. Procesar archivo de proyectos
         System.out.println("Procesando archivo de proyectos...");
@@ -304,16 +380,46 @@ public class InvestigatorProductivityService {
     }
 
     /**
+     * Períodos 1–5 extraídos de un campo tipo progressReport (coma-separado u otros ruidos).
+     */
+    private static Set<Integer> parsePeriods1To5(Object periodoObj) {
+        Set<Integer> periodosSet = new LinkedHashSet<>();
+        try {
+            if (periodoObj instanceof Number) {
+                int p = ((Number) periodoObj).intValue();
+                if (p >= 1 && p <= 5) {
+                    periodosSet.add(p);
+                }
+            } else if (periodoObj != null) {
+                String raw = periodoObj.toString();
+                for (String part : raw.split(",")) {
+                    if (part == null) continue;
+                    String digits = part.replaceAll("\\D+", "");
+                    if (digits.isEmpty()) continue;
+                    int p = Integer.parseInt(digits);
+                    if (p >= 1 && p <= 5) {
+                        periodosSet.add(p);
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+            // dejar vacío
+        }
+        return periodosSet;
+    }
+
+    /**
      * Obtiene datos de thesis_report directamente desde SQL.
-     * Mapea: fullname, idTipoParticipacion (12=tutor, 13=cotutor), idThesis, periodo,
-     * idEstadoTesis (1=terminada, 2=en progreso), idGradoAcademico (1=pregrado, 2=master, 3=postgrado)
+     * Mapea: fullname, idTipoParticipacion (12=tutor, 13=cotutor), periodo,
+     * idEstadoTesis (1=terminada, 2=en progreso), idGradoAcademico (1=pregrado, 2=magíster, 3=doctorado).
+     * Rellena por período las columnas: magíster/pregrado vs doctorado × en curso vs terminada × tutor vs cotutor.
      */
     private Map<String, ThesisStats> loadThesisDataFromSQL() {
         Map<String, ThesisStats> result = new HashMap<>();
 
-        String sql = "SELECT fullname, idTipoParticipacion, idThesis, periodo, idEstadoTesis, idGradoAcademico " +
+        String sql = "SELECT fullname, idTipoParticipacion, periodo, idEstadoTesis, idGradoAcademico " +
                      "FROM thesis_report " +
-                     "WHERE fullname IS NOT NULL AND fullname != '' AND idThesis IS NOT NULL AND idThesis != ''";
+                     "WHERE fullname IS NOT NULL AND fullname != ''";
 
         try {
             Query query = entityManager.createNativeQuery(sql);
@@ -324,16 +430,14 @@ public class InvestigatorProductivityService {
             for (Object[] row : rows) {
                 String nombre = row[0] != null ? row[0].toString().trim() : null;
                 Object tipoObj = row[1];
-                String idTesis = row[2] != null ? row[2].toString().trim() : null;
-                Object periodoObj = row[3];
-                Object estadoObj = row[4];
-                Object gradoObj = row[5];
+                Object periodoObj = row[2];
+                Object estadoObj = row[3];
+                Object gradoObj = row[4];
 
-                if (nombre == null || nombre.isEmpty() || idTesis == null || idTesis.isEmpty()) {
+                if (nombre == null || nombre.isEmpty()) {
                     continue;
                 }
 
-                // Parsear tipo: 12=tutor, 13=cotutor
                 int tipo;
                 try {
                     if (tipoObj instanceof Number) {
@@ -348,35 +452,11 @@ public class InvestigatorProductivityService {
                     continue;
                 }
 
-                // Parsear período(s) - progressReport puede venir como "1,2,3"
-                Set<Integer> periodosSet = new LinkedHashSet<>();
-                try {
-                    if (periodoObj instanceof Number) {
-                        int p = ((Number) periodoObj).intValue();
-                        if (p >= 1 && p <= 5) {
-                            periodosSet.add(p);
-                        }
-                    } else if (periodoObj != null) {
-                        String raw = periodoObj.toString();
-                        for (String part : raw.split(",")) {
-                            if (part == null) continue;
-                            // Extraer solo dígitos (soporta casos tipo "5.." o "2023,5..")
-                            String digits = part.replaceAll("\\D+", "");
-                            if (digits == null || digits.isEmpty()) continue;
-                            int p = Integer.parseInt(digits);
-                            if (p >= 1 && p <= 5) {
-                                periodosSet.add(p);
-                            }
-                        }
-                    }
-                } catch (Exception ignored) {
-                    // Si no se puede parsear, periodosSet quedará vacío y se hará continue
-                }
+                Set<Integer> periodosSet = parsePeriods1To5(periodoObj);
                 if (periodosSet.isEmpty()) {
                     continue;
                 }
 
-                // Parsear estado: 1=terminada, 2=en progreso
                 int estado;
                 try {
                     if (estadoObj instanceof Number) {
@@ -391,7 +471,6 @@ public class InvestigatorProductivityService {
                     continue;
                 }
 
-                // Parsear grado: 1=pregrado, 2=master, 3=postgrado
                 int grado;
                 try {
                     if (gradoObj instanceof Number) {
@@ -399,71 +478,67 @@ public class InvestigatorProductivityService {
                     } else {
                         grado = Integer.parseInt(gradoObj.toString());
                     }
-                    if (grado < 1 || grado > 3) {
+                    if (grado != 1 && grado != 2 && grado != 3) {
                         continue;
                     }
                 } catch (NumberFormatException e) {
                     continue;
                 }
 
-                // Obtener o crear estadísticas del investigador
-                ThesisStats stats = result.computeIfAbsent(nombre, k -> new ThesisStats());
-
+                boolean magpreg = (grado == 1 || grado == 2);
+                boolean doctora = (grado == 3);
+                boolean epr = (estado == 2);
+                boolean ter = (estado == 1);
                 boolean isTutor = (tipo == 12);
                 boolean isCotutor = (tipo == 13);
 
+                ThesisStats stats = result.computeIfAbsent(nombre, k -> new ThesisStats());
+
+                // Contador total único: este registro puede tener varios períodos, pero cuenta una vez.
+                if (isTutor && magpreg && epr) {
+                    stats.totalMagpregTutorEpr++;
+                } else if (isTutor && magpreg && ter) {
+                    stats.totalMagpregTutorTer++;
+                } else if (isTutor && doctora && epr) {
+                    stats.totalDoctoraTutorEpr++;
+                } else if (isTutor && doctora && ter) {
+                    stats.totalDoctoraTutorTer++;
+                } else if (isCotutor && magpreg && epr) {
+                    stats.totalMagpregCotutorEpr++;
+                } else if (isCotutor && magpreg && ter) {
+                    stats.totalMagpregCotutorTer++;
+                } else if (isCotutor && doctora && epr) {
+                    stats.totalDoctoraCotutorEpr++;
+                } else if (isCotutor && doctora && ter) {
+                    stats.totalDoctoraCotutorTer++;
+                }
+
                 for (int periodo : periodosSet) {
-                    if (periodo == 4) {
-                        // Período 4: lógica especial
-                        if (isTutor) {
-                            if (estado == 2) { // En progreso
-                                stats.enCursoTutor++;
-                            } else if (estado == 1) { // Terminada
-                                stats.terminadasTutor++;
-                            }
-                            if (grado == 3) { // Postdoctoral
-                                stats.postdoctoralesTutor++;
-                            }
-                            stats.uniqueTutorThesisIds.add(idTesis);
-                        } else if (isCotutor) {
-                            stats.cotutor++;
-                            stats.uniqueCotutorThesisIds.add(idTesis);
-                        }
-                    } else if (periodo == 5) {
-                        // Período 5: mismo desglose que P4
-                        if (isTutor) {
-                            if (estado == 2) { // En progreso
-                                stats.enCursoTutorP5++;
-                            } else if (estado == 1) { // Terminada
-                                stats.terminadasTutorP5++;
-                            }
-                            if (grado == 3) { // Postdoctoral
-                                stats.postdoctoralesTutorP5++;
-                            }
-                            stats.uniqueTutorThesisIds.add(idTesis);
-                        } else if (isCotutor) {
-                            stats.cotutorP5++;
-                            stats.uniqueCotutorThesisIds.add(idTesis);
-                        }
-                    } else {
-                        // Períodos 1-3: contar tutor y cotutor por período
-                        if (isTutor) {
-                            stats.tutorCountByPeriod.put(periodo,
-                                stats.tutorCountByPeriod.getOrDefault(periodo, 0) + 1);
-                            stats.uniqueTutorThesisIds.add(idTesis);
-                        } else if (isCotutor) {
-                            stats.cotutorCountByPeriod.put(periodo,
-                                stats.cotutorCountByPeriod.getOrDefault(periodo, 0) + 1);
-                            stats.uniqueCotutorThesisIds.add(idTesis);
-                        }
+                    ThesisPeriodBreakdown b = stats.periodThesis(periodo);
+                    if (isTutor && magpreg && epr) {
+                        b.magpregTutorEpr++;
+                    } else if (isTutor && magpreg && ter) {
+                        b.magpregTutorTer++;
+                    } else if (isTutor && doctora && epr) {
+                        b.doctoraTutorEpr++;
+                    } else if (isTutor && doctora && ter) {
+                        b.doctoraTutorTer++;
+                    } else if (isCotutor && magpreg && epr) {
+                        b.magpregCotutorEpr++;
+                    } else if (isCotutor && magpreg && ter) {
+                        b.magpregCotutorTer++;
+                    } else if (isCotutor && doctora && epr) {
+                        b.doctoraCotutorEpr++;
+                    } else if (isCotutor && doctora && ter) {
+                        b.doctoraCotutorTer++;
                     }
                 }
 
                 processedCount++;
             }
 
-            System.out.println("Procesadas " + processedCount + " tesis válidas desde thesis_report");
-            System.out.println("Investigadores con tesis: " + result.size());
+            System.out.println("Procesadas " + processedCount + " filas válidas desde thesis_report");
+            System.out.println("Investigadores con datos de tesis en thesis_report: " + result.size());
         } catch (Exception e) {
             System.err.println("Error al obtener datos de thesis_report: " + e.getMessage());
             e.printStackTrace();
@@ -471,6 +546,76 @@ public class InvestigatorProductivityService {
         }
 
         return result;
+    }
+
+    /**
+     * Carga supervisiones postdoctorales desde postdoctoral_report (17=tutor principal, 18=supervisor).
+     * El campo periodo puede listar varios períodos separados por coma.
+     */
+    private void loadPostdoctoralDataFromSQL(Map<String, ThesisStats> thesisStats) {
+        if (thesisStats == null) thesisStats = new HashMap<>();
+
+        String sql = "SELECT fullname, idTipoParticipacion, periodo FROM postdoctoral_report " +
+                     "WHERE fullname IS NOT NULL AND fullname != ''";
+
+        try {
+            Query query = entityManager.createNativeQuery(sql);
+            @SuppressWarnings("unchecked")
+            List<Object[]> rows = query.getResultList();
+
+            int processedCount = 0;
+            for (Object[] row : rows) {
+                String nombre = row[0] != null ? row[0].toString().trim() : null;
+                Object tipoObj = row[1];
+                Object periodoObj = row[2];
+
+                if (nombre == null || nombre.isEmpty()) {
+                    continue;
+                }
+
+                int tipo;
+                try {
+                    if (tipoObj instanceof Number) {
+                        tipo = ((Number) tipoObj).intValue();
+                    } else {
+                        tipo = Integer.parseInt(tipoObj.toString());
+                    }
+                    if (tipo != 17 && tipo != 18) {
+                        continue;
+                    }
+                } catch (NumberFormatException e) {
+                    continue;
+                }
+
+                Set<Integer> periodosSet = parsePeriods1To5(periodoObj);
+                if (periodosSet.isEmpty()) {
+                    continue;
+                }
+
+                ThesisStats stats = thesisStats.computeIfAbsent(nombre, k -> new ThesisStats());
+                boolean principalSup = (tipo == 17);
+                // Contador total único: una fila con varios períodos cuenta una sola vez.
+                if (principalSup) {
+                    stats.totalPostdoctoTutor++;
+                } else {
+                    stats.totalPostdoctoCotutor++;
+                }
+                for (int periodo : periodosSet) {
+                    if (principalSup) {
+                        stats.postdocTutorByPeriod[periodo]++;
+                    } else {
+                        stats.postdocCotutorByPeriod[periodo]++;
+                    }
+                }
+                processedCount++;
+            }
+
+            System.out.println("Procesadas " + processedCount + " filas válidas desde postdoctoral_report");
+        } catch (Exception e) {
+            System.err.println("Error al obtener datos de postdoctoral_report: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Error al obtener datos de postdoctoral_report: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -782,6 +927,33 @@ public class InvestigatorProductivityService {
 
     // Métodos auxiliares (continúan en el siguiente bloque debido a la extensión...)
 
+    private void writeThesisPeriodBlock(
+            Row row,
+            ThesisStats stats,
+            int period,
+            int cMagpregTutorEpr,
+            int cMagpregTutorTer,
+            int cDoctoraTutorEpr,
+            int cDoctoraTutorTer,
+            int cMagpregCotutorEpr,
+            int cMagpregCotutorTer,
+            int cDoctoraCotutorEpr,
+            int cDoctoraCotutorTer,
+            int cPostdocTutor,
+            int cPostdocCotutor) {
+        ThesisPeriodBreakdown b = stats.thesisByPeriod.getOrDefault(period, EMPTY_THESIS_BREAKDOWN);
+        setCellValue(row, cMagpregTutorEpr, b.magpregTutorEpr);
+        setCellValue(row, cMagpregTutorTer, b.magpregTutorTer);
+        setCellValue(row, cDoctoraTutorEpr, b.doctoraTutorEpr);
+        setCellValue(row, cDoctoraTutorTer, b.doctoraTutorTer);
+        setCellValue(row, cMagpregCotutorEpr, b.magpregCotutorEpr);
+        setCellValue(row, cMagpregCotutorTer, b.magpregCotutorTer);
+        setCellValue(row, cDoctoraCotutorEpr, b.doctoraCotutorEpr);
+        setCellValue(row, cDoctoraCotutorTer, b.doctoraCotutorTer);
+        setCellValue(row, cPostdocTutor, stats.postdocTutorByPeriod[period]);
+        setCellValue(row, cPostdocCotutor, stats.postdocCotutorByPeriod[period]);
+    }
+
     private void updateThesisData(Sheet sheet, Map<String, ThesisStats> thesisStats, int totalRowIndex) {
         Map<String, Row> researcherRows = new HashMap<>();
         
@@ -800,32 +972,52 @@ public class InvestigatorProductivityService {
 
             Row researcherRow = researcherRows.get(nombre);
             if (researcherRow == null) {
-                System.out.println("Advertencia: Investigador " + nombre + " no encontrado en archivo de productividad para tesis");
+                System.out.println("Advertencia: Investigador " + nombre + " no encontrado en archivo de productividad para tesis/postdoctorado");
                 continue;
             }
 
-            // Período 1: tutor y cotutor
-            setCellValue(researcherRow, P1_COL_TESIS_TUTOR, stats.tutorCountByPeriod.getOrDefault(1, 0));
-            setCellValue(researcherRow, P1_COL_TESIS_COTUTOR, stats.cotutorCountByPeriod.getOrDefault(1, 0));
-            // Período 2: tutor y cotutor
-            setCellValue(researcherRow, P2_COL_TESIS_TUTOR, stats.tutorCountByPeriod.getOrDefault(2, 0));
-            setCellValue(researcherRow, P2_COL_TESIS_COTUTOR, stats.cotutorCountByPeriod.getOrDefault(2, 0));
-            // Período 3: tutor y cotutor
-            setCellValue(researcherRow, P3_COL_TESIS_TUTOR, stats.tutorCountByPeriod.getOrDefault(3, 0));
-            setCellValue(researcherRow, P3_COL_TESIS_COTUTOR, stats.cotutorCountByPeriod.getOrDefault(3, 0));
-            // Período 4: desglose especial
-            setCellValue(researcherRow, P4_COL_TESIS_EN_CURSO_TUTOR, stats.enCursoTutor);
-            setCellValue(researcherRow, P4_COL_TESIS_TERMINADAS_TUTOR, stats.terminadasTutor);
-            setCellValue(researcherRow, P4_COL_TESIS_POSTDOCTORAL_TUTOR, stats.postdoctoralesTutor);
-            setCellValue(researcherRow, P4_COL_TESIS_COTUTOR, stats.cotutor);
-            // Período 5: desglose especial
-            setCellValue(researcherRow, P5_COL_TESIS_EN_CURSO_TUTOR, stats.enCursoTutorP5);
-            setCellValue(researcherRow, P5_COL_TESIS_TERMINADAS_TUTOR, stats.terminadasTutorP5);
-            setCellValue(researcherRow, P5_COL_TESIS_POSTDOCTORAL_TUTOR, stats.postdoctoralesTutorP5);
-            setCellValue(researcherRow, P5_COL_TESIS_COTUTOR, stats.cotutorP5);
-            // Totales
-            setCellValue(researcherRow, COL_TOTAL_TESIS_TUTOR, stats.uniqueTutorThesisIds.size());
-            setCellValue(researcherRow, COL_TOTAL_TESIS_COTUTOR, stats.uniqueCotutorThesisIds.size());
+            writeThesisPeriodBlock(researcherRow, stats, 1,
+                    P1_COL_MAGPREG_TUTOR_EPR, P1_COL_MAGPREG_TUTOR_TER,
+                    P1_COL_DOCTORA_TUTOR_EPR, P1_COL_DOCTORA_TUTOR_TER,
+                    P1_COL_MAGPREG_COTUTOR_EPR, P1_COL_MAGPREG_COTUTOR_TER,
+                    P1_COL_DOCTORA_COTUTOR_EPR, P1_COL_DOCTORA_COTUTOR_TER,
+                    P1_COL_POSTDOCTO_TUTOR, P1_COL_POSTDOCTO_COTUTOR);
+            writeThesisPeriodBlock(researcherRow, stats, 2,
+                    P2_COL_MAGPREG_TUTOR_EPR, P2_COL_MAGPREG_TUTOR_TER,
+                    P2_COL_DOCTORA_TUTOR_EPR, P2_COL_DOCTORA_TUTOR_TER,
+                    P2_COL_MAGPREG_COTUTOR_EPR, P2_COL_MAGPREG_COTUTOR_TER,
+                    P2_COL_DOCTORA_COTUTOR_EPR, P2_COL_DOCTORA_COTUTOR_TER,
+                    P2_COL_POSTDOCTO_TUTOR, P2_COL_POSTDOCTO_COTUTOR);
+            writeThesisPeriodBlock(researcherRow, stats, 3,
+                    P3_COL_MAGPREG_TUTOR_EPR, P3_COL_MAGPREG_TUTOR_TER,
+                    P3_COL_DOCTORA_TUTOR_EPR, P3_COL_DOCTORA_TUTOR_TER,
+                    P3_COL_MAGPREG_COTUTOR_EPR, P3_COL_MAGPREG_COTUTOR_TER,
+                    P3_COL_DOCTORA_COTUTOR_EPR, P3_COL_DOCTORA_COTUTOR_TER,
+                    P3_COL_POSTDOCTO_TUTOR, P3_COL_POSTDOCTO_COTUTOR);
+            writeThesisPeriodBlock(researcherRow, stats, 4,
+                    P4_COL_MAGPREG_TUTOR_EPR, P4_COL_MAGPREG_TUTOR_TER,
+                    P4_COL_DOCTORA_TUTOR_EPR, P4_COL_DOCTORA_TUTOR_TER,
+                    P4_COL_MAGPREG_COTUTOR_EPR, P4_COL_MAGPREG_COTUTOR_TER,
+                    P4_COL_DOCTORA_COTUTOR_EPR, P4_COL_DOCTORA_COTUTOR_TER,
+                    P4_COL_POSTDOCTO_TUTOR, P4_COL_POSTDOCTO_COTUTOR);
+            writeThesisPeriodBlock(researcherRow, stats, 5,
+                    P5_COL_MAGPREG_TUTOR_EPR, P5_COL_MAGPREG_TUTOR_TER,
+                    P5_COL_DOCTORA_TUTOR_EPR, P5_COL_DOCTORA_TUTOR_TER,
+                    P5_COL_MAGPREG_COTUTOR_EPR, P5_COL_MAGPREG_COTUTOR_TER,
+                    P5_COL_DOCTORA_COTUTOR_EPR, P5_COL_DOCTORA_COTUTOR_TER,
+                    P5_COL_POSTDOCTO_TUTOR, P5_COL_POSTDOCTO_COTUTOR);
+
+            // Totales (sin duplicar por múltiples períodos del mismo registro).
+            setCellValue(researcherRow, COL_TOTAL_MAGPREG_TUTOR_EPR, stats.totalMagpregTutorEpr);
+            setCellValue(researcherRow, COL_TOTAL_MAGPREG_TUTOR_TER, stats.totalMagpregTutorTer);
+            setCellValue(researcherRow, COL_TOTAL_DOCTORA_TUTOR_EPR, stats.totalDoctoraTutorEpr);
+            setCellValue(researcherRow, COL_TOTAL_DOCTORA_TUTOR_TER, stats.totalDoctoraTutorTer);
+            setCellValue(researcherRow, COL_TOTAL_MAGPREG_COTUTOR_EPR, stats.totalMagpregCotutorEpr);
+            setCellValue(researcherRow, COL_TOTAL_MAGPREG_COTUTOR_TER, stats.totalMagpregCotutorTer);
+            setCellValue(researcherRow, COL_TOTAL_DOCTORA_COTUTOR_EPR, stats.totalDoctoraCotutorEpr);
+            setCellValue(researcherRow, COL_TOTAL_DOCTORA_COTUTOR_TER, stats.totalDoctoraCotutorTer);
+            setCellValue(researcherRow, COL_TOTAL_POSTDOCTO_TUTOR, stats.totalPostdoctoTutor);
+            setCellValue(researcherRow, COL_TOTAL_POSTDOCTO_COTUTOR, stats.totalPostdoctoCotutor);
         }
     }
 

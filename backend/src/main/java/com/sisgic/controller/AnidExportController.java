@@ -1624,6 +1624,7 @@ public class AnidExportController {
         header.createCell(10).setCellValue("Target Audiences");
         header.createCell(11).setCellValue("Name of the main Responsible");
         header.createCell(12).setCellValue("Progress report");
+        header.createCell(13).setCellValue("Link");
 
         Map<Long, String> tipoDifusionDescCodeById = new HashMap<>();
         for (TipoDifusion td : tipoDifusionRepository.findAllByOrderByIdAsc()) {
@@ -1730,6 +1731,7 @@ public class AnidExportController {
             row.createCell(10).setCellValue(targetAudiences);
             row.createCell(11).setCellValue(String.join("; ", mainResponsibles));
             row.createCell(12).setCellValue(full.getProgressReport() != null ? full.getProgressReport() : "");
+            row.createCell(13).setCellValue(full.getLink() != null ? full.getLink() : "");
         }
     }
 

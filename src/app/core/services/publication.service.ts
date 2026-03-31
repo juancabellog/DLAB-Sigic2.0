@@ -122,6 +122,14 @@ export class PublicationService {
   }
 
   /**
+   * Exporta publicaciones visibles a Excel
+   */
+  exportPublicationsToExcel(params: { sort: string; direction: 'ASC' | 'DESC' }): Observable<Blob> {
+    const { sort, direction } = params;
+    return this.baseHttp.getFile(`/publications/export?sortBy=${sort}&sortDir=${direction}`);
+  }
+
+  /**
    * Obtiene el preview de una publicación desde OpenAlex usando su DOI
    */
   getPublicationPreview(doi: string): Observable<any> {

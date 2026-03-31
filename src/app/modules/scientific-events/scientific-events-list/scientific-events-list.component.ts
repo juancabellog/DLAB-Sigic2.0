@@ -44,6 +44,7 @@ export class ScientificEventsListComponent implements OnInit, OnDestroy {
   events: OrganizacionEventosCientificosDTO[] = [];
   isSearching: boolean = false;
   loading: boolean = false;
+  exportLoading: boolean = false;
   basalOnly: boolean = false;
   finalFilteredCount: number | null = null;
   private searchResults: OrganizacionEventosCientificosDTO[] = [];
@@ -88,8 +89,8 @@ export class ScientificEventsListComponent implements OnInit, OnDestroy {
       direction: 'DESC'
     }).pipe(
       catchError(error => {
-        console.error('Error loading scientific events:', error);
-        this.messageService.error('Error loading scientific events. Please try again later.');
+        console.error('Error loading organization of scientific events:', error);
+        this.messageService.error('Error loading organization of scientific events. Please try again later.');
         return of({ content: [], totalElements: 0 } as any);
       }),
       finalize(() => {
@@ -179,8 +180,8 @@ export class ScientificEventsListComponent implements OnInit, OnDestroy {
               this.loadEvents();
             },
             error: (error) => {
-              console.error('Error deleting scientific event:', error);
-              this.messageService.error('Error deleting scientific event. Please try again.');
+              console.error('Error deleting organization of scientific events:', error);
+              this.messageService.error('Error deleting organization of scientific events. Please try again.');
             }
           });
         }
@@ -208,6 +209,40 @@ export class ScientificEventsListComponent implements OnInit, OnDestroy {
     this.basalOnly = basalOnly;
     this.listStateService.saveState('scientific-events', { basalOnly });
     this.applyFilters();
+  }
+
+  onExportRequested(): void {
+    if (this.filteredEvents.length === 0) {
+      this.messageService.info('There are no results to export.');
+      return;
+    }
+    this.exportLoading = true;
+    this.scientificEventsService.exportScientificEventsToExcel({
+      sort: this.sortColumn || 'id',
+      direction: this.sortDirection === 'asc' ? 'ASC' : 'DESC'
+    }).pipe(
+      catchError(error => {
+        console.error('Error exporting organization of scientific events to Excel:', error);
+        this.messageService.error('Error exporting organization of scientific events. Please try again later.');
+        return of(null as any);
+      }),
+      finalize(() => {
+        this.exportLoading = false;
+      })
+    ).subscribe(blob => {
+      if (!blob) {
+        return;
+      }
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'scientific-events.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      this.messageService.success('Export started. Your download should begin shortly.');
+    });
   }
 
   private applyFilters(): void {

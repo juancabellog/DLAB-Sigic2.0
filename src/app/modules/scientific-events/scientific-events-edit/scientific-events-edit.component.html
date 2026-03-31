@@ -1,7 +1,7 @@
 <div class="scientific-events-container">
   <div class="header">
     <div class="header-left">
-      <button mat-icon-button (click)="goBack()" matTooltip="Back to Scientific Events List">
+      <button mat-icon-button (click)="goBack()" matTooltip="Back to Organization of Scientific Events List">
         <mat-icon>arrow_back</mat-icon>
       </button>
       <h1>{{ pageTitle }}</h1>
@@ -10,7 +10,7 @@
   
   <div *ngIf="loading" class="loading-container">
     <mat-spinner></mat-spinner>
-    <p>Loading scientific event...</p>
+    <p>Loading organization of scientific events...</p>
   </div>
 
   <mat-card class="form-card" *ngIf="!loading">

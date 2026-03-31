@@ -11,7 +11,6 @@ import com.sisgic.dto.AffiliationPreviewDTO;
 import com.sisgic.entity.Publicacion;
 import com.sisgic.repository.JournalRepository;
 import com.sisgic.repository.PublicacionRepository;
-import com.sisgic.service.PdfFileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;

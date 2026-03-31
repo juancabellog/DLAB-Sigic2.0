@@ -17,6 +17,11 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -101,6 +106,101 @@ public class OrganizacionEventosCientificosController {
         Page<OrganizacionEventosCientificosDTO> eventosDTO = eventos.map(e -> convertToDTOWithoutParticipants(e, textosMap));
 
         return ResponseEntity.ok(eventosDTO);
+    }
+
+    /**
+     * Exporta los eventos científicos visibles a Excel.
+     */
+    @GetMapping("/export")
+    @Transactional(readOnly = true)
+    public void exportScientificEventsToExcel(
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            HttpServletResponse response) {
+
+        try {
+            Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+            Long idRRHH = userService.getCurrentUserIdRRHH().orElse(null);
+            String userName = userService.getCurrentUsername().orElse(null);
+            List<OrganizacionEventosCientificos> eventos = organizacionEventosCientificosRepository
+                .findVisibleByUserIdRRHH(idRRHH, userName, Pageable.unpaged(sort))
+                .getContent();
+
+            Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("Scientific Events");
+
+            int rowIdx = 0;
+            Row header = sheet.createRow(rowIdx++);
+            header.createCell(0).setCellValue("Id");
+            header.createCell(1).setCellValue("Name");
+            header.createCell(2).setCellValue("Title");
+            header.createCell(3).setCellValue("Event Type");
+            header.createCell(4).setCellValue("Number of Participants");
+            header.createCell(5).setCellValue("City");
+            header.createCell(6).setCellValue("Country");
+            header.createCell(7).setCellValue("Start Date");
+            header.createCell(8).setCellValue("End Date");
+            header.createCell(9).setCellValue("Progress Report");
+            header.createCell(10).setCellValue("ANID Code");
+            header.createCell(11).setCellValue("Clusters");
+            header.createCell(12).setCellValue("Organizers");
+            header.createCell(13).setCellValue("Speakers");
+
+            for (OrganizacionEventosCientificos evento : eventos) {
+                OrganizacionEventosCientificosDTO dto = convertToDTOBase(evento, null);
+                List<ParticipacionProducto> participaciones = participacionProductoRepository.findByProductoId(evento.getId());
+
+                String organizers = "";
+                String speakers = "";
+                for (ParticipacionProducto pp : participaciones) {
+                    if (pp.getTipoParticipacion() == null || pp.getTipoParticipacion().getId() == null) {
+                        continue;
+                    }
+                    String fullname = formatParticipantWithTipoRRHH(pp);
+
+                    if (pp.getTipoParticipacion().getId() == 14L) {
+                        organizers = appendWithSeparator(organizers, fullname);
+                    } else if (pp.getTipoParticipacion().getId() == 24L) {
+                        speakers = appendWithSeparator(speakers, fullname);
+                    }
+                }
+
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(dto.getId() != null ? dto.getId().toString() : "");
+                row.createCell(1).setCellValue(dto.getDescripcion() != null ? dto.getDescripcion() : "");
+                row.createCell(2).setCellValue(dto.getComentario() != null ? dto.getComentario() : "");
+                row.createCell(3).setCellValue(dto.getTipoEvento() != null
+                    ? (dto.getTipoEvento().getDescripcion() != null
+                        ? dto.getTipoEvento().getDescripcion()
+                        : (dto.getTipoEvento().getIdDescripcion() != null ? dto.getTipoEvento().getIdDescripcion() : ""))
+                    : "");
+                row.createCell(4).setCellValue(dto.getNumParticipantes() != null ? dto.getNumParticipantes() : 0);
+                row.createCell(5).setCellValue(dto.getCiudad() != null ? dto.getCiudad() : "");
+                row.createCell(6).setCellValue(dto.getPais() != null && dto.getPais().getIdDescripcion() != null ? dto.getPais().getIdDescripcion() : "");
+                row.createCell(7).setCellValue(dto.getFechaInicio() != null ? dto.getFechaInicio() : "");
+                row.createCell(8).setCellValue(dto.getFechaTermino() != null ? dto.getFechaTermino() : "");
+                row.createCell(9).setCellValue(dto.getProgressReport() != null ? dto.getProgressReport() : "");
+                row.createCell(10).setCellValue(dto.getCodigoANID() != null ? dto.getCodigoANID() : "");
+                row.createCell(11).setCellValue(formatClustersAsRoman(dto.getCluster()));
+                row.createCell(12).setCellValue(organizers);
+                row.createCell(13).setCellValue(speakers);
+            }
+
+            for (int i = 0; i <= 13; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=scientific-events.xlsx");
+            workbook.write(response.getOutputStream());
+            workbook.close();
+            response.flushBuffer();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -544,6 +644,57 @@ public class OrganizacionEventosCientificosController {
                 participacionProductoRepository.save(participacion);
             }
         }
+    }
+
+    private String appendWithSeparator(String existing, String toAdd) {
+        if (toAdd == null || toAdd.trim().isEmpty()) {
+            return existing != null ? existing : "";
+        }
+        if (existing == null || existing.isEmpty()) {
+            return toAdd;
+        }
+        return existing + "; " + toAdd;
+    }
+
+    private String formatParticipantWithTipoRRHH(ParticipacionProducto participacion) {
+        if (participacion == null || participacion.getRrhh() == null) {
+            return "";
+        }
+        RRHH rrhh = participacion.getRrhh();
+        String fullname = rrhh.getFullname() != null ? rrhh.getFullname().trim() : "";
+        if (fullname.isEmpty()) {
+            return "";
+        }
+
+        String tipoRRHH = "";
+        if (rrhh.getTipoRRHH() != null) {
+            if (rrhh.getTipoRRHH().getDescripcion() != null && !rrhh.getTipoRRHH().getDescripcion().trim().isEmpty()) {
+                tipoRRHH = rrhh.getTipoRRHH().getDescripcion().trim();
+            } else if (rrhh.getTipoRRHH().getCodigoDescripcion() != null) {
+                tipoRRHH = rrhh.getTipoRRHH().getCodigoDescripcion().trim();
+            }
+        }
+        return tipoRRHH.isEmpty() ? fullname : fullname + " (" + tipoRRHH + ")";
+    }
+
+    private String formatClustersAsRoman(String cluster) {
+        if (cluster == null || cluster.isEmpty()) {
+            return "";
+        }
+        return java.util.Arrays.stream(cluster.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .map(s -> {
+                switch (s) {
+                    case "1": return "I";
+                    case "2": return "II";
+                    case "3": return "III";
+                    case "4": return "IV";
+                    case "5": return "V";
+                    default: return s;
+                }
+            })
+            .collect(Collectors.joining(", "));
     }
 }
 

@@ -44,6 +44,7 @@ export class PublicationListComponent implements OnInit, OnDestroy {
   publications: PublicacionDTO[] = [];
   isSearching: boolean = false;
   loading: boolean = false;
+  exportLoading: boolean = false;
   basalOnly: boolean = false;
   pendingOnly: boolean = false;
   finalFilteredCount: number = 0;
@@ -206,6 +207,40 @@ export class PublicationListComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.applyFilters();
     }, 0);
+  }
+
+  onExportRequested(): void {
+    if (this.filteredPublications.length === 0) {
+      this.messageService.info('There are no results to export.');
+      return;
+    }
+    this.exportLoading = true;
+    this.publicationService.exportPublicationsToExcel({
+      sort: this.sortColumn || 'id',
+      direction: this.sortDirection === 'asc' ? 'ASC' : 'DESC'
+    }).pipe(
+      catchError(error => {
+        console.error('Error exporting publications to Excel:', error);
+        this.messageService.error('Error exporting publications. Please try again later.');
+        return of(null as any);
+      }),
+      finalize(() => {
+        this.exportLoading = false;
+      })
+    ).subscribe(blob => {
+      if (!blob) {
+        return;
+      }
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'publications.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+      this.messageService.success('Export started. Your download should begin shortly.');
+    });
   }
 
   private applyFilters(): void {

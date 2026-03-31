@@ -25,6 +25,9 @@
     [showBasalFilter]="true"
     [showPendingFilter]="true"
     [readonly]="true"
+    [showExportButton]="true"
+    exportLabel="Export Excel"
+    [exportLoading]="exportLoading"
     [currentViewMode]="viewMode"
     [finalFilteredCount]="finalFilteredCount"
     itemType="publication"
@@ -33,7 +36,8 @@
     (searchTermChange)="onSearchTermChange($event)"
     (viewModeChange)="onViewModeChange($event)"
     (basalFilterChange)="onBasalFilterChange($event)"
-    (pendingFilterChange)="onPendingFilterChange($event)">
+    (pendingFilterChange)="onPendingFilterChange($event)"
+    (exportRequested)="onExportRequested()">
   </app-list-controls>
 
   <mat-card>

@@ -24,6 +24,9 @@ public class Journal {
     
     @Column(name = "issn")
     private String issn;
+
+    @Column(name = "is_preprint", length = 1, columnDefinition = "CHAR(1)")
+    private Character isPreprint; // S o N
     
     @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -73,6 +76,14 @@ public class Journal {
     
     public void setIssn(String issn) {
         this.issn = issn;
+    }
+
+    public Character getIsPreprint() {
+        return isPreprint;
+    }
+
+    public void setIsPreprint(Character isPreprint) {
+        this.isPreprint = isPreprint;
     }
     
     public LocalDateTime getCreatedAt() {

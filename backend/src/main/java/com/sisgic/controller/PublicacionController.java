@@ -24,6 +24,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import jakarta.servlet.http.HttpServletResponse;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -32,7 +39,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
+import java.util.LinkedHashSet;
 import java.util.stream.Collectors;
 
 @RestController
@@ -87,6 +95,12 @@ public class PublicacionController {
     
     @Autowired
     private com.sisgic.service.UserService userService;
+
+    @Autowired
+    private VIndexTypeRepository vIndexTypeRepository;
+
+    @Autowired
+    private FundingTypeRepository fundingTypeRepository;
     
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PublicacionController.class);
 
@@ -130,6 +144,121 @@ public class PublicacionController {
         Page<PublicacionDTO> publicacionesDTO = publicaciones.map(p -> convertToDTOWithoutParticipants(p, textosMap));
         
         return ResponseEntity.ok(publicacionesDTO);
+    }
+
+    /**
+     * Exporta las publicaciones visibles a Excel.
+     */
+    @GetMapping("/export")
+    @Transactional(readOnly = true)
+    public void exportPublicationsToExcel(
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            HttpServletResponse response) {
+        try {
+            Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+            Long idRRHH = userService.getCurrentUserIdRRHH().orElse(null);
+            String userName = userService.getCurrentUsername().orElse(null);
+            List<Publicacion> publicaciones = publicacionRepository
+                .findVisibleByUserIdRRHH(idRRHH, userName, Pageable.unpaged(sort))
+                .getContent();
+
+            Map<Long, String> indexLabels = vIndexTypeRepository.findAllByOrderByIdAsc().stream()
+                .filter(i -> i.getId() != null)
+                .collect(Collectors.toMap(VIndexType::getId, i -> i.getDescripcion() != null ? i.getDescripcion() : ""));
+
+            Map<Long, String> fundingLabels = new HashMap<>();
+            fundingTypeRepository.findAll().forEach(f -> {
+                if (f.getId() != null && f.getIdDescripcion() != null) {
+                    String label = textosService.getTextValue(f.getIdDescripcion(), 2, "us").orElse(f.getIdDescripcion());
+                    fundingLabels.put(f.getId(), label);
+                }
+            });
+
+            Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("Publications");
+
+            int rowIdx = 0;
+            Row header = sheet.createRow(rowIdx++);
+            header.createCell(0).setCellValue("Id");
+            header.createCell(1).setCellValue("DOI");
+            header.createCell(2).setCellValue("Title");
+            header.createCell(3).setCellValue("Journal");
+            header.createCell(4).setCellValue("isPrePrint");
+            header.createCell(5).setCellValue("Year");
+            header.createCell(6).setCellValue("Volume");
+            header.createCell(7).setCellValue("First Page");
+            header.createCell(8).setCellValue("Last Page");
+            header.createCell(9).setCellValue("Impact Factor");
+            header.createCell(10).setCellValue("Average Impact Factor 5y");
+            header.createCell(11).setCellValue("Basal");
+            header.createCell(12).setCellValue("Progress Report");
+            header.createCell(13).setCellValue("ANID Code");
+            header.createCell(14).setCellValue("Indexes");
+            header.createCell(15).setCellValue("Funding");
+            header.createCell(16).setCellValue("Clusters");
+            header.createCell(17).setCellValue("Authors");
+
+            for (Publicacion pub : publicaciones) {
+                PublicacionDTO dto = convertToDTOBase(pub, null);
+                List<ParticipacionProducto> participaciones = participacionProductoRepository.findByProductoId(pub.getId());
+
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(dto.getId() != null ? dto.getId().toString() : "");
+                row.createCell(1).setCellValue(dto.getDoi() != null ? dto.getDoi() : "");
+                row.createCell(2).setCellValue(dto.getDescripcion() != null ? dto.getDescripcion() : "");
+                row.createCell(3).setCellValue(dto.getJournal() != null
+                    ? (dto.getJournal().getDescripcion() != null
+                        ? dto.getJournal().getDescripcion()
+                        : (dto.getJournal().getAbbreviation() != null ? dto.getJournal().getAbbreviation() : ""))
+                    : "");
+                row.createCell(4).setCellValue(
+                    pub.getJournal() != null && pub.getJournal().getIsPreprint() != null
+                        ? pub.getJournal().getIsPreprint().toString()
+                        : ""
+                );
+                if (dto.getYearPublished() != null) {
+                    row.createCell(5).setCellValue(dto.getYearPublished());
+                } else {
+                    row.createCell(5).setCellValue("");
+                }
+                row.createCell(6).setCellValue(dto.getVolume() != null ? dto.getVolume() : "");
+                row.createCell(7).setCellValue(dto.getFirstpage() != null ? dto.getFirstpage() : "");
+                row.createCell(8).setCellValue(dto.getLastpage() != null ? dto.getLastpage() : "");
+                if (dto.getFactorImpacto() != null) {
+                    row.createCell(9).setCellValue(dto.getFactorImpacto());
+                } else {
+                    row.createCell(9).setCellValue("");
+                }
+                if (dto.getFactorImpactoPromedio() != null) {
+                    row.createCell(10).setCellValue(dto.getFactorImpactoPromedio());
+                } else {
+                    row.createCell(10).setCellValue("");
+                }
+                row.createCell(11).setCellValue(dto.getBasal() != null ? dto.getBasal() : "");
+                row.createCell(12).setCellValue(dto.getProgressReport() != null ? dto.getProgressReport() : "");
+                row.createCell(13).setCellValue(dto.getCodigoANID() != null ? dto.getCodigoANID() : "");
+                row.createCell(14).setCellValue(resolvePublicationIndexesLabel(dto.getIndexs(), indexLabels));
+                row.createCell(15).setCellValue(resolvePublicationFundingLabel(dto.getFunding(), fundingLabels));
+                row.createCell(16).setCellValue(formatClustersAsRoman(dto.getCluster()));
+                row.createCell(17).setCellValue(buildAuthorsLabel(participaciones));
+            }
+
+            for (int i = 0; i <= 17; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=publications.xlsx");
+            workbook.write(response.getOutputStream());
+            workbook.close();
+            response.flushBuffer();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -1530,6 +1659,133 @@ public class PublicacionController {
         
         // Todos los participantes tienen afiliaciones
         return false;
+    }
+
+    private String resolvePublicationIndexesLabel(String raw, Map<Long, String> indexLabels) {
+        List<String> values = new ArrayList<>();
+        for (Long id : parseIdsFromJsonOrCsv(raw)) {
+            String label = indexLabels.get(id);
+            if (label != null && !label.trim().isEmpty()) {
+                values.add(label.trim());
+            }
+        }
+        // Otros textos manuales (id=10, text) en JSON
+        values.addAll(parseTextValuesFromJson(raw));
+        return String.join(", ", values);
+    }
+
+    private String resolvePublicationFundingLabel(String raw, Map<Long, String> fundingLabels) {
+        List<String> values = new ArrayList<>();
+        for (Long id : parseIdsFromJsonOrCsv(raw)) {
+            String label = fundingLabels.get(id);
+            if (label != null && !label.trim().isEmpty()) {
+                values.add(label.trim());
+            }
+        }
+        return String.join(", ", values);
+    }
+
+    private List<Long> parseIdsFromJsonOrCsv(String raw) {
+        Set<Long> ids = new LinkedHashSet<>();
+        if (raw == null || raw.trim().isEmpty()) {
+            return new ArrayList<>();
+        }
+        String value = raw.trim();
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(value);
+            if (root.isArray()) {
+                for (JsonNode node : root) {
+                    if (node.isNumber()) {
+                        ids.add(node.longValue());
+                    } else if (node.isObject()) {
+                        JsonNode idNode = node.get("id");
+                        if (idNode != null && idNode.isNumber()) {
+                            ids.add(idNode.longValue());
+                        } else if (idNode != null && idNode.isTextual()) {
+                            try { ids.add(Long.parseLong(idNode.asText())); } catch (Exception ignored) {}
+                        }
+                    } else if (node.isTextual()) {
+                        try { ids.add(Long.parseLong(node.asText())); } catch (Exception ignored) {}
+                    }
+                }
+                return new ArrayList<>(ids);
+            }
+        } catch (Exception ignored) {
+            // fallback CSV
+        }
+        for (String part : value.split(",")) {
+            if (part == null) continue;
+            String digits = part.replaceAll("\\D+", "");
+            if (digits.isEmpty()) continue;
+            try { ids.add(Long.parseLong(digits)); } catch (Exception ignored) {}
+        }
+        return new ArrayList<>(ids);
+    }
+
+    private List<String> parseTextValuesFromJson(String raw) {
+        List<String> values = new ArrayList<>();
+        if (raw == null || raw.trim().isEmpty()) {
+            return values;
+        }
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(raw);
+            if (root.isArray()) {
+                for (JsonNode node : root) {
+                    if (!node.isObject()) continue;
+                    JsonNode textNode = node.get("text");
+                    if (textNode != null && textNode.isTextual() && !textNode.asText().trim().isEmpty()) {
+                        values.add(textNode.asText().trim());
+                    }
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return values;
+    }
+
+    private String formatClustersAsRoman(String cluster) {
+        if (cluster == null || cluster.isEmpty()) {
+            return "";
+        }
+        return java.util.Arrays.stream(cluster.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .map(s -> {
+                switch (s) {
+                    case "1": return "I";
+                    case "2": return "II";
+                    case "3": return "III";
+                    case "4": return "IV";
+                    case "5": return "V";
+                    default: return s;
+                }
+            })
+            .collect(Collectors.joining(", "));
+    }
+
+    private String buildAuthorsLabel(List<ParticipacionProducto> participaciones) {
+        if (participaciones == null || participaciones.isEmpty()) {
+            return "";
+        }
+        List<String> values = new ArrayList<>();
+        for (ParticipacionProducto pp : participaciones) {
+            if (pp == null || pp.getRrhh() == null) continue;
+            String fullname = pp.getRrhh().getFullname() != null ? pp.getRrhh().getFullname().trim() : "";
+            if (fullname.isEmpty()) continue;
+
+            String tipo = "";
+            if (pp.getRrhh().getTipoRRHH() != null) {
+                if (pp.getRrhh().getTipoRRHH().getDescripcion() != null && !pp.getRrhh().getTipoRRHH().getDescripcion().trim().isEmpty()) {
+                    tipo = pp.getRrhh().getTipoRRHH().getDescripcion().trim();
+                } else if (pp.getRrhh().getTipoRRHH().getCodigoDescripcion() != null) {
+                    tipo = pp.getRrhh().getTipoRRHH().getCodigoDescripcion().trim();
+                }
+            }
+            values.add(tipo.isEmpty() ? fullname : fullname + " (" + tipo + ")");
+        }
+        return String.join("; ", values);
     }
 }
 

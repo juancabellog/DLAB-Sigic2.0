@@ -188,11 +188,11 @@ export class ScientificEventsEditComponent implements OnInit {
   }
 
   get pageTitle(): string {
-    return this.isEditMode ? 'Edit Scientific Event' : 'New Scientific Event';
+    return this.isEditMode ? 'Edit Organization of Scientific Events' : 'New Organization of Scientific Events';
   }
 
   get saveButtonText(): string {
-    return this.isEditMode ? 'Update Scientific Event' : 'Add Scientific Event';
+    return this.isEditMode ? 'Update Organization of Scientific Events' : 'Add Organization of Scientific Events';
   }
 
   get backButtonText(): string {
@@ -225,8 +225,8 @@ export class ScientificEventsEditComponent implements OnInit {
     
     this.scientificEventsService.getScientificEvent(id).pipe(
       catchError(error => {
-        console.error('Error loading scientific event:', error);
-        this.messageService.error('Error loading scientific event. Please try again later.');
+        console.error('Error loading organization of scientific events:', error);
+        this.messageService.error('Error loading organization of scientific events. Please try again later.');
         this.router.navigate(['/scientific-events']);
         return of(null);
       }),
@@ -300,7 +300,7 @@ export class ScientificEventsEditComponent implements OnInit {
           }
         }
       } else {
-        this.messageService.error('Scientific event not found');
+        this.messageService.error('Organization of scientific events not found');
         this.router.navigate(['/scientific-events']);
       }
     });
@@ -311,8 +311,8 @@ export class ScientificEventsEditComponent implements OnInit {
 
     this.scientificEventsService.getScientificEvent(id).pipe(
       catchError(error => {
-        console.error('Error loading scientific event for copy:', error);
-        this.messageService.error('Error loading scientific event to copy. Please try again later.');
+        console.error('Error loading organization of scientific events for copy:', error);
+        this.messageService.error('Error loading organization of scientific events to copy. Please try again later.');
         this.router.navigate(['/scientific-events']);
         return of(null);
       }),
@@ -397,7 +397,7 @@ export class ScientificEventsEditComponent implements OnInit {
           }
         }
       } else {
-        this.messageService.error('Scientific event not found');
+        this.messageService.error('Organization of scientific events not found');
         this.router.navigate(['/scientific-events']);
       }
     });
@@ -518,8 +518,8 @@ export class ScientificEventsEditComponent implements OnInit {
         return saveOperation;
       }),
       catchError(error => {
-        console.error('Error saving scientific event:', error);
-        this.messageService.error('Error saving scientific event. Please try again.');
+        console.error('Error saving organization of scientific events:', error);
+        this.messageService.error('Error saving organization of scientific events. Please try again.');
         return of(null);
       }),
       finalize(() => {
@@ -528,7 +528,7 @@ export class ScientificEventsEditComponent implements OnInit {
     ).subscribe(savedEvent => {
       if (savedEvent) {
         this.messageService.success(
-          `Scientific event ${this.isEditMode ? 'updated' : 'created'} successfully!`
+          `Organization of scientific events ${this.isEditMode ? 'updated' : 'created'} successfully!`
         );
         this.goBack();
       }
@@ -614,7 +614,7 @@ export class ScientificEventsEditComponent implements OnInit {
   }
 
   getEventName(): string {
-    return this.event.descripcion || 'Scientific Event';
+    return this.event.descripcion || 'Organization of Scientific Events';
   }
 
   /**
