@@ -11,7 +11,7 @@ import { catchError } from 'rxjs/operators';
 
 import { PublicationService } from '../../core/services/publication.service';
 import { ScientificEventsService } from '../../core/services/scientific-events.service';
-import { ResearcherService } from '../../core/services/researcher.service';
+import { ParticipationScientificEventsService } from '../../core/services/participation-scientific-events.service';
 import { ThesisService } from '../../core/services/thesis.service';
 import { TechnologyTransferService } from '../../core/services/technology-transfer.service';
 import { PostdoctoralFellowsService } from '../../core/services/postdoctoral-fellows.service';
@@ -41,7 +41,7 @@ export class DashboardComponent implements OnInit {
   loadingStats: boolean = true;
   publicationCount: number = 0;
   scientificEventsCount: number = 0;
-  researcherCount: number = 0;
+  participationScientificEventsCount: number = 0;
   thesisStudentCount: number = 0;
   postdoctoralFellowsCount: number = 0;
   outreachActivitiesCount: number = 0;
@@ -52,7 +52,7 @@ export class DashboardComponent implements OnInit {
   constructor(
     private publicationService: PublicationService,
     private scientificEventsService: ScientificEventsService,
-    private researcherService: ResearcherService,
+    private participationScientificEventsService: ParticipationScientificEventsService,
     private thesisService: ThesisService,
     private postdoctoralFellowsService: PostdoctoralFellowsService,
     private outreachActivitiesService: OutreachActivitiesService,
@@ -91,7 +91,7 @@ export class DashboardComponent implements OnInit {
       scientificEvents: this.scientificEventsService.getScientificEvents({ page: 0, size: 1 }).pipe(
         catchError(() => of({ totalElements: 0 } as any))
       ),
-      researchers: this.researcherService.getResearchers({ page: 0, size: 1 }).pipe(
+      participationScientificEvents: this.participationScientificEventsService.getParticipationScientificEvents({ page: 0, size: 1 }).pipe(
         catchError(() => of({ totalElements: 0 } as any))
       ),
       thesis: this.thesisService.getThesis({ page: 0, size: 1 }).pipe(
@@ -114,7 +114,7 @@ export class DashboardComponent implements OnInit {
         // Extraer totalElements de la respuesta paginada
         this.publicationCount = (stats.publications as any)?.totalElements || 0;
         this.scientificEventsCount = (stats.scientificEvents as any)?.totalElements || 0;
-        this.researcherCount = (stats.researchers as any)?.totalElements || 0;
+        this.participationScientificEventsCount = (stats.participationScientificEvents as any)?.totalElements || 0;
         this.thesisStudentCount = (stats.thesis as any)?.totalElements || 0;
         this.postdoctoralFellowsCount = (stats.postdoctoralFellows as any)?.totalElements || 0;
         this.outreachActivitiesCount = (stats.outreachActivities as any)?.totalElements || 0;

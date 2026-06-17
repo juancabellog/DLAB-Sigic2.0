@@ -1,0 +1,87 @@
+<div class="link-dialog">
+  <div class="link-dialog-header">
+    <h2 class="link-dialog-title">Link</h2>
+    <button mat-icon-button type="button" matTooltip="Close" (click)="cancel()" aria-label="Close">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="link-dialog-content">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Link to</mat-label>
+      <mat-select [(ngModel)]="linkType" (selectionChange)="onLinkTypeChange()">
+        <mat-option *ngFor="let opt of linkTypeOptions" [value]="opt.value">{{ opt.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>{{ valueLabel }}</mat-label>
+      <input matInput [(ngModel)]="value" [placeholder]="valuePlaceholder" />
+    </mat-form-field>
+
+    <p *ngIf="errorMessage" class="link-dialog-error" role="alert">{{ errorMessage }}</p>
+
+    <div class="link-dialog-toggles" *ngIf="supportsNewTabOption">
+      <div class="toggle-row">
+        <mat-slide-toggle [(ngModel)]="openInNewTab" (change)="onOpenInNewTabChange()">
+          Open link in a new tab
+        </mat-slide-toggle>
+      </div>
+    </div>
+
+    <div class="link-dialog-toggles">
+      <div class="toggle-row" *ngIf="supportsNewTabOption">
+        <mat-slide-toggle [(ngModel)]="noreferrer" [disabled]="!openInNewTab">
+          Noreferrer
+        </mat-slide-toggle>
+        <button
+          mat-icon-button
+          type="button"
+          class="info-btn"
+          matTooltip="Prevents the destination site from receiving referrer information."
+          aria-label="Noreferrer info">
+          <mat-icon>info_outline</mat-icon>
+        </button>
+      </div>
+
+      <div class="toggle-row">
+        <mat-slide-toggle [(ngModel)]="nofollow">Nofollow</mat-slide-toggle>
+        <button
+          mat-icon-button
+          type="button"
+          class="info-btn"
+          matTooltip="Tells search engines not to pass ranking authority to this link."
+          aria-label="Nofollow info">
+          <mat-icon>info_outline</mat-icon>
+        </button>
+      </div>
+
+      <div class="toggle-row">
+        <mat-slide-toggle [(ngModel)]="sponsored">Sponsored</mat-slide-toggle>
+        <button
+          mat-icon-button
+          type="button"
+          class="info-btn"
+          matTooltip="Use for paid or sponsored links."
+          aria-label="Sponsored info">
+          <mat-icon>info_outline</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <button
+      *ngIf="data.isEditing"
+      mat-stroked-button
+      type="button"
+      color="warn"
+      class="remove-link-btn"
+      (click)="removeLink()">
+      Remove link
+    </button>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end" class="link-dialog-actions">
+    <button mat-stroked-button type="button" (click)="cancel()">Cancel</button>
+    <button mat-flat-button color="primary" type="button" (click)="save()">Save</button>
+  </mat-dialog-actions>
+</div>

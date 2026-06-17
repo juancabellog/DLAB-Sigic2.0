@@ -31,17 +31,34 @@
             <mat-icon matListItemIcon>dashboard</mat-icon>
             <span matListItemTitle>Dashboard</span>
           </a>
-          
-          <mat-divider></mat-divider>
+
+          <div class="sidebar-nav-divider" role="separator"></div>
+
+          <a mat-list-item routerLink="/news" routerLinkActive="active" (click)="navigateTo('/news')">
+            <mat-icon matListItemIcon>article</mat-icon>
+            <span matListItemTitle>News</span>
+          </a>
+
+          <a mat-list-item routerLink="/agenda" routerLinkActive="active" (click)="navigateTo('/agenda')">
+            <mat-icon matListItemIcon>event</mat-icon>
+            <span matListItemTitle>Agenda</span>
+          </a>
+
+          <div class="sidebar-nav-divider" role="separator"></div>
           
           <a mat-list-item routerLink="/publications" routerLinkActive="active" (click)="navigateTo('/publications')">
-            <mat-icon matListItemIcon>article</mat-icon>
+            <mat-icon matListItemIcon>menu_book</mat-icon>
             <span matListItemTitle>Publications</span>
           </a>
           
           <a mat-list-item routerLink="/scientific-events" routerLinkActive="active" (click)="navigateTo('/scientific-events')">
             <mat-icon matListItemIcon>event_note</mat-icon>
             <span matListItemTitle>Organization of Scientific Events</span>
+          </a>
+
+          <a mat-list-item routerLink="/participation-scientific-events" routerLinkActive="active" (click)="navigateTo('/participation-scientific-events')">
+            <mat-icon matListItemIcon>record_voice_over</mat-icon>
+            <span matListItemTitle>Participation in Scientific Events</span>
           </a>
           
           <a mat-list-item routerLink="/thesis-students" routerLinkActive="active" (click)="navigateTo('/thesis-students')">
@@ -69,7 +86,7 @@
             <span matListItemTitle>Technology Transfer</span>
           </a>
           
-          <mat-divider></mat-divider>
+          <div class="sidebar-nav-divider" role="separator"></div>
           
           <a mat-list-item routerLink="/researchers" routerLinkActive="active" (click)="navigateTo('/researchers')">
             <mat-icon matListItemIcon>people</mat-icon>

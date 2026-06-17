@@ -1,0 +1,35 @@
+<div class="product-form-grid" [formGroup]="form">
+  <mat-form-field class="full-width">
+    <mat-label>Product name</mat-label>
+    <input matInput formControlName="name" maxlength="150" placeholder="Enter the product name">
+    <mat-hint align="end">{{ nameControl.value.length }}/150</mat-hint>
+    <mat-error *ngIf="shouldShow(nameControl.touched) && nameControl.hasError('required')">
+      Enter the product name.
+    </mat-error>
+    <mat-error *ngIf="shouldShow(nameControl.touched) && nameControl.hasError('minlength')">
+      The name must be at least 3 characters.
+    </mat-error>
+    <mat-error *ngIf="shouldShow(nameControl.touched) && nameControl.hasError('maxlength')">
+      The name cannot exceed 150 characters.
+    </mat-error>
+    <mat-error *ngIf="shouldShow(nameControl.touched) && nameControl.hasError('duplicateName')">
+      A product with this name already exists.
+    </mat-error>
+  </mat-form-field>
+
+  <mat-form-field class="full-width">
+    <mat-label>Description</mat-label>
+    <textarea
+      matInput
+      formControlName="description"
+      rows="3"
+      [maxlength]="maxDescriptionLength"
+      placeholder="Product description (optional)"></textarea>
+    <mat-hint align="end">{{ descriptionControl.value.length }}/{{ maxDescriptionLength }}</mat-hint>
+    <mat-error *ngIf="shouldShow(descriptionControl.touched) && descriptionControl.hasError('maxlength')">
+      The description cannot exceed 500 characters.
+    </mat-error>
+  </mat-form-field>
+
+  <app-segment-selector formControlName="segments" [forceShowErrors]="showErrors" />
+</div>

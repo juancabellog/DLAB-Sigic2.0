@@ -1,0 +1,78 @@
+<div class="news-related-posts-field" [class.news-related-posts-field--disabled]="disabled">
+  <div class="related-posts-header">
+    <div class="related-posts-label-row">
+      <label class="related-posts-label" id="related-posts-field-label">Related posts</label>
+      <button
+        mat-icon-button
+        type="button"
+        class="info-tooltip-btn"
+        [matTooltip]="fieldTooltip"
+        matTooltipPosition="above"
+        aria-label="Related posts information">
+        <mat-icon>info_outline</mat-icon>
+      </button>
+    </div>
+    <span class="related-posts-counter" aria-live="polite">
+      {{ selectedCount }} / {{ maxRelatedPosts }}
+    </span>
+  </div>
+
+  <div
+    class="news-related-posts-container"
+    role="group"
+    aria-labelledby="related-posts-field-label">
+    <div
+      *ngIf="!relatedPosts.length"
+      class="news-related-posts-empty"
+      role="status"
+      aria-live="polite">
+      <p class="news-related-posts-empty-title">No related posts selected yet.</p>
+      <p class="news-related-posts-empty-text">
+        Add up to {{ maxRelatedPosts }} posts to suggest more content to readers.
+      </p>
+      <div class="news-related-posts-action">
+        <button
+          mat-button
+          type="button"
+          class="choose-posts-btn"
+          (click)="openPicker()"
+          [disabled]="disabled">
+          Choose Posts
+        </button>
+      </div>
+    </div>
+
+    <ng-container *ngIf="relatedPosts.length">
+      <div class="news-related-posts-selected-list">
+        <div class="news-related-post-item" *ngFor="let post of relatedPosts">
+          <span
+            class="news-related-post-title"
+            [matTooltip]="post.title"
+            matTooltipPosition="above">
+            {{ post.title }}
+          </span>
+          <button
+            mat-icon-button
+            type="button"
+            class="news-related-post-remove"
+            *ngIf="!disabled"
+            (click)="removeRelatedPost(post)"
+            [attr.aria-label]="'Remove ' + post.title">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      </div>
+
+      <div class="news-related-posts-action">
+        <button
+          mat-button
+          type="button"
+          class="choose-posts-btn"
+          (click)="openPicker()"
+          [disabled]="disabled">
+          Choose Posts
+        </button>
+      </div>
+    </ng-container>
+  </div>
+</div>

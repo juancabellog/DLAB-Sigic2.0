@@ -1,0 +1,282 @@
+<div class="list-container">
+  <div class="list-header">
+    <div class="list-header-left">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to Dashboard">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>Agenda</h1>
+    </div>
+    <div class="list-header-right">
+      <button mat-raised-button color="primary" routerLink="/agenda/new" class="add-button">
+        <mat-icon>add</mat-icon>
+        Add Agenda Event
+      </button>
+    </div>
+  </div>
+
+  <app-list-controls
+    searchPlaceholder="Search agenda events..."
+    [items]="agendaItems"
+    [readonly]="true"
+    [showExportButton]="false"
+    [currentViewMode]="viewMode"
+    [finalFilteredCount]="finalFilteredCount"
+    itemType="event"
+    listType="agenda"
+    (searchResults)="onSearchResults($event)"
+    (searchTermChange)="onSearchTermChange($event)"
+    (viewModeChange)="onViewModeChange($event)">
+  </app-list-controls>
+
+  <div class="agenda-filters">
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Publication status</mat-label>
+      <mat-select [(ngModel)]="filterPublicationStatus" (selectionChange)="onFiltersChange()">
+        <mat-option value="">All</mat-option>
+        <mat-option *ngFor="let s of publicationStatuses" [value]="s">{{ publicationStatusLabels[s] }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Category</mat-label>
+      <mat-select [(ngModel)]="filterCategoryId" (selectionChange)="onFiltersChange()">
+        <mat-option value="">All</mat-option>
+        <mat-option *ngFor="let cat of availableCategories" [value]="cat.id">{{ cat.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Event mode</mat-label>
+      <mat-select [(ngModel)]="filterEventMode" (selectionChange)="onFiltersChange()">
+        <mat-option value="">All</mat-option>
+        <mat-option *ngFor="let mode of eventModes" [value]="mode">{{ eventModeLabels[mode] }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>From date</mat-label>
+      <input matInput type="date" [(ngModel)]="filterFromDate" (change)="onFiltersChange()" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>To date</mat-label>
+      <input matInput type="date" [(ngModel)]="filterToDate" (change)="onFiltersChange()" />
+    </mat-form-field>
+    <button mat-stroked-button type="button" (click)="clearFilters()">Clear filters</button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner></mat-spinner>
+        <p>Loading agenda...</p>
+      </div>
+
+      <div *ngIf="!loading && filteredAgenda.length === 0 && !isSearching" class="empty-state">
+        <mat-icon>event</mat-icon>
+        <h3>No events found</h3>
+        <p>Start by creating your first agenda event.</p>
+        <button mat-raised-button color="primary" routerLink="/agenda/new">
+          <mat-icon>add</mat-icon>
+          Add Agenda Event
+        </button>
+      </div>
+
+      <div *ngIf="!loading && filteredAgenda.length === 0 && isSearching" class="empty-state">
+        <mat-icon>search_off</mat-icon>
+        <h3>No results found</h3>
+        <p>Try adjusting your search or filters.</p>
+      </div>
+
+      <!-- Card view -->
+      <div *ngIf="!loading && filteredAgenda.length > 0 && viewMode === 'card'" class="list-grid">
+        <mat-card *ngFor="let item of filteredAgenda" class="list-card agenda-card">
+          <mat-card-content class="agenda-card-body">
+            <div class="agenda-cell">
+              <div class="agenda-thumb" *ngIf="getImageUrl(item) as img; else cardThumbPlaceholder">
+                <img [src]="img" [alt]="getTitle(item)" />
+              </div>
+              <ng-template #cardThumbPlaceholder>
+                <div class="agenda-thumb agenda-thumb--empty">
+                  <mat-icon>image</mat-icon>
+                </div>
+              </ng-template>
+              <div class="agenda-copy">
+                <div class="agenda-title-row">
+                  <div class="agenda-title">{{ getTitle(item) }}</div>
+                  <mat-chip *ngIf="isPast(item)" class="past-badge" selected>Past</mat-chip>
+                </div>
+                <div class="agenda-meta">{{ getEventMetaLine(item) }}</div>
+                <div class="agenda-meta">{{ formatDisplayDate(item.eventDate) }} · {{ formatTime(item) }}</div>
+              </div>
+            </div>
+            <div class="agenda-card-details">
+              <span>{{ getCategoryLabel(item) }}</span>
+              <span>{{ getLocationDisplay(item) }}</span>
+            </div>
+            <div class="agenda-card-footer">
+              <div class="footer-left">
+                <mat-chip [color]="getPublicationStatusColor(item.publicationStatus)" selected>
+                  {{ publicationStatusLabels[item.publicationStatus] }}
+                </mat-chip>
+                <mat-icon *ngIf="item.featured" class="featured-icon" matTooltip="Featured">star</mat-icon>
+              </div>
+              <app-agenda-row-actions
+                [item]="item"
+                (view)="viewEvent(item)"
+                (edit)="editEvent(item)"
+                (preview)="previewOnWebsite(item)"
+                (duplicate)="duplicateEvent(item)"
+                (publish)="publishEvent(item)"
+                (unpublish)="unpublishEvent(item)"
+                (delete)="deleteEvent(item)">
+              </app-agenda-row-actions>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- List view -->
+      <div *ngIf="!loading && filteredAgenda.length > 0 && viewMode === 'list'" class="list-view agenda-list-view">
+        <div class="list-header-row">
+          <div
+            class="list-cell event-col sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'event' }"
+            (click)="onSort('event')">
+            <span>Event</span>
+            <mat-icon>
+              {{ sortColumn === 'event'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell category-col sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'category' }"
+            (click)="onSort('category')">
+            <span>Category</span>
+            <mat-icon>
+              {{ sortColumn === 'category'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell date-col sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'date' }"
+            (click)="onSort('date')">
+            <span>Date</span>
+            <mat-icon>
+              {{ sortColumn === 'date'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell time-col sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'time' }"
+            (click)="onSort('time')">
+            <span>Time</span>
+            <mat-icon>
+              {{ sortColumn === 'time'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell location-col sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'location' }"
+            (click)="onSort('location')">
+            <span>Location</span>
+            <mat-icon>
+              {{ sortColumn === 'location'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell status-col sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'status' }"
+            (click)="onSort('status')">
+            <span>Status</span>
+            <mat-icon>
+              {{ sortColumn === 'status'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell featured-col sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'featured' }"
+            (click)="onSort('featured')">
+            <span>Featured</span>
+            <mat-icon>
+              {{ sortColumn === 'featured'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div class="list-cell actions-col">Actions</div>
+        </div>
+
+        <div class="list-item-row" *ngFor="let item of filteredAgenda">
+          <div class="list-cell event-col">
+            <div class="agenda-cell">
+              <div class="agenda-thumb" *ngIf="getImageUrl(item) as img; else listThumbPlaceholder">
+                <img [src]="img" [alt]="getTitle(item)" />
+              </div>
+              <ng-template #listThumbPlaceholder>
+                <div class="agenda-thumb agenda-thumb--empty">
+                  <mat-icon>image</mat-icon>
+                </div>
+              </ng-template>
+              <div class="agenda-copy">
+                <div class="agenda-title-row">
+                  <div class="agenda-title" [matTooltip]="getTitle(item)">{{ getTitle(item) }}</div>
+                  <mat-chip *ngIf="isPast(item)" class="past-badge" selected>Past</mat-chip>
+                </div>
+                <div class="agenda-meta">{{ getEventMetaLine(item) }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="list-cell category-col">
+            {{ getCategoryLabel(item) }}
+          </div>
+
+          <div class="list-cell date-col">
+            {{ formatDisplayDate(item.eventDate) || '—' }}
+          </div>
+
+          <div class="list-cell time-col">
+            {{ formatTime(item) }}
+          </div>
+
+          <div class="list-cell location-col" [matTooltip]="getLocationDisplay(item)">
+            {{ getLocationDisplay(item) }}
+          </div>
+
+          <div class="list-cell status-col">
+            <mat-chip [color]="getPublicationStatusColor(item.publicationStatus)" selected>
+              {{ publicationStatusLabels[item.publicationStatus] }}
+            </mat-chip>
+          </div>
+
+          <div class="list-cell featured-col">
+            <mat-icon *ngIf="item.featured" class="featured-icon" matTooltip="Featured">star</mat-icon>
+            <span *ngIf="!item.featured" class="featured-empty">—</span>
+          </div>
+
+          <div class="list-cell actions-col">
+            <app-agenda-row-actions
+              [item]="item"
+              (view)="viewEvent(item)"
+              (edit)="editEvent(item)"
+              (preview)="previewOnWebsite(item)"
+              (duplicate)="duplicateEvent(item)"
+              (publish)="publishEvent(item)"
+              (unpublish)="unpublishEvent(item)"
+              (delete)="deleteEvent(item)">
+            </app-agenda-row-actions>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

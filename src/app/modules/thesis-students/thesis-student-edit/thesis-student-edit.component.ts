@@ -24,7 +24,15 @@ import { ResearcherService } from '../../../core/services/researcher.service';
 import { BaseHttpService } from '../../../core/services/base-http.service';
 import { UtilsService } from '../../../core/services/utils.service';
 import { ProgressReportService } from '../../../core/services/progress-report.service';
-import { TesisDTO, InstitucionDTO, GradoAcademicoDTO, EstadoTesisDTO, TipoSectorDTO, RRHHDTO } from '../../../core/models/backend-dtos';
+import {
+  TesisDTO,
+  InstitucionDTO,
+  GradoAcademicoDTO,
+  EstadoTesisDTO,
+  TipoSectorDTO,
+  ResourceDTO,
+  RRHHDTO
+} from '../../../core/models/backend-dtos';
 
 @Component({
   selector: 'app-thesis-student-edit',
@@ -50,6 +58,9 @@ import { TesisDTO, InstitucionDTO, GradoAcademicoDTO, EstadoTesisDTO, TipoSector
   styleUrls: ['./thesis-student-edit.component.scss']
 })
 export class ThesisStudentEditComponent implements OnInit {
+  /** Catalog "Resource Other" — free text as `{ id: 4, text: "..." }` in `resources` JSON (same as Postdoctoral Fellows). */
+  private readonly RESOURCE_OTHER_ID = 4;
+
   isEditMode: boolean = false;
   thesisId: number | null = null;
   loading: boolean = false;
@@ -69,6 +80,12 @@ export class ThesisStudentEditComponent implements OnInit {
   // Lista de tipos de sector disponibles
   sectorTypes: TipoSectorDTO[] = [];
   loadingSectorTypes: boolean = false;
+
+  /** Catálogo Resources (mismo endpoint que Postdoctoral Fellows). */
+  resourceCatalog: ResourceDTO[] = [];
+  loadingResources: boolean = false;
+  selectedResourceIds: number[] = [];
+  resourceOtherText = '';
 
   // Lista de participantes (estudiantes y tutores)
   participants: ParticipantDTO[] = [];
@@ -113,6 +130,7 @@ export class ThesisStudentEditComponent implements OnInit {
     codigoANID: '',
     progressReport: undefined,
     tipoSector: '',
+    resources: '',
     tipoProducto: { id: 11 } // ID 11 para Thesis (backend default)
   };
 
@@ -144,6 +162,7 @@ export class ThesisStudentEditComponent implements OnInit {
         this.loadAcademicDegrees();
         this.loadThesisStatuses();
         this.loadSectorTypes();
+        this.loadResources();
         // Usar setTimeout para asegurar que los catálogos se carguen antes de cargar la tesis
         setTimeout(() => {
           if (this.thesisId !== null) {
@@ -159,7 +178,8 @@ export class ThesisStudentEditComponent implements OnInit {
         this.loadAcademicDegrees();
         this.loadThesisStatuses();
         this.loadSectorTypes();
-        
+        this.loadResources();
+
         // Verificar si hay un query param para copiar desde otra tesis
         const copyFromId = this.route.snapshot.queryParams['copyFrom'];
         if (copyFromId) {
@@ -257,6 +277,28 @@ export class ThesisStudentEditComponent implements OnInit {
     });
   }
 
+  loadResources(): void {
+    this.loadingResources = true;
+    this.baseHttp.get<ResourceDTO[]>('/catalogs/resources').pipe(
+      catchError(error => {
+        console.error('Error loading resources:', error);
+        return of([]);
+      }),
+      finalize(() => {
+        this.loadingResources = false;
+      })
+    ).subscribe(items => {
+      this.resourceCatalog = items || [];
+      this.resourceCatalog.sort((a, b) => {
+        const ao = a.id === this.RESOURCE_OTHER_ID;
+        const bo = b.id === this.RESOURCE_OTHER_ID;
+        if (ao && !bo) return 1;
+        if (!ao && bo) return -1;
+        return (a.idDescripcion || '').localeCompare(b.idDescripcion || '');
+      });
+    });
+  }
+
   initializeNewThesis(): void {
     this.thesis = {
       descripcion: '',
@@ -265,6 +307,7 @@ export class ThesisStudentEditComponent implements OnInit {
       codigoANID: '',
       progressReport: undefined,
       tipoSector: '',
+      resources: '',
       tipoProducto: { id: 11 },
       fechaInicio: '',
       fechaTermino: '',
@@ -274,6 +317,8 @@ export class ThesisStudentEditComponent implements OnInit {
     this.isBasal = true;
     this.participants = [];
     this.selectedSectorTypes = [];
+    this.selectedResourceIds = [];
+    this.resourceOtherText = '';
     this.originalThesis = null;
     this.selectedClusters = [];
     this.selectedPeriods = [];
@@ -339,7 +384,8 @@ export class ThesisStudentEditComponent implements OnInit {
         }
 
         this.thesis = thesis;
-        this.originalThesis = JSON.parse(JSON.stringify(thesis));
+        this.parseResourcesFromThesis();
+        this.originalThesis = JSON.parse(JSON.stringify(this.thesis));
 
         // Cargar clusters seleccionados desde el string de backend
         this.selectedClusters = [];
@@ -421,7 +467,8 @@ export class ThesisStudentEditComponent implements OnInit {
           estadoTesis: undefined, // No copiar el estado de tesis
           tipoProducto: thesis.tipoProducto || { id: 11 }
         };
-        
+        this.parseResourcesFromThesis();
+
         this.originalThesis = null; // No hay original porque es una nueva tesis
         this.selectedPeriods = [];
         this.messageService.info('Thesis data loaded. You can now edit and save as a new thesis.');
@@ -524,6 +571,89 @@ export class ThesisStudentEditComponent implements OnInit {
     return this.selectedSectorTypes.some(st => st.id === sector.id);
   }
 
+  private parseResourcesFromThesis(): void {
+    this.selectedResourceIds = [];
+    this.resourceOtherText = '';
+    const raw = this.thesis?.resources;
+    if (!raw || !raw.trim()) {
+      return;
+    }
+    const trimmed = raw.trim();
+    let parsedAny: any[] = [];
+    if (trimmed.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          parsedAny = parsed;
+        }
+      } catch {
+        /* fall through */
+      }
+    }
+    if (!parsedAny.length) {
+      const ids = trimmed
+        .split(',')
+        .map(s => parseInt(s.trim(), 10))
+        .filter(n => !isNaN(n));
+      parsedAny = ids.map(id => ({ id }));
+    }
+    const unique = new Set<number>();
+    for (const item of parsedAny) {
+      const id = Number(item?.id);
+      if (isNaN(id)) continue;
+      unique.add(id);
+      if (id === this.RESOURCE_OTHER_ID) {
+        this.resourceOtherText = item?.text != null ? String(item.text) : '';
+      }
+    }
+    this.selectedResourceIds = Array.from(unique);
+  }
+
+  private updateResourcesString(): void {
+    const unique = Array.from(new Set(this.selectedResourceIds));
+    this.selectedResourceIds = unique;
+    if (unique.length === 0) {
+      this.thesis.resources = '';
+      return;
+    }
+    const payload = unique.map(id => {
+      if (id === this.RESOURCE_OTHER_ID) {
+        return { id, text: this.resourceOtherText || '' };
+      }
+      return { id };
+    });
+    this.thesis.resources = JSON.stringify(payload);
+  }
+
+  hasOtherResourceType(): boolean {
+    return this.selectedResourceIds.includes(this.RESOURCE_OTHER_ID);
+  }
+
+  onResourceChange(resource: ResourceDTO, checked: boolean): void {
+    const rid = resource.id != null ? Number(resource.id) : NaN;
+    if (isNaN(rid)) return;
+    if (checked) {
+      if (!this.selectedResourceIds.includes(rid)) {
+        this.selectedResourceIds.push(rid);
+      }
+    } else {
+      this.selectedResourceIds = this.selectedResourceIds.filter(id => id !== rid);
+      if (rid === this.RESOURCE_OTHER_ID) {
+        this.resourceOtherText = '';
+      }
+    }
+    this.updateResourcesString();
+  }
+
+  onResourceOtherTextChange(value: string): void {
+    this.resourceOtherText = value;
+    this.updateResourcesString();
+  }
+
+  isResourceSelected(resource: ResourceDTO): boolean {
+    return resource.id != null && this.selectedResourceIds.includes(resource.id);
+  }
+
   compareInstitutions(inst1: InstitucionDTO | null, inst2: InstitucionDTO | null): boolean {
     if (!inst1 || !inst2) return inst1 === inst2;
     return inst1.id === inst2.id;
@@ -605,6 +735,8 @@ export class ThesisStudentEditComponent implements OnInit {
       return;
     }
 
+    this.updateResourcesString();
+
     this.loading = true;
 
     // Preparar participantes
@@ -642,6 +774,7 @@ export class ThesisStudentEditComponent implements OnInit {
           participantes: participantes,
           basal: this.isBasal ? 'S' : 'N',
           tipoSector: this.selectedSectorTypes.map(st => st.id).join(','),
+          resources: this.thesis.resources || undefined,
           cluster: this.selectedClusters.join(','),
           progressReport: sanitizedPeriods.length > 0
             ? sanitizedPeriods.join(',')

@@ -44,7 +44,7 @@ public interface TransferenciaTecnologicaRepository extends JpaRepository<Transf
      * @return Página de transferencias tecnológicas visibles
      */
     @Query(value = "SELECT tt.id, tt.idInstitucion, tt.idTipoTransferencia, tt.categoriaTransferencia, " +
-           "tt.ciudad, tt.region, tt.year, tt.codigoPais, " +
+           "tt.productos, tt.ciudad, tt.region, tt.year, tt.codigoPais, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
            "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
@@ -66,7 +66,7 @@ public interface TransferenciaTecnologicaRepository extends JpaRepository<Transf
      * @return Optional con la transferencia tecnológica si es visible, o vacío si no lo es
      */
     @Query(value = "SELECT tt.id, tt.idInstitucion, tt.idTipoTransferencia, tt.categoriaTransferencia, " +
-           "tt.ciudad, tt.region, tt.year, tt.codigoPais, " +
+           "tt.productos, tt.ciudad, tt.region, tt.year, tt.codigoPais, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
            "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +

@@ -70,7 +70,8 @@ export class CatalogService {
       'postdoctoral-fellows': 14, // BECAPOSTDOCTO - ID correcto según el usuario
       'thesis-students': 11, // TESIS
       'technology-transfer': 10, // TRANSF_TECNOLOGICA
-      'scientific-events': 15 // ORGANIZACION_EVENTOS_CIENTIFICOS - ID correcto según el usuario
+      'scientific-events': 15, // ORGANIZACION_EVENTOS_CIENTIFICOS
+      'participation-scientific-events': 16 // PARTICIPACION_EVENTO_CIENTIFICO
     };
     
     return productTypeMap[productType.toLowerCase()];

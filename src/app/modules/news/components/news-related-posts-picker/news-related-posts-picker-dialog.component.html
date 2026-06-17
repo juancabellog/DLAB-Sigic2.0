@@ -1,0 +1,76 @@
+<div class="picker-dialog">
+  <div class="picker-dialog-header">
+    <h2 class="picker-dialog-title">Choose Posts</h2>
+    <button mat-icon-button type="button" (click)="close()" aria-label="Close dialog">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <div class="picker-dialog-toolbar">
+    <mat-form-field appearance="outline" class="search-field">
+      <input matInput [(ngModel)]="searchText" placeholder="Search..." />
+      <mat-icon matPrefix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Filter by</mat-label>
+      <mat-select [(ngModel)]="statusFilter">
+        <mat-option *ngFor="let option of filterOptions" [value]="option">
+          {{ filterLabels[option] }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <div class="picker-dialog-body">
+    <div class="loading-row" *ngIf="loading">
+      <mat-spinner diameter="32"></mat-spinner>
+    </div>
+
+    <div class="posts-list" *ngIf="!loading">
+      <button
+        type="button"
+        class="post-row"
+        *ngFor="let post of filteredPosts"
+        [class.post-row--disabled]="isSelectionDisabled(post)"
+        [disabled]="isSelectionDisabled(post)"
+        (click)="onRowClick(post)">
+        <mat-checkbox
+          class="post-row-checkbox"
+          [checked]="isSelected(post)"
+          [disabled]="isSelectionDisabled(post)"
+          (click)="$event.stopPropagation()"
+          (change)="onCheckboxChange(post, $event)">
+        </mat-checkbox>
+
+        <div class="post-thumb-wrap">
+          <img
+            *ngIf="getThumbnailUrl(post) as thumb; else thumbPlaceholder"
+            [src]="thumb"
+            class="post-thumb"
+            [alt]="getPostTitle(post)" />
+          <ng-template #thumbPlaceholder>
+            <div class="post-thumb post-thumb--placeholder" aria-hidden="true">
+              <mat-icon>image</mat-icon>
+            </div>
+          </ng-template>
+        </div>
+
+        <div class="post-row-content">
+          <span class="post-title">{{ getPostTitle(post) }}</span>
+          <span class="post-meta">{{ getPostMetadata(post) }}</span>
+        </div>
+      </button>
+
+      <p class="empty-state" *ngIf="!filteredPosts.length">No posts match your search.</p>
+    </div>
+  </div>
+
+  <div class="picker-dialog-footer">
+    <span class="footer-selection">{{ footerSelectionText }}</span>
+    <div class="footer-actions">
+      <button mat-button type="button" (click)="cancel()">Cancel</button>
+      <button mat-raised-button color="primary" type="button" (click)="done()">Done</button>
+    </div>
+  </div>
+</div>

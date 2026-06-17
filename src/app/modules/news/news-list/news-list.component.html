@@ -1,0 +1,236 @@
+<div class="list-container">
+  <div class="list-header">
+    <div class="list-header-left">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to Dashboard">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>News</h1>
+    </div>
+    <div class="list-header-right">
+      <button mat-raised-button color="primary" routerLink="/news/new" class="add-button">
+        <mat-icon>add</mat-icon>
+        Add News
+      </button>
+    </div>
+  </div>
+
+  <app-list-controls
+    searchPlaceholder="Search news..."
+    [items]="newsItems"
+    [readonly]="true"
+    [showExportButton]="false"
+    [currentViewMode]="viewMode"
+    [finalFilteredCount]="finalFilteredCount"
+    itemType="news item"
+    listType="news"
+    (searchResults)="onSearchResults($event)"
+    (searchTermChange)="onSearchTermChange($event)"
+    (viewModeChange)="onViewModeChange($event)">
+  </app-list-controls>
+
+  <div class="news-filters">
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Publication status</mat-label>
+      <mat-select [(ngModel)]="filterPublicationStatus" (selectionChange)="onFiltersChange()">
+        <mat-option value="">All</mat-option>
+        <mat-option *ngFor="let s of publicationStatuses" [value]="s">{{ publicationStatusLabels[s] }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Tag</mat-label>
+      <mat-select [(ngModel)]="filterTagId" (selectionChange)="onFiltersChange()">
+        <mat-option value="">All</mat-option>
+        <mat-option *ngFor="let tag of availableTags" [value]="tag.id">{{ tag.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>From date</mat-label>
+      <input matInput type="date" [(ngModel)]="filterFromDate" (change)="onFiltersChange()" />
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>To date</mat-label>
+      <input matInput type="date" [(ngModel)]="filterToDate" (change)="onFiltersChange()" />
+    </mat-form-field>
+    <button mat-stroked-button type="button" (click)="clearFilters()">Clear filters</button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner></mat-spinner>
+        <p>Loading news...</p>
+      </div>
+
+      <div *ngIf="!loading && filteredNews.length === 0 && !isSearching" class="empty-state">
+        <mat-icon>newspaper</mat-icon>
+        <h3>No news found</h3>
+        <p>Start by creating your first news item.</p>
+        <button mat-raised-button color="primary" routerLink="/news/new">
+          <mat-icon>add</mat-icon>
+          Add News
+        </button>
+      </div>
+
+      <div *ngIf="!loading && filteredNews.length === 0 && isSearching" class="empty-state">
+        <mat-icon>search_off</mat-icon>
+        <h3>No results found</h3>
+        <p>Try adjusting your search or filters.</p>
+      </div>
+
+      <!-- Card view -->
+      <div *ngIf="!loading && filteredNews.length > 0 && viewMode === 'card'" class="list-grid">
+        <mat-card *ngFor="let item of filteredNews" class="list-card news-card">
+          <mat-card-content class="news-card-body">
+            <div class="news-cell">
+              <div class="news-thumb" *ngIf="getImageUrl(item) as img; else cardThumbPlaceholder">
+                <img [src]="img" [alt]="getTitle(item)" />
+              </div>
+              <ng-template #cardThumbPlaceholder>
+                <div class="news-thumb news-thumb--empty">
+                  <mat-icon>image</mat-icon>
+                </div>
+              </ng-template>
+              <div class="news-copy">
+                <div class="news-title">{{ getTitle(item) }}</div>
+                <div class="news-meta">{{ getNewsMetaLine(item) }}</div>
+              </div>
+            </div>
+            <div class="news-card-tags">
+              <ng-container *ngIf="hasTags(item); else noTagsCard">
+                <div
+                  class="tags-chips"
+                  [matTooltip]="getHiddenTagsCount(item) > 0 ? getAllTagsTooltip(item) : ''"
+                  [matTooltipDisabled]="getHiddenTagsCount(item) === 0">
+                  <mat-chip *ngFor="let tag of getVisibleTags(item)" class="tag-chip">{{ tag.label }}</mat-chip>
+                  <mat-chip *ngIf="getHiddenTagsCount(item) as extra" class="tag-chip tag-chip--more">+{{ extra }}</mat-chip>
+                </div>
+              </ng-container>
+              <ng-template #noTagsCard><span class="tags-empty">—</span></ng-template>
+            </div>
+            <div class="news-card-footer">
+              <mat-chip [color]="getPublicationStatusColor(item.publicationStatus)" selected>
+                {{ publicationStatusLabels[item.publicationStatus] }}
+              </mat-chip>
+              <app-news-row-actions
+                [item]="item"
+                (view)="viewNews(item)"
+                (edit)="editNews(item)"
+                (preview)="previewOnWebsite(item)"
+                (duplicate)="duplicateNews(item)"
+                (publish)="publishNews(item)"
+                (unpublish)="unpublishNews(item)"
+                (delete)="deleteNews(item)">
+              </app-news-row-actions>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- List view -->
+      <div *ngIf="!loading && filteredNews.length > 0 && viewMode === 'list'" class="list-view news-list-view">
+        <div class="list-header-row">
+          <div
+            class="list-cell news-col sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'title' }"
+            (click)="onSort('title')">
+            <span>News</span>
+            <mat-icon>
+              {{ sortColumn === 'title'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell tags-col sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'tags' }"
+            (click)="onSort('tags')">
+            <span>Tags</span>
+            <mat-icon>
+              {{ sortColumn === 'tags'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell date-col sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'date' }"
+            (click)="onSort('date')">
+            <span>Date</span>
+            <mat-icon>
+              {{ sortColumn === 'date'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div
+            class="list-cell status-col sortable-header"
+            [ngClass]="{ 'sortable-header-active': sortColumn === 'status' }"
+            (click)="onSort('status')">
+            <span>Status</span>
+            <mat-icon>
+              {{ sortColumn === 'status'
+                  ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward')
+                  : 'unfold_more' }}
+            </mat-icon>
+          </div>
+          <div class="list-cell actions-col">Actions</div>
+        </div>
+
+        <div class="list-item-row" *ngFor="let item of filteredNews">
+          <div class="list-cell news-col">
+            <div class="news-cell">
+              <div class="news-thumb" *ngIf="getImageUrl(item) as img; else listThumbPlaceholder">
+                <img [src]="img" [alt]="getTitle(item)" />
+              </div>
+              <ng-template #listThumbPlaceholder>
+                <div class="news-thumb news-thumb--empty">
+                  <mat-icon>image</mat-icon>
+                </div>
+              </ng-template>
+              <div class="news-copy">
+                <div class="news-title" [matTooltip]="getTitle(item)">{{ getTitle(item) }}</div>
+                <div class="news-meta">{{ getNewsMetaLine(item) }}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="list-cell tags-col">
+            <ng-container *ngIf="hasTags(item); else noTagsList">
+              <div
+                class="tags-chips"
+                [matTooltip]="getHiddenTagsCount(item) > 0 ? getAllTagsTooltip(item) : ''"
+                [matTooltipDisabled]="getHiddenTagsCount(item) === 0">
+                <mat-chip *ngFor="let tag of getVisibleTags(item)" class="tag-chip">{{ tag.label }}</mat-chip>
+                <mat-chip *ngIf="getHiddenTagsCount(item) as extra" class="tag-chip tag-chip--more">+{{ extra }}</mat-chip>
+              </div>
+            </ng-container>
+            <ng-template #noTagsList><span class="tags-empty">—</span></ng-template>
+          </div>
+
+          <div class="list-cell date-col">
+            {{ formatDisplayDate(item.publicationDate) || '—' }}
+          </div>
+
+          <div class="list-cell status-col">
+            <mat-chip [color]="getPublicationStatusColor(item.publicationStatus)" selected>
+              {{ publicationStatusLabels[item.publicationStatus] }}
+            </mat-chip>
+          </div>
+
+          <div class="list-cell actions-col">
+            <app-news-row-actions
+              [item]="item"
+              (view)="viewNews(item)"
+              (edit)="editNews(item)"
+              (preview)="previewOnWebsite(item)"
+              (duplicate)="duplicateNews(item)"
+              (publish)="publishNews(item)"
+              (unpublish)="unpublishNews(item)"
+              (delete)="deleteNews(item)">
+            </app-news-row-actions>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

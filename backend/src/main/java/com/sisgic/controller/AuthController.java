@@ -48,7 +48,7 @@ public class AuthController {
     @Autowired
     com.sisgic.repository.RRHHRepository rrhhRepository;
 
-    @Value("${app.version:dev}")
+    @Value("${app.version:2026.06.04-01}")
     private String appVersion;
 
     @PostMapping("/login")

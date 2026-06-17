@@ -175,6 +175,7 @@ public class TesisController {
             header.createCell(21).setCellValue("Student Name");
             header.createCell(22).setCellValue("Student Gender");
             header.createCell(23).setCellValue("Student Type");
+            header.createCell(24).setCellValue("Resources");
 
             Map<String, String> textosMap = Map.of();
 
@@ -377,9 +378,10 @@ public class TesisController {
                 row.createCell(21).setCellValue(studentNames);
                 row.createCell(22).setCellValue(studentGenders);
                 row.createCell(23).setCellValue(studentTypes);
+                row.createCell(24).setCellValue(dto.getResources() != null ? dto.getResources() : "");
             }
 
-            for (int i = 0; i <= 23; i++) {
+            for (int i = 0; i <= 24; i++) {
                 sheet.autoSizeColumn(i);
             }
 
@@ -537,6 +539,9 @@ public class TesisController {
                 }
                 if (dto.getTipoSector() != null) {
                     existingTesis.setTipoSector(dto.getTipoSector());
+                }
+                if (dto.getResources() != null) {
+                    existingTesis.setResources(dto.getResources());
                 }
 
                 // Actualizar participantes
@@ -725,6 +730,7 @@ public class TesisController {
         dto.setFechaInicioPrograma(tesis.getFechaInicioPrograma() != null ? tesis.getFechaInicioPrograma().toString() : null);
         dto.setNombreCompletoTitulo(tesis.getNombreCompletoTitulo());
         dto.setTipoSector(tesis.getTipoSector());
+        dto.setResources(tesis.getResources());
         dto.setEstudiante(tesis.getEstudiante());
 
         return dto;
@@ -807,6 +813,7 @@ public class TesisController {
         }
         tesis.setNombreCompletoTitulo(dto.getNombreCompletoTitulo());
         tesis.setTipoSector(dto.getTipoSector());
+        tesis.setResources(dto.getResources());
 
         return tesis;
     }

@@ -54,6 +54,9 @@ import { BecariosPostdoctoralesDTO, InstitucionDTO, TipoSectorDTO, ResourceDTO, 
   styleUrls: ['./pf-edit.component.scss']
 })
 export class PfEditComponent implements OnInit {
+  /** Catalog "Resource Other" — free text stored as `{ id: 4, text: "..." }` in `resources` JSON. */
+  private readonly RESOURCE_OTHER_ID = 4;
+
   isEditMode: boolean = false;
   fellowId: number | null = null;
   loading: boolean = false;
@@ -106,8 +109,9 @@ export class PfEditComponent implements OnInit {
     tipoProducto: { id: 14 } // ID 14 para Postdoctoral Fellows según DataInitializer (BECAPOSTDOCTO)
   };
 
-  // Recursos seleccionados (para el formulario)
-  selectedResources: ResourceDTO[] = [];
+  /** Selected resource catalog ids — persisted as JSON `[{id:1},…]` or `[{id:4,text:'…'}]` for Other. */
+  selectedResourceIds: number[] = [];
+  resourceOtherText: string = '';
 
   // Tipos de financiamiento seleccionados (para el formulario)
   selectedFundingTypes: FundingTypeDTO[] = [];
@@ -223,7 +227,14 @@ export class PfEditComponent implements OnInit {
         this.loadingResources = false;
       })
     ).subscribe(items => {
-      this.resources = items;
+      this.resources = items || [];
+      this.resources.sort((a, b) => {
+        const ao = a.id === this.RESOURCE_OTHER_ID;
+        const bo = b.id === this.RESOURCE_OTHER_ID;
+        if (ao && !bo) return 1;
+        if (!ao && bo) return -1;
+        return (a.idDescripcion || '').localeCompare(b.idDescripcion || '');
+      });
     });
   }
 
@@ -257,7 +268,8 @@ export class PfEditComponent implements OnInit {
     };
     this.isBasal = true;
     this.participants = [];
-    this.selectedResources = [];
+    this.selectedResourceIds = [];
+    this.resourceOtherText = '';
     this.selectedFundingTypes = [];
     this.selectedPeriods = [];
     this.originalFellow = null;
@@ -286,17 +298,8 @@ export class PfEditComponent implements OnInit {
           this.participants = [];
         }
 
-        // Cargar recursos seleccionados
-        if (fellow.resources) {
-          try {
-            const resourceIds = fellow.resources.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
-            this.selectedResources = this.resources.filter(r => resourceIds.includes(r.id!));
-          } catch (e) {
-            this.selectedResources = [];
-          }
-        } else {
-          this.selectedResources = [];
-        }
+        this.fellow = fellow;
+        this.parseResourcesFromFellow();
 
         // Cargar tipos de financiamiento seleccionados
         this.selectedFundingTypes = [];
@@ -369,8 +372,7 @@ export class PfEditComponent implements OnInit {
           }
         }
 
-        this.fellow = fellow;
-        this.originalFellow = JSON.parse(JSON.stringify(fellow));
+        this.originalFellow = JSON.parse(JSON.stringify(this.fellow));
 
         // Cargar clusters seleccionados desde el string de backend
         this.selectedClusters = [];
@@ -441,20 +443,87 @@ export class PfEditComponent implements OnInit {
     this.fellow.cluster = this.selectedClusters.join(',');
   }
 
+  private parseResourcesFromFellow(): void {
+    this.selectedResourceIds = [];
+    this.resourceOtherText = '';
+    const raw = this.fellow?.resources;
+    if (!raw || !raw.trim()) {
+      return;
+    }
+    const trimmed = raw.trim();
+    let parsedAny: any[] = [];
+    if (trimmed.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          parsedAny = parsed;
+        }
+      } catch {
+        /* fall through to comma-separated */
+      }
+    }
+    if (!parsedAny.length) {
+      const ids = trimmed
+        .split(',')
+        .map(s => parseInt(s.trim(), 10))
+        .filter(n => !isNaN(n));
+      parsedAny = ids.map(id => ({ id }));
+    }
+    const unique = new Set<number>();
+    for (const item of parsedAny) {
+      const id = Number(item?.id);
+      if (isNaN(id)) continue;
+      unique.add(id);
+      if (id === this.RESOURCE_OTHER_ID) {
+        this.resourceOtherText = item?.text != null ? String(item.text) : '';
+      }
+    }
+    this.selectedResourceIds = Array.from(unique);
+  }
+
+  private updateResourcesString(): void {
+    const unique = Array.from(new Set(this.selectedResourceIds));
+    this.selectedResourceIds = unique;
+    if (unique.length === 0) {
+      this.fellow.resources = '';
+      return;
+    }
+    const payload = unique.map(id => {
+      if (id === this.RESOURCE_OTHER_ID) {
+        return { id, text: this.resourceOtherText || '' };
+      }
+      return { id };
+    });
+    this.fellow.resources = JSON.stringify(payload);
+  }
+
+  hasOtherResourceType(): boolean {
+    return this.selectedResourceIds.includes(this.RESOURCE_OTHER_ID);
+  }
+
   onResourceChange(resource: ResourceDTO, checked: boolean): void {
+    const rid = resource.id != null ? Number(resource.id) : NaN;
+    if (isNaN(rid)) return;
     if (checked) {
-      if (!this.selectedResources.find(r => r.id === resource.id)) {
-        this.selectedResources.push(resource);
+      if (!this.selectedResourceIds.includes(rid)) {
+        this.selectedResourceIds.push(rid);
       }
     } else {
-      this.selectedResources = this.selectedResources.filter(r => r.id !== resource.id);
+      this.selectedResourceIds = this.selectedResourceIds.filter(id => id !== rid);
+      if (rid === this.RESOURCE_OTHER_ID) {
+        this.resourceOtherText = '';
+      }
     }
-    // Actualizar el string de resources
-    this.fellow.resources = this.selectedResources.map(r => r.id).join(',');
+    this.updateResourcesString();
+  }
+
+  onResourceOtherTextChange(value: string): void {
+    this.resourceOtherText = value;
+    this.updateResourcesString();
   }
 
   isResourceSelected(resource: ResourceDTO): boolean {
-    return this.selectedResources.some(r => r.id === resource.id);
+    return resource.id != null && this.selectedResourceIds.includes(resource.id);
   }
 
   onFundingTypeChange(fundingType: FundingTypeDTO, checked: boolean): void {
@@ -567,6 +636,9 @@ export class PfEditComponent implements OnInit {
       return;
     }
 
+    this.updateResourcesString();
+    this.updateFundingSourceString();
+
     this.loading = true;
 
     // Preparar participantes
@@ -602,7 +674,7 @@ export class PfEditComponent implements OnInit {
           linkPDF: this.fellow.linkPDF || undefined, // Asegurar que linkPDF se incluya explícitamente
           participantes: participantes,
           basal: this.isBasal ? 'S' : 'N',
-          resources: this.selectedResources.map(r => r.id).join(','),
+          resources: this.fellow.resources || undefined,
           cluster: this.selectedClusters.join(',')
         };
 

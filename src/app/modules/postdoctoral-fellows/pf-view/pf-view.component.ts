@@ -38,6 +38,8 @@ import { TipoParticipacionDTO } from '../../../core/models/catalog-types';
   styleUrls: ['./pf-view.component.scss']
 })
 export class PfViewComponent implements OnInit {
+  private readonly RESOURCE_OTHER_ID = 4;
+
   fellow: BecariosPostdoctoralesDTO | null = null;
   loading: boolean = false;
   participants: Array<{ name: string; role: string; roleName: string; corresponding: boolean }> = [];
@@ -191,21 +193,63 @@ export class PfViewComponent implements OnInit {
 
   getResources(): string[] {
     if (!this.fellow?.resources) return [];
-    try {
-      const resourceIds = this.fellow.resources.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
-      return resourceIds.map(id => {
-        const resource = this.resources.find(r => r.id === id);
-        return resource?.idDescripcion || `Resource ${id}`;
-      });
-    } catch (e) {
-      return [];
+    const raw = this.fellow.resources.trim();
+    let parsedAny: any[] = [];
+    if (raw.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          parsedAny = parsed;
+        }
+      } catch {
+        /* fall through */
+      }
     }
+    if (!parsedAny.length) {
+      const ids = raw
+        .split(',')
+        .map(s => parseInt(s.trim(), 10))
+        .filter(n => !isNaN(n));
+      parsedAny = ids.map(id => ({ id }));
+    }
+    const labels: string[] = [];
+    for (const item of parsedAny) {
+      const id = Number(item?.id);
+      if (isNaN(id)) continue;
+      if (id === this.RESOURCE_OTHER_ID) {
+        const cat = this.resources.find(r => r.id === id);
+        const base = cat?.idDescripcion || 'Other';
+        const text = item?.text != null ? String(item.text).trim() : '';
+        labels.push(text ? `${base}: ${text}` : base);
+      } else {
+        const resource = this.resources.find(r => r.id === id);
+        labels.push(resource?.idDescripcion || `Resource ${id}`);
+      }
+    }
+    return labels;
   }
 
   getFundingSources(): string[] {
     if (!this.fellow?.fundingSource) return [];
+    const raw = this.fellow.fundingSource.trim();
     try {
-      const fundingIds = this.fellow.fundingSource.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+      if (raw.startsWith('[')) {
+        const arr: any[] = JSON.parse(raw);
+        const labels: string[] = [];
+        for (const item of arr) {
+          const id = Number(item?.id);
+          if (isNaN(id)) continue;
+          const fundingType = this.fundingTypes.find(ft => ft.id === id);
+          const base = fundingType?.idDescripcion || `Funding ${id}`;
+          if (id === 7 && item?.text != null && String(item.text).trim()) {
+            labels.push(`${base}: ${String(item.text).trim()}`);
+          } else {
+            labels.push(base);
+          }
+        }
+        return labels;
+      }
+      const fundingIds = raw.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
       return fundingIds.map(id => {
         const fundingType = this.fundingTypes.find(ft => ft.id === id);
         return fundingType?.idDescripcion || `Funding ${id}`;

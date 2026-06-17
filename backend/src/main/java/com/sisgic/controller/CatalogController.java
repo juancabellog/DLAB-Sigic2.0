@@ -20,6 +20,8 @@ import com.sisgic.dto.PublicoObjetivoDTO;
 import com.sisgic.dto.TipoColaboracionDTO;
 import com.sisgic.dto.TipoRRHHDTO;
 import com.sisgic.dto.IndexTypeDTO;
+import com.sisgic.dto.ModalidadPresentacionDTO;
+import com.sisgic.dto.TipoParticipacionEventoDTO;
 import com.sisgic.entity.TipoParticipacion;
 import com.sisgic.entity.TipoProducto;
 import com.sisgic.entity.TipoEvento;
@@ -37,6 +39,8 @@ import com.sisgic.entity.TipoDifusion;
 import com.sisgic.entity.PublicoObjetivo;
 import com.sisgic.entity.TipoColaboracion;
 import com.sisgic.entity.VIndexType;
+import com.sisgic.entity.TipoParticipacionEvento;
+import com.sisgic.entity.ModalidadPresentacion;
 import com.sisgic.repository.TipoParticipacionRepository;
 import com.sisgic.repository.TipoProductoRepository;
 import com.sisgic.repository.TipoEventoRepository;
@@ -55,6 +59,8 @@ import com.sisgic.repository.PublicoObjetivoRepository;
 import com.sisgic.repository.TipoColaboracionRepository;
 import com.sisgic.repository.TipoRRHHRepository;
 import com.sisgic.repository.VIndexTypeRepository;
+import com.sisgic.repository.TipoParticipacionEventoRepository;
+import com.sisgic.repository.ModalidadPresentacionRepository;
 import com.sisgic.entity.TipoRRHH;
 import com.sisgic.service.TextosService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,6 +70,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 @RestController
@@ -124,6 +131,12 @@ public class CatalogController {
 
     @Autowired
     private VIndexTypeRepository vIndexTypeRepository;
+
+    @Autowired
+    private TipoParticipacionEventoRepository tipoParticipacionEventoRepository;
+
+    @Autowired
+    private ModalidadPresentacionRepository modalidadPresentacionRepository;
     
     @GetMapping("/participation-types")
     public ResponseEntity<List<TipoParticipacionDTO>> getAllParticipationTypes() {
@@ -468,6 +481,28 @@ public class CatalogController {
             indexType.getId(),
             indexType.getDescripcion()
         );
+    }
+
+    // ========================================
+    // SCIENTIFIC EVENT PARTICIPATION TYPES
+    // ========================================
+
+    @GetMapping("/event-participation-types")
+    public ResponseEntity<List<TipoParticipacionEventoDTO>> getAllEventParticipationTypes() {
+        List<TipoParticipacionEvento> results = tipoParticipacionEventoRepository.findAllByOrderByIdAsc();
+        List<TipoParticipacionEventoDTO> dtos = results.stream()
+            .map(t -> new TipoParticipacionEventoDTO(t.getId(), t.getIdDescripcion()))
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/presentation-modalities")
+    public ResponseEntity<List<ModalidadPresentacionDTO>> getPresentationModalities() {
+        List<ModalidadPresentacion> results = modalidadPresentacionRepository.findAllByOrderByIdAsc();
+        List<ModalidadPresentacionDTO> dtos = results.stream()
+            .map(m -> new ModalidadPresentacionDTO(m.getId(), m.getIdDescripcion()))
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
     
     // ========================================

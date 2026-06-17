@@ -31,6 +31,11 @@ public class TransferenciaTecnologica extends ProductoCientifico {
     @ManyToOne
     @JoinColumn(name = "codigoPais")
     private Pais pais;
+
+    /** JSON array of associated technology-transfer products (frontend model). */
+    @Lob
+    @Column(name = "productos")
+    private String productos;
     
     // Constructors
     public TransferenciaTecnologica() {}
@@ -90,6 +95,14 @@ public class TransferenciaTecnologica extends ProductoCientifico {
     
     public void setPais(Pais pais) {
         this.pais = pais;
+    }
+
+    public String getProductos() {
+        return productos;
+    }
+
+    public void setProductos(String productos) {
+        this.productos = productos;
     }
 }
 

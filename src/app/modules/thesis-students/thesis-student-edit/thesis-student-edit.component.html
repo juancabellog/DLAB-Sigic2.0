@@ -189,6 +189,34 @@ BASAL Year 3,4,5 (Finished)
       <mat-divider></mat-divider>
 
       <div class="form-section">
+        <div class="section-title">Resources</div>
+        <p class="section-description">Select one or more resources associated with this thesis.</p>
+
+        <div class="checkbox-group">
+          <mat-checkbox
+            *ngFor="let resource of resourceCatalog"
+            [checked]="isResourceSelected(resource)"
+            (change)="onResourceChange(resource, $event.checked)"
+            color="primary">
+            {{ resource.idDescripcion }}
+          </mat-checkbox>
+        </div>
+
+        <div class="form-row" *ngIf="hasOtherResourceType()">
+          <mat-form-field class="full-width">
+            <mat-label>Other resource</mat-label>
+            <input
+              matInput
+              [(ngModel)]="resourceOtherText"
+              (ngModelChange)="onResourceOtherTextChange($event)"
+              placeholder="Describe the other resource">
+          </mat-form-field>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="form-section">
         <div class="section-title">Clusters</div>
         <div class="form-row">
           <div class="full-width cluster">

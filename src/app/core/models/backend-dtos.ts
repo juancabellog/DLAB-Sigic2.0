@@ -86,6 +86,21 @@ export interface OrganizacionEventosCientificosDTO extends ProductoCientificoDTO
   participantes?: ParticipanteDTO[]; // Participantes en formato backend
 }
 
+export interface ParticipacionEventoCientificoDTO extends ProductoCientificoDTO {
+  idModalidadPresentacion?: number;
+  tipoParticipacionEvento?: { id?: number; idDescripcion?: string };
+  pais?: PaisDTO;
+  ciudad?: string;
+  nameResearchLine?: string;
+  eventName?: string;
+  participantes?: ParticipanteDTO[];
+}
+
+export interface ModalidadPresentacionDTO {
+  id?: number;
+  idDescripcion?: string;
+}
+
 // DTO para Institucion
 export interface InstitucionDTO {
   id?: number;
@@ -122,6 +137,8 @@ export interface TesisDTO extends ProductoCientificoDTO {
   fechaInicioPrograma?: string; // LocalDate como string
   nombreCompletoTitulo?: string;
   tipoSector?: string; // JSON string o lista separada por comas
+  /** JSON e.g. `[{"id":1},{"id":4,"text":"..."}]` or legacy comma-separated ids */
+  resources?: string;
   participantes?: ParticipanteDTO[]; // Participantes en formato backend
   estudiante?: string; // Campo calculado: nombre del estudiante (rol 7)
 }
@@ -147,6 +164,8 @@ export interface TransferenciaTecnologicaDTO extends ProductoCientificoDTO {
   region?: string;
   agno?: number;
   pais?: PaisDTO;
+  /** JSON string: productos asociados (tabla transferenciatecnologica.productos) */
+  productos?: string;
   participantes?: ParticipanteDTO[]; // Participantes en formato backend
 }
 
@@ -168,7 +187,8 @@ export interface BecariosPostdoctoralesDTO extends ProductoCientificoDTO {
   institucion?: InstitucionDTO;
   fundingSource?: string; // JSON string o lista separada por comas
   tipoSector?: TipoSectorDTO;
-  resources?: string; // JSON string o lista separada por comas
+  /** JSON e.g. `[{"id":1},{"id":4,"text":"..."}]` or legacy comma-separated ids */
+  resources?: string;
   participantes?: ParticipanteDTO[]; // Participantes en formato backend
 }
 

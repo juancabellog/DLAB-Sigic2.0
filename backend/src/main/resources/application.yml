@@ -61,6 +61,11 @@ pdfs:
   # Si no se especifica, intentará resolver desde backend/pdfs o pdfs
   path: ${PDFS_PATH:}
 
+# Imágenes de noticias — GET /sigic2.0/media/{archivo}
+# Vacío = auto-detecta media/ o backend/media según desde dónde se ejecuta el JAR
+media:
+  path: ${MEDIA_PATH:}
+
 # Configuración para carga de publicaciones desde DOI
 openalex:
   # Proyecto por defecto a asignar cuando se carga una publicación desde DOI
@@ -77,5 +82,16 @@ cache:
     max-size: 5000       # Máximo número de entradas en el caché de textos
     ttl-minutes: 60      # Tiempo de vida en minutos para entradas del caché de textos
 
+gemini:
+  # Configure via environment (GEMINI_API_KEY) or a local override file — do not commit API keys.
+  apikeys: []
+  apikey: ${GEMINI_API_KEY:}
+  model: ${GEMINI_MODEL:gemini-flash-lite-latest}
+  timeout-ms: ${GEMINI_TIMEOUT_MS:300000}
+
 app:
-  version: "dev"
+  # Debe coincidir con environment*.ts appVersion y application-prod.yml
+  version: ${APP_VERSION:2026.06.04-01}
+  # URL pública del backend (enlaces en Excel, etc.). Sin barra final.
+  # Ej. prod: https://apps.cienciavida.org/sigic2.0
+  public-base-url: ${APP_PUBLIC_BASE_URL:}

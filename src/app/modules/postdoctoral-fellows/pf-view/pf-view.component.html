@@ -67,7 +67,7 @@
         <mat-divider></mat-divider>
 
         <!-- Resources -->
-        <div class="detail-section" *ngIf="fellow.resources">
+        <div class="detail-section" *ngIf="getResources().length">
           <h3>Resources</h3>
           <div class="chips-container">
             <mat-chip *ngFor="let resource of getResources()" selected>

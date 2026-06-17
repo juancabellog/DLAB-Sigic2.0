@@ -40,6 +40,13 @@ export class AnalysisLandingComponent {
       icon: 'timeline',
       route: '/analysis/temporal-evolution',
       color: '#f57c00'
+    },
+    {
+      title: 'Gender Observatory',
+      description: 'Tracking of gender-disaggregated data and key indicators of equity',
+      icon: 'wc',
+      route: '/analysis/gender-observatory',
+      color: '#1b5e20'
     }
   ];
 

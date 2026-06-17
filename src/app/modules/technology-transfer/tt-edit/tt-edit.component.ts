@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -28,6 +28,8 @@ import { BaseHttpService } from '../../../core/services/base-http.service';
 import { UtilsService } from '../../../core/services/utils.service';
 import { ProgressReportService } from '../../../core/services/progress-report.service';
 import { TransferenciaTecnologicaDTO, InstitucionDTO, TipoTransferenciaDTO, CategoriaTransferenciaDTO, PaisDTO, RRHHDTO } from '../../../core/models/backend-dtos';
+import { TransferProductsSectionComponent } from '../transfer-products/transfer-products-section/transfer-products-section.component';
+import { TransferProduct } from '../transfer-products/models/transfer-products.models';
 
 @Component({
   selector: 'app-tt-edit',
@@ -50,12 +52,15 @@ import { TransferenciaTecnologicaDTO, InstitucionDTO, TipoTransferenciaDTO, Cate
     MatChipsModule,
     MatTooltipModule,
     ParticipantManagerComponent,
-    InstitutionSearchComponent
+    InstitutionSearchComponent,
+    TransferProductsSectionComponent
   ],
   templateUrl: './tt-edit.component.html',
   styleUrls: ['./tt-edit.component.scss']
 })
 export class TtEditComponent implements OnInit {
+  @ViewChild(TransferProductsSectionComponent) transferProductsSection?: TransferProductsSectionComponent;
+
   isEditMode: boolean = false;
   transferId: number | null = null;
   loading: boolean = false;
@@ -112,6 +117,14 @@ export class TtEditComponent implements OnInit {
 
   // Categorías de transferencia seleccionadas (para el formulario)
   selectedCategories: CategoriaTransferenciaDTO[] = [];
+  /** Live model for save (updated by child). */
+  associatedProducts: TransferProduct[] = [];
+  /**
+   * One-time seed for the child FormArray — do not bind the same array that updates on every keystroke
+   * or Angular will re-check the whole section on every valueChanges emit.
+   */
+  associatedProductsSeed: TransferProduct[] = [];
+  associatedProductsValid = true;
 
   constructor(
     private route: ActivatedRoute,
@@ -250,6 +263,9 @@ export class TtEditComponent implements OnInit {
     this.selectedCategories = [];
     this.originalTransfer = null;
     this.selectedClusters = [];
+    this.associatedProducts = [];
+    this.associatedProductsSeed = [];
+    this.associatedProductsValid = true;
   }
 
   loadTransferForEdit(id: number): void {
@@ -324,6 +340,14 @@ export class TtEditComponent implements OnInit {
         }
 
         this.transfer = transfer;
+        const productsJson =
+          transfer.productos?.trim() ||
+          transfer.lineasInvestigacion?.trim() ||
+          '';
+        const parsedProducts = this.parseAssociatedProducts(productsJson);
+        this.associatedProducts = parsedProducts;
+        this.associatedProductsSeed = this.cloneTransferProducts(parsedProducts);
+        this.associatedProductsValid = true;
         this.originalTransfer = JSON.parse(JSON.stringify(transfer));
 
         // Cargar clusters seleccionados desde el string de backend
@@ -465,6 +489,13 @@ export class TtEditComponent implements OnInit {
       this.messageService.error('Start Date is required');
       return false;
     }
+    this.transferProductsSection?.markAllAsTouched();
+    if ((this.transferProductsSection && !this.transferProductsSection.isValid()) || !this.associatedProductsValid) {
+      this.messageService.error(
+        'Please review associated products. There are pending fields or duplicate product names.'
+      );
+      return false;
+    }
     return true;
   }
 
@@ -503,13 +534,15 @@ export class TtEditComponent implements OnInit {
     // Después de subir el PDF (si había uno), guardar el registro
     uploadPdfObservable.pipe(
       switchMap((uploadResult) => {
+        const { lineasInvestigacion: _legacyProductsLine, ...transferWithoutLegacyProducts } = this.transfer;
         const transferData: TransferenciaTecnologicaDTO = {
-          ...this.transfer,
+          ...transferWithoutLegacyProducts,
           linkPDF: this.transfer.linkPDF || undefined, // Asegurar que linkPDF se incluya explícitamente
           participantes: participantes,
           basal: this.isBasal ? 'S' : 'N',
           categoriaTransferencia: this.selectedCategories.map(c => c.id).join(','),
-          cluster: this.selectedClusters.join(',')
+          cluster: this.selectedClusters.join(','),
+          productos: this.stringifyAssociatedProducts(this.associatedProducts)
         };
 
         const saveOperation = this.isEditMode && this.transferId
@@ -582,5 +615,48 @@ export class TtEditComponent implements OnInit {
    */
   onFechaInicioChange(): void {
     this.transfer.progressReport = this.progressReportService.calculateProgressReport(this.transfer.fechaInicio);
+  }
+
+  onAssociatedProductsChange(products: TransferProduct[]): void {
+    console.log('onAssociatedProductsChange', products);
+    this.associatedProducts = products;
+  }
+
+  onAssociatedProductsValidChange(isValid: boolean): void {
+    console.log('onAssociatedProductsValidChange', isValid);
+    this.associatedProductsValid = isValid;
+  }
+
+  private parseAssociatedProducts(raw: string | undefined): TransferProduct[] {
+    if (!raw || raw.trim().length === 0) {
+      return [];
+    }
+    try {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+      return parsed
+        .map((item: any) => ({
+          id: item?.id ? String(item.id) : undefined,
+          name: typeof item?.name === 'string' ? item.name : '',
+          description: typeof item?.description === 'string' ? item.description : '',
+          segments: Array.isArray(item?.segments) ? item.segments.map((s: any) => String(s)) : []
+        }))
+        .filter((p: TransferProduct) => p.name || p.description || p.segments.length > 0);
+    } catch {
+      return [];
+    }
+  }
+
+  private stringifyAssociatedProducts(products: TransferProduct[]): string {
+    return JSON.stringify(products ?? []);
+  }
+
+  private cloneTransferProducts(products: TransferProduct[]): TransferProduct[] {
+    return (products ?? []).map(p => ({
+      ...p,
+      segments: [...(p.segments ?? [])]
+    }));
   }
 }

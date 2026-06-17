@@ -85,6 +85,18 @@
 
         <mat-divider></mat-divider>
 
+        <!-- Resources -->
+        <div class="detail-section" *ngIf="getResources().length">
+          <h3>Resources</h3>
+          <div class="chips-container">
+            <mat-chip *ngFor="let label of getResources()" selected>
+              {{ label }}
+            </mat-chip>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
         <!-- Product Information -->
         <div class="detail-section">
           <h3>Product Information</h3>

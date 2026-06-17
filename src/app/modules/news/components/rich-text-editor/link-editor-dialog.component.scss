@@ -1,0 +1,71 @@
+.link-dialog {
+  display: flex;
+  flex-direction: column;
+  min-width: 360px;
+}
+
+.link-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 0 24px;
+}
+
+.link-dialog-title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.link-dialog-content {
+  padding: 8px 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.link-dialog-error {
+  margin: 0 0 8px;
+  color: #c62828;
+  font-size: 13px;
+}
+
+.link-dialog-toggles {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 40px;
+}
+
+.info-btn {
+  color: #757575;
+  width: 32px;
+  height: 32px;
+
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.remove-link-btn {
+  align-self: flex-start;
+  margin-top: 12px;
+}
+
+.link-dialog-actions {
+  padding: 12px 24px 16px;
+  gap: 8px;
+}

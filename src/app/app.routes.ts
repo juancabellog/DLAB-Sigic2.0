@@ -21,6 +21,46 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'news',
+    loadComponent: () => import('./modules/news/news-list/news-list.component').then(m => m.NewsListComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'news/new',
+    loadComponent: () => import('./modules/news/news-edit/news-edit.component').then(m => m.NewsEditComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'news/:id/view',
+    loadComponent: () => import('./modules/news/news-view/news-view.component').then(m => m.NewsViewComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'news/:id/edit',
+    loadComponent: () => import('./modules/news/news-edit/news-edit.component').then(m => m.NewsEditComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'agenda',
+    loadComponent: () => import('./modules/agenda/agenda-list/agenda-list.component').then(m => m.AgendaListComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'agenda/new',
+    loadComponent: () => import('./modules/agenda/agenda-edit/agenda-edit.component').then(m => m.AgendaEditComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'agenda/:id/view',
+    loadComponent: () => import('./modules/agenda/agenda-view/agenda-view.component').then(m => m.AgendaViewComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'agenda/:id/edit',
+    loadComponent: () => import('./modules/agenda/agenda-edit/agenda-edit.component').then(m => m.AgendaEditComponent),
+    canActivate: [authGuard]
+  },
       {
         path: 'publications',
         loadComponent: () => import('./modules/publications/publication-list/publication-list.component').then(m => m.PublicationListComponent),
@@ -59,6 +99,26 @@ export const routes: Routes = [
   {
     path: 'scientific-events/:id/edit',
     loadComponent: () => import('./modules/scientific-events/scientific-events-edit/scientific-events-edit.component').then(m => m.ScientificEventsEditComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'participation-scientific-events',
+    loadComponent: () => import('./modules/participation-scientific-events/pse-list/pse-list.component').then(m => m.PseListComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'participation-scientific-events/new',
+    loadComponent: () => import('./modules/participation-scientific-events/pse-edit/pse-edit.component').then(m => m.PseEditComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'participation-scientific-events/:id',
+    loadComponent: () => import('./modules/participation-scientific-events/pse-view/pse-view.component').then(m => m.PseViewComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'participation-scientific-events/:id/edit',
+    loadComponent: () => import('./modules/participation-scientific-events/pse-edit/pse-edit.component').then(m => m.PseEditComponent),
     canActivate: [authGuard]
   },
   {
@@ -220,6 +280,11 @@ export const routes: Routes = [
   {
     path: 'analysis/temporal-evolution',
     loadComponent: () => import('./modules/analysis/temporal-evolution/temporal-evolution.component').then(m => m.TemporalEvolutionComponent),
+    canActivate: [analysisGuard]
+  },
+  {
+    path: 'analysis/gender-observatory',
+    loadComponent: () => import('./modules/analysis/gender-observatory/gender-observatory.component').then(m => m.GenderObservatoryComponent),
     canActivate: [analysisGuard]
   },
   {

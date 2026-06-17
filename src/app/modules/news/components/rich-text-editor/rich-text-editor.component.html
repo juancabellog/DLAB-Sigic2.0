@@ -1,0 +1,388 @@
+<div class="rte-container" [class.rte-disabled]="disabled" [class.rte-source-mode]="sourceMode">
+  <div class="rte-toolbar" aria-label="Formatting toolbar">
+    <!-- Paragraph / heading -->
+    <mat-form-field appearance="outline" class="rte-select-field" subscriptSizing="dynamic">
+      <mat-select
+        [value]="blockFormat"
+        (selectionChange)="applyBlockFormat($event.value)"
+        [disabled]="disabled || sourceMode"
+        matTooltip="Paragraph style"
+        aria-label="Paragraph style">
+        <mat-option *ngFor="let opt of blockFormatOptions" [value]="opt.value">{{ opt.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <!-- Font size -->
+    <mat-form-field appearance="outline" class="rte-select-field rte-select-field--narrow" subscriptSizing="dynamic">
+      <mat-select
+        [value]="fontSize"
+        (selectionChange)="applyFontSize($event.value)"
+        [disabled]="disabled || sourceMode"
+        matTooltip="Font size"
+        aria-label="Font size">
+        <mat-option *ngFor="let size of fontSizeOptions" [value]="size">{{ size }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <span class="rte-toolbar-divider" aria-hidden="true"></span>
+
+    <!-- Inline formatting -->
+    <button type="button" mat-icon-button matTooltip="Bold" (click)="exec('bold')" [disabled]="disabled || sourceMode">
+      <mat-icon>format_bold</mat-icon>
+    </button>
+    <button type="button" mat-icon-button matTooltip="Italic" (click)="exec('italic')" [disabled]="disabled || sourceMode">
+      <mat-icon>format_italic</mat-icon>
+    </button>
+    <button type="button" mat-icon-button matTooltip="Underline" (click)="exec('underline')" [disabled]="disabled || sourceMode">
+      <mat-icon>format_underlined</mat-icon>
+    </button>
+
+    <!-- Text color -->
+    <button
+      type="button"
+      mat-icon-button
+      matTooltip="Text color"
+      class="rte-color-btn"
+      (click)="openForeColorPicker()"
+      [disabled]="disabled || sourceMode">
+      <mat-icon class="rte-icon-color-text">format_color_text</mat-icon>
+    </button>
+    <input
+      #foreColorInput
+      type="color"
+      class="rte-color-input"
+      [value]="foreColor"
+      (input)="applyForeColor($any($event.target).value)"
+      tabindex="-1"
+      aria-hidden="true" />
+
+    <!-- Highlight -->
+    <button
+      type="button"
+      mat-icon-button
+      matTooltip="Highlight color"
+      class="rte-color-btn"
+      (click)="openHighlightColorPicker()"
+      [disabled]="disabled || sourceMode">
+      <mat-icon>border_color</mat-icon>
+    </button>
+    <input
+      #highlightColorInput
+      type="color"
+      class="rte-color-input"
+      [value]="highlightColor"
+      (input)="applyHighlightColor($any($event.target).value)"
+      tabindex="-1"
+      aria-hidden="true" />
+
+    <span class="rte-toolbar-divider" aria-hidden="true"></span>
+
+    <button type="button" mat-icon-button matTooltip="Insert link" (click)="insertLink()" [disabled]="disabled || sourceMode">
+      <mat-icon>link</mat-icon>
+    </button>
+    <button type="button" mat-icon-button matTooltip="Quote" (click)="insertQuote()" [disabled]="disabled || sourceMode">
+      <mat-icon>format_quote</mat-icon>
+    </button>
+    <button
+      type="button"
+      mat-icon-button
+      [matTooltip]="sourceMode ? 'Visual editor' : 'HTML source'"
+      [class.rte-btn-active]="sourceMode"
+      (click)="toggleSourceMode()"
+      [disabled]="disabled">
+      <mat-icon>code</mat-icon>
+    </button>
+
+    <span class="rte-toolbar-divider" aria-hidden="true"></span>
+
+    <button type="button" mat-icon-button matTooltip="Numbered list" (click)="exec('insertOrderedList')" [disabled]="disabled || sourceMode">
+      <mat-icon>format_list_numbered</mat-icon>
+    </button>
+    <button type="button" mat-icon-button matTooltip="Bullet list" (click)="exec('insertUnorderedList')" [disabled]="disabled || sourceMode">
+      <mat-icon>format_list_bulleted</mat-icon>
+    </button>
+
+    <span class="rte-toolbar-divider" aria-hidden="true"></span>
+
+    <!-- Alignment -->
+    <button type="button" mat-icon-button matTooltip="Align left" (click)="exec('justifyLeft')" [disabled]="disabled || sourceMode">
+      <mat-icon>format_align_left</mat-icon>
+    </button>
+    <button type="button" mat-icon-button matTooltip="Align center" (click)="exec('justifyCenter')" [disabled]="disabled || sourceMode">
+      <mat-icon>format_align_center</mat-icon>
+    </button>
+    <button type="button" mat-icon-button matTooltip="Align right" (click)="exec('justifyRight')" [disabled]="disabled || sourceMode">
+      <mat-icon>format_align_right</mat-icon>
+    </button>
+    <button type="button" mat-icon-button matTooltip="Justify" (click)="exec('justifyFull')" [disabled]="disabled || sourceMode">
+      <mat-icon>format_align_justify</mat-icon>
+    </button>
+
+    <!-- Line spacing -->
+    <mat-form-field appearance="outline" class="rte-select-field rte-select-field--narrow" subscriptSizing="dynamic">
+      <mat-select
+        [value]="lineHeight"
+        (selectionChange)="applyLineHeight($event.value)"
+        [disabled]="disabled || sourceMode"
+        matTooltip="Line spacing"
+        aria-label="Line spacing">
+        <mat-option *ngFor="let opt of lineHeightOptions" [value]="opt.value">{{ opt.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button type="button" mat-icon-button matTooltip="Decrease indent" (click)="exec('outdent')" [disabled]="disabled || sourceMode">
+      <mat-icon>format_indent_decrease</mat-icon>
+    </button>
+    <button type="button" mat-icon-button matTooltip="Increase indent" (click)="exec('indent')" [disabled]="disabled || sourceMode">
+      <mat-icon>format_indent_increase</mat-icon>
+    </button>
+
+    <span class="rte-toolbar-divider" aria-hidden="true"></span>
+
+    <button
+      type="button"
+      mat-icon-button
+      matTooltip="Insert image"
+      (click)="triggerImageUpload()"
+      [disabled]="disabled || uploadingImage || sourceMode">
+      <mat-icon>image</mat-icon>
+    </button>
+    <button
+      type="button"
+      mat-icon-button
+      matTooltip="Insert video"
+      (click)="openVideoInsertDialog()"
+      [disabled]="disabled || sourceMode">
+      <mat-icon>smart_display</mat-icon>
+    </button>
+    <button type="button" mat-icon-button matTooltip="Clear formatting" (click)="exec('removeFormat')" [disabled]="disabled || sourceMode">
+      <mat-icon>format_clear</mat-icon>
+    </button>
+    <button type="button" mat-icon-button matTooltip="Undo" (click)="exec('undo')" [disabled]="disabled || sourceMode">
+      <mat-icon>undo</mat-icon>
+    </button>
+    <button type="button" mat-icon-button matTooltip="Redo" (click)="exec('redo')" [disabled]="disabled || sourceMode">
+      <mat-icon>redo</mat-icon>
+    </button>
+
+    <button
+      type="button"
+      mat-icon-button
+      matTooltip="Use this editor to format the full news content."
+      class="rte-info-btn"
+      tabindex="-1">
+      <mat-icon>info</mat-icon>
+    </button>
+  </div>
+
+  <input
+    #imageInput
+    type="file"
+    accept="image/*"
+    class="rte-file-input"
+    (change)="onImageFileSelected($event)" />
+
+  <div class="rte-editor-surface">
+    <textarea
+      *ngIf="sourceMode"
+      class="rte-source"
+      [ngModel]="sourceHtml"
+      (ngModelChange)="onSourceHtmlChange($event)"
+      [ngStyle]="editorBodyStyle"
+      [disabled]="disabled"
+      spellcheck="false"
+      aria-label="HTML source editor"></textarea>
+
+    <div
+      *ngIf="!sourceMode"
+      #editable
+      class="rte-editable rich-text-content news-body-content"
+      contenteditable="true"
+      [attr.data-placeholder]="placeholder"
+      [ngStyle]="editorBodyStyle"
+      (input)="onInput()"
+      (blur)="onBlur()"
+      (click)="onEditableClick($event)"
+      (scroll)="onEditableScroll()"
+      [attr.contenteditable]="!disabled ? 'true' : 'false'">
+    </div>
+  </div>
+</div>
+
+<!-- Quick video toolbar — fixed to viewport so parent overflow cannot clip it -->
+<div
+  *ngIf="videoToolbarVisible && selectedVideoBlock"
+  class="rte-video-toolbar-portal"
+  [style.top.px]="videoToolbarTop"
+  [style.left.px]="videoToolbarLeft"
+  (mousedown)="$event.preventDefault()"
+  role="toolbar"
+  aria-label="Video options">
+  <span
+    class="rte-video-toolbar-label"
+    [matTooltip]="selectedVideoLabel"
+    matTooltipShowDelay="400">
+    {{ selectedVideoLabel }}
+  </span>
+  <button
+    type="button"
+    mat-icon-button
+    class="rte-video-toolbar-btn"
+    matTooltip="Edit video"
+    aria-label="Edit video"
+    (click)="editSelectedVideo()">
+    <mat-icon>edit</mat-icon>
+  </button>
+  <button
+    type="button"
+    mat-icon-button
+    class="rte-video-toolbar-btn"
+    matTooltip="Full width"
+    aria-label="Full width"
+    [class.rte-btn-active]="isVideoFullWidth()"
+    (click)="setVideoFullWidth()">
+    <mat-icon>fit_screen</mat-icon>
+  </button>
+  <button
+    type="button"
+    mat-icon-button
+    class="rte-video-toolbar-btn"
+    matTooltip="Align center"
+    aria-label="Align center"
+    [class.rte-btn-active]="isVideoAlignCenter()"
+    (click)="setVideoAlignCenter()">
+    <mat-icon>format_align_center</mat-icon>
+  </button>
+  <button
+    type="button"
+    mat-icon-button
+    class="rte-video-toolbar-btn"
+    matTooltip="Remove video"
+    aria-label="Remove video"
+    color="warn"
+    (click)="removeSelectedVideo()">
+    <mat-icon>delete</mat-icon>
+  </button>
+</div>
+
+<!-- Quick link toolbar — fixed to viewport so parent overflow cannot clip it -->
+<div
+  *ngIf="linkToolbarVisible && selectedAnchor"
+  class="rte-link-toolbar-portal quick-link-popover"
+  [style.top.px]="linkToolbarTop"
+  [style.left.px]="linkToolbarLeft"
+  (mousedown)="$event.preventDefault()"
+  role="toolbar"
+  aria-label="Link options">
+  <span
+    class="quick-link-popover-url"
+    [matTooltip]="selectedLinkHref"
+    matTooltipShowDelay="400">
+    {{ selectedLinkHref }}
+  </span>
+  <button
+    type="button"
+    mat-icon-button
+    class="quick-link-popover-button"
+    matTooltip="Open link"
+    aria-label="Open link"
+    (click)="openSelectedLink()">
+    <mat-icon>open_in_new</mat-icon>
+  </button>
+  <button
+    type="button"
+    mat-icon-button
+    class="quick-link-popover-button"
+    matTooltip="Edit link"
+    aria-label="Edit link"
+    (click)="editSelectedLink()">
+    <mat-icon>edit</mat-icon>
+  </button>
+  <button
+    type="button"
+    mat-icon-button
+    class="quick-link-popover-button"
+    matTooltip="Remove link"
+    aria-label="Remove link"
+    (click)="removeSelectedLink()">
+    <mat-icon>link_off</mat-icon>
+  </button>
+</div>
+
+<!-- Fixed to viewport so parent overflow cannot clip the menu -->
+<div
+  *ngIf="imageToolbarVisible && selectedImage"
+  class="rte-image-toolbar-portal"
+  [style.top.px]="imageToolbarTop"
+  [style.left.px]="imageToolbarLeft"
+  (mousedown)="$event.preventDefault()"
+  role="toolbar"
+  aria-label="Image options">
+  <div class="rte-image-toolbar-row rte-image-toolbar-row--size">
+    <span class="rte-toolbar-group-label">Size</span>
+    <button
+      *ngFor="let opt of imageSizeOptions"
+      type="button"
+      mat-stroked-button
+      class="rte-size-btn"
+      [class.rte-size-btn--active]="isSizeActive(opt.id)"
+      (click)="setImageSize(opt.id)">
+      {{ opt.label }}
+    </button>
+  </div>
+  <div class="rte-image-toolbar-row rte-image-toolbar-row--text-position">
+    <span class="rte-toolbar-group-label">Text position</span>
+    <button
+      *ngFor="let opt of imageTextWrapOptions"
+      type="button"
+      mat-stroked-button
+      class="rte-wrap-btn"
+      [class.rte-wrap-btn--active]="isTextWrapActive(opt.id)"
+      [matTooltip]="opt.tooltip"
+      (click)="setImageTextWrap(opt.id)">
+      {{ opt.label }}
+    </button>
+  </div>
+  <div
+    class="rte-image-toolbar-row rte-image-toolbar-row--align"
+    [class.rte-image-toolbar-row--disabled]="isAlignDisabled()">
+    <span class="rte-toolbar-group-label">Align</span>
+    <button
+      type="button"
+      mat-icon-button
+      matTooltip="Align left"
+      [class.rte-align-active]="isAlignActive('left')"
+      [disabled]="isAlignDisabled()"
+      (click)="alignSelectedImage('left')">
+      <mat-icon>format_align_left</mat-icon>
+    </button>
+    <button
+      type="button"
+      mat-icon-button
+      matTooltip="Align center"
+      [class.rte-align-active]="isAlignActive('center')"
+      [disabled]="isAlignDisabled()"
+      (click)="alignSelectedImage('center')">
+      <mat-icon>format_align_center</mat-icon>
+    </button>
+    <button
+      type="button"
+      mat-icon-button
+      matTooltip="Align right"
+      [class.rte-align-active]="isAlignActive('right')"
+      [disabled]="isAlignDisabled()"
+      (click)="alignSelectedImage('right')">
+      <mat-icon>format_align_right</mat-icon>
+    </button>
+    <span *ngIf="isAlignDisabled()" class="rte-align-hint">For block images only</span>
+  </div>
+  <div class="rte-image-toolbar-row rte-image-toolbar-row--alt">
+    <mat-form-field appearance="outline" class="rte-alt-field" subscriptSizing="dynamic">
+      <mat-label>Alt text</mat-label>
+      <input matInput [(ngModel)]="imageAltText" (change)="applyImageAlt()" />
+    </mat-form-field>
+    <button type="button" mat-icon-button matTooltip="Remove image" color="warn" (click)="removeSelectedImage()">
+      <mat-icon>delete</mat-icon>
+    </button>
+  </div>
+</div>

@@ -1,0 +1,121 @@
+<div class="detail-container" *ngIf="item">
+  <div class="header-actions">
+    <button mat-button (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back to Participation in Scientific Events
+    </button>
+    <button mat-raised-button color="primary" (click)="editItem()">
+      <mat-icon>edit</mat-icon>
+      Edit
+    </button>
+  </div>
+
+  <mat-card class="detail-card">
+    <mat-card-header>
+      <mat-card-title>{{ getTitle() }}</mat-card-title>
+      <mat-card-subtitle>
+        <mat-chip [color]="getStatusColor(item.estadoProducto?.codigo || item.estadoProducto?.codigoDescripcion)" selected>
+          {{ item.estadoProducto?.codigo || item.estadoProducto?.codigoDescripcion || item.estadoProducto?.nombre || 'N/A' }}
+        </mat-chip>
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="detail-section">
+        <h3>Participation Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <strong>Event Name:</strong>
+            <span>{{ item.eventName || 'N/A' }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Participation Type:</strong>
+            <span>{{ item.tipoParticipacionEvento?.idDescripcion || 'N/A' }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Presentation Modality:</strong>
+            <span>{{ item.idModalidadPresentacion === 1 ? 'Oral Presentation' : (item.idModalidadPresentacion === 2 ? 'Poster' : 'N/A') }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>City:</strong>
+            <span>{{ item.ciudad || 'N/A' }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Country:</strong>
+            <span>{{ item.pais?.idDescripcion || 'N/A' }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Location:</strong>
+            <span>{{ getLocation() }}</span>
+          </div>
+          <div class="detail-item" *ngIf="item.fechaInicio">
+            <strong>Start Date:</strong>
+            <span>{{ item.fechaInicio | date:'MMM dd, yyyy' }}</span>
+          </div>
+          <div class="detail-item" *ngIf="item.fechaTermino">
+            <strong>End Date:</strong>
+            <span>{{ item.fechaTermino | date:'MMM dd, yyyy' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="detail-section">
+        <h3>Product Information</h3>
+        <div class="detail-grid">
+          <div class="detail-item" *ngIf="item.progressReport">
+            <strong>Progress Report (Period):</strong>
+            <span>Period {{ item.progressReport }}</span>
+          </div>
+          <div class="detail-item" *ngIf="item.codigoANID">
+            <strong>ANID Code:</strong>
+            <span>{{ item.codigoANID }}</span>
+          </div>
+          <div class="detail-item">
+            <strong>Basal Funding:</strong>
+            <mat-chip [color]="isBasal() ? 'primary' : 'warn'" selected>
+              {{ getBasalStatus() }}
+            </mat-chip>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="detail-section" *ngIf="getPdfUrl()">
+        <h3>Documents</h3>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <strong>PDF Document:</strong>
+            <span>
+              <a [href]="getPdfUrl()!" target="_blank" download [attr.download]="getTitle() + '.pdf'" class="pdf-link" matTooltip="Download PDF">
+                <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+                Download PDF
+              </a>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="detail-section" *ngIf="item.comentario">
+        <h3>Comments</h3>
+        <p>{{ item.comentario }}</p>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions>
+      <button mat-button color="warn" (click)="deleteItem()">
+        <mat-icon>delete</mat-icon>
+        Delete
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>
+
+<div *ngIf="loading || !item" class="loading-container">
+  <mat-spinner></mat-spinner>
+  <p>Loading participation in scientific events details...</p>
+</div>

@@ -70,10 +70,18 @@ export class BaseHttpService {
   /**
    * Sube un archivo (multipart/form-data)
    */
-  uploadFile<T>(endpoint: string, file: File, fieldName: string = 'file'): Observable<T> {
+  uploadFile<T>(
+    endpoint: string,
+    file: File,
+    fieldName: string = 'file',
+    extraFields?: Record<string, string>
+  ): Observable<T> {
     const formData = new FormData();
     formData.append(fieldName, file);
-    
+    if (extraFields) {
+      Object.entries(extraFields).forEach(([key, value]) => formData.append(key, value));
+    }
+
     return this.http.post<T>(`${this.baseUrl}${endpoint}`, formData).pipe(
       catchError(this.handleError)
     );

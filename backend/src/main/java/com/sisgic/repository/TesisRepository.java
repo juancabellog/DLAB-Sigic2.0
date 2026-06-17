@@ -46,7 +46,7 @@ public interface TesisRepository extends JpaRepository<Tesis, Long> {
      * @return Página de tesis visibles
      */
     @Query(value = "SELECT t.id, t.idInstitucionOG, t.idGradoAcademico, t.idInstitucion, t.idEstadoTesis, " +
-           "t.fechaInicioPrograma, t.nombreCompletoTitulo, t.tipoSector, " +
+           "t.fechaInicioPrograma, t.nombreCompletoTitulo, t.tipoSector, t.resources, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
            "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +
@@ -69,7 +69,7 @@ public interface TesisRepository extends JpaRepository<Tesis, Long> {
      * @return Optional con la tesis si es visible, o vacío si no lo es
      */
     @Query(value = "SELECT t.id, t.idInstitucionOG, t.idGradoAcademico, t.idInstitucion, t.idEstadoTesis, " +
-           "t.fechaInicioPrograma, t.nombreCompletoTitulo, t.tipoSector, " +
+           "t.fechaInicioPrograma, t.nombreCompletoTitulo, t.tipoSector, t.resources, " +
            "pr.idDescripcion, pr.idComentario, pr.fechaInicio, pr.fechaTermino, " +
            "pr.idTipoProducto, pr.urlDocumento, pr.linkVisualizacion, pr.linkPDF, pr.progressReport, " +
            "pr.idEstadoProducto, pr.codigoANID, pr.basal, pr.nameResearchLine, pr.cluster, pr.created_at, pr.updated_at, " +

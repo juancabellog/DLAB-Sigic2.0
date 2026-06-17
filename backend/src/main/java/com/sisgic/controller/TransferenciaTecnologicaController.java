@@ -221,6 +221,9 @@ public class TransferenciaTecnologicaController {
                 if (dto.getLineasInvestigacion() != null) {
                     existingTransfer.setLineasInvestigacion(dto.getLineasInvestigacion());
                 }
+                if (dto.getProductos() != null) {
+                    existingTransfer.setProductos(dto.getProductos());
+                }
                 if (dto.getCluster() != null) {
                     existingTransfer.setCluster(dto.getCluster());
                 }
@@ -444,6 +447,8 @@ public class TransferenciaTecnologicaController {
             dto.setPais(paisDTO);
         }
 
+        dto.setProductos(transfer.getProductos());
+
         return dto;
     }
 
@@ -519,6 +524,7 @@ public class TransferenciaTecnologicaController {
             paisRepository.findById(dto.getPais().getCodigo())
                 .ifPresent(transfer::setPais);
         }
+        transfer.setProductos(dto.getProductos());
 
         return transfer;
     }

@@ -1,0 +1,123 @@
+<div class="agenda-preview" *ngIf="!loading && item; else loadingTpl">
+  <div class="agenda-preview-toolbar">
+    <button mat-icon-button type="button" (click)="back()" matTooltip="Back to list" aria-label="Back to list">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="toolbar-actions">
+      <button mat-stroked-button type="button" (click)="preview()">
+        <mat-icon>open_in_new</mat-icon>
+        Preview website
+      </button>
+      <button mat-raised-button color="primary" type="button" (click)="edit()">
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+    </div>
+  </div>
+
+  <div class="language-selector">
+    <span class="language-selector-label">Content language</span>
+    <mat-button-toggle-group
+      class="language-toggle-group"
+      [value]="selectedLanguage"
+      (change)="onLanguageChange($event.value)"
+      aria-label="Content language">
+      <mat-button-toggle value="es">Spanish</mat-button-toggle>
+      <mat-button-toggle
+        value="en"
+        [disabled]="isEnglishDisabled()"
+        [matTooltip]="englishDisabledTooltip()"
+        [matTooltipDisabled]="!isEnglishDisabled()"
+        [attr.title]="isEnglishDisabled() ? englishDisabledTooltip() : null"
+        matTooltipPosition="above">
+        English
+      </mat-button-toggle>
+    </mat-button-toggle-group>
+    <p class="translation-warning" *ngIf="showEnglishNotValidatedWarning()">
+      <mat-icon>info</mat-icon>
+      English translation is not validated yet.
+    </p>
+  </div>
+
+  <header class="agenda-preview-header">
+    <p class="editorial-meta">{{ getEditorialMetaLine() }}</p>
+    <h1 class="editorial-title">{{ getDisplayTitle() }}</h1>
+    <div class="event-details-row">
+      <mat-chip *ngIf="getEventModeLabel()" class="mode-chip">{{ getEventModeLabel() }}</mat-chip>
+      <mat-chip *ngIf="isPast()" class="past-chip">Past event</mat-chip>
+      <mat-chip *ngIf="item.featured" class="featured-chip">
+        <mat-icon>star</mat-icon>
+        Featured
+      </mat-chip>
+    </div>
+    <div class="category-row" *ngIf="item.categories?.length">
+      <mat-chip *ngFor="let category of item.categories" class="category-chip">{{ category.label }}</mat-chip>
+    </div>
+  </header>
+
+  <mat-card class="event-details-card" *ngIf="item">
+    <mat-card-content>
+      <h2 class="card-title">Event details</h2>
+      <dl class="details-list">
+        <div *ngIf="item.eventDate">
+          <dt>Date</dt>
+          <dd>{{ formatEventDate(item.eventDate) }}</dd>
+        </div>
+        <div *ngIf="item.startTime">
+          <dt>Time</dt>
+          <dd>{{ formatEventTimeRange(item.startTime, item.endTime) }}</dd>
+        </div>
+        <div *ngIf="getLocationLine()">
+          <dt>Location / Online</dt>
+          <dd>{{ getLocationLine() }}</dd>
+        </div>
+        <div *ngIf="getEventModeLabel()">
+          <dt>Mode</dt>
+          <dd>{{ getEventModeLabel() }}</dd>
+        </div>
+        <div *ngIf="getDisplayOrganizer()">
+          <dt>Organizer</dt>
+          <dd>{{ getDisplayOrganizer() }}</dd>
+        </div>
+        <div *ngIf="getDisplaySpeaker()">
+          <dt>Speaker</dt>
+          <dd>{{ getDisplaySpeaker() }}</dd>
+        </div>
+        <div *ngIf="getDisplayAudience()">
+          <dt>Audience</dt>
+          <dd>{{ getDisplayAudience() }}</dd>
+        </div>
+      </dl>
+    </mat-card-content>
+  </mat-card>
+
+  <article class="agenda-preview-article">
+    <img
+      *ngIf="getImageUrl() as src"
+      [src]="src"
+      class="hero-image"
+      [alt]="getImageAlt()" />
+
+    <p class="article-lead" *ngIf="getDisplaySummary()?.trim()">{{ getDisplaySummary() }}</p>
+
+    <div
+      class="body-html agenda-body-content rich-text-content"
+      *ngIf="hasDisplayDescription(); else emptyBodyTpl"
+      [innerHTML]="getSanitizedDescriptionHtml()"></div>
+    <ng-template #emptyBodyTpl>
+      <p class="content-empty" *ngIf="!getDisplaySummary()?.trim()">No content available in this language.</p>
+    </ng-template>
+
+    <div class="cta-row" *ngIf="getCtaUrl()">
+      <a mat-raised-button color="primary" [href]="getCtaUrl()" target="_blank" rel="noopener">
+        {{ getCtaLabel() }}
+      </a>
+    </div>
+  </article>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+</ng-template>

@@ -1,4 +1,5 @@
 server:
+  port: 8081
   servlet:
     context-path: /sigic2.0
 
@@ -24,12 +25,13 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: validate
-    show-sql: true
+      # Igual que dev: no validar esquema contra entidades (BD legacy con CHAR/MEDIUMTEXT, etc.)
+      ddl-auto: none
+    show-sql: false
     open-in-view: false  # Deshabilitar OpenSessionInViewFilter para evitar lazy loading durante serialización
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         # Configurar para respetar nombres exactos de columnas
         physical_naming_strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
   
@@ -45,9 +47,39 @@ jwt:
 logging:
   level:
     com.sisgic: DEBUG
-    org.springframework.security: DEBUG
+    com.sisgic.security: INFO
+    org.springframework.security: WARN
+    org.springframework.web.servlet.handler.HandlerMappingIntrospector: ERROR
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
 
+# Configuración para PDFs
+pdfs:
+  path: ${PDFS_PATH:}
+
+# Imágenes de noticias/agenda — GET /sigic2.0/media/{archivo}
+media:
+  path: ${MEDIA_PATH:}
+
+# Configuración para carga de publicaciones desde DOI
+openalex:
+  default-project-code: PRJ0000000000004
+
+# Configuración de caché (catálogos y textos; invalidación vía AdminCacheController)
+cache:
+  catalogos:
+    max-size: 1000
+    ttl-minutes: 30
+  textos:
+    max-size: 5000
+    ttl-minutes: 60
+
+gemini:
+  apikeys: []
+  apikey: ${GEMINI_API_KEY:}
+  model: ${GEMINI_MODEL:gemini-flash-lite-latest}
+  timeout-ms: ${GEMINI_TIMEOUT_MS:300000}
 
 app:
-  version: "2025.03.30-01"
-
+  version: ${APP_VERSION:2026.06.04-01}
+  public-base-url: https://apps.cienciavida.org/sigic2.0

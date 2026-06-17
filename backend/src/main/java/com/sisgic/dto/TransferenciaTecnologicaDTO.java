@@ -36,6 +36,8 @@ public class TransferenciaTecnologicaDTO {
     private String region;
     private Integer agno;
     private PaisDTO pais;
+    /** JSON string: associated products for this technology transfer */
+    private String productos;
     
     // Participantes
     private List<ParticipanteDTO> participantes;
@@ -94,6 +96,8 @@ public class TransferenciaTecnologicaDTO {
     public void setAgno(Integer agno) { this.agno = agno; }
     public PaisDTO getPais() { return pais; }
     public void setPais(PaisDTO pais) { this.pais = pais; }
+    public String getProductos() { return productos; }
+    public void setProductos(String productos) { this.productos = productos; }
     
     // Getters and Setters - Participantes
     public List<ParticipanteDTO> getParticipantes() { return participantes; }

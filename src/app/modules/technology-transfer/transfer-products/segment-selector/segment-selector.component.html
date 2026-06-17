@@ -1,0 +1,42 @@
+<div class="segment-selector">
+  <div class="segment-selector__label-row">
+    <span class="segment-selector__label">Segment</span>
+    <span class="segment-selector__required" aria-hidden="true">*</span>
+  </div>
+  <p class="segment-selector__helper">Select one or more segments associated with this product.</p>
+
+  <div class="segment-selector__groups">
+    @for (group of groupedRoots; track group.id) {
+      <div class="segment-selector__group">
+        <div class="segment-selector__group-title">{{ group.label }}</div>
+        <div class="segment-selector__options">
+          @for (child of group.children!; track child.id) {
+            <mat-checkbox
+              class="segment-selector__checkbox"
+              [checked]="isChecked(child.id)"
+              [disabled]="isLeafDisabled(child.id)"
+              (change)="onLeafChange(child.id, $event)">
+              {{ child.label }}
+            </mat-checkbox>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  <div class="segment-selector__standalone">
+    @for (leaf of standaloneLeaves; track leaf.id) {
+      <mat-checkbox
+        class="segment-selector__checkbox"
+        [checked]="isChecked(leaf.id)"
+        [disabled]="isLeafDisabled(leaf.id)"
+        (change)="onLeafChange(leaf.id, $event)">
+        {{ leaf.label }}
+      </mat-checkbox>
+    }
+  </div>
+
+  @if (showError() && hasRequiredError()) {
+    <div class="segment-selector__error" role="alert">Select at least one segment.</div>
+  }
+</div>

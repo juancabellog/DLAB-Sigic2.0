@@ -9,6 +9,8 @@ import com.sisgic.dto.TipoProductoDTO;
 import com.sisgic.entity.*;
 import com.sisgic.repository.*;
 import com.sisgic.service.TextosService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,7 +19,15 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.poi.common.usermodel.HyperlinkType;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Hyperlink;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -35,6 +45,9 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/outreach-activities")
 @CrossOrigin(origins = "*")
 public class DifusionController {
+
+    private static final Logger log = LoggerFactory.getLogger(DifusionController.class);
+    private static final int EXCEL_CELL_MAX_LENGTH = 32_767;
 
     @Autowired
     private DifusionRepository difusionRepository;
@@ -119,7 +132,9 @@ public class DifusionController {
     public void exportOutreachActivitiesToExcel(
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "DESC") String sortDir,
+            HttpServletRequest request,
             HttpServletResponse response) {
+        log.info("POST /api/outreach-activities/export started: sortBy={}, sortDir={}", sortBy, sortDir);
         try {
             Sort sort = sortDir.equalsIgnoreCase("DESC")
                 ? Sort.by(sortBy).descending()
@@ -130,6 +145,9 @@ public class DifusionController {
             List<Difusion> activities = difusionRepository
                 .findVisibleByUserIdRRHH(idRRHH, userName, PageRequest.of(0, 100000, sort))
                 .getContent();
+
+            log.info("Outreach Excel export: user={}, idRRHH={}, activitiesToExport={}",
+                userName, idRRHH, activities.size());
 
             Map<Long, String> targetAudienceDescriptions = new HashMap<>();
             for (PublicoObjetivo po : publicoObjetivoRepository.findAllByOrderByIdAsc()) {
@@ -162,15 +180,26 @@ public class DifusionController {
                 "ANID Code",
                 "creationDate",
                 "Main Responsible",
-                "Participants"
+                "Participants",
+                "Link",
+                "PDF Document"
             };
 
             for (int i = 0; i < headers.length; i++) {
                 headerRow.createCell(i).setCellValue(headers[i]);
             }
 
+            CreationHelper creationHelper = workbook.getCreationHelper();
+            CellStyle pdfLinkStyle = workbook.createCellStyle();
+            Font pdfLinkFont = workbook.createFont();
+            pdfLinkFont.setUnderline(Font.U_SINGLE);
+            pdfLinkFont.setColor(IndexedColors.BLUE.getIndex());
+            pdfLinkStyle.setFont(pdfLinkFont);
+
             int rowNum = 1;
             for (Difusion activity : activities) {
+                Long activityId = activity != null ? activity.getId() : null;
+                try {
                 Row row = sheet.createRow(rowNum++);
                 DifusionDTO dto = convertToDTO(activity);
 
@@ -225,35 +254,70 @@ public class DifusionController {
                         .orElse(dto.getPais().getIdDescripcion())
                     : "";
 
-                row.createCell(0).setCellValue(dto.getId() != null ? dto.getId().toString() : "");
-                row.createCell(1).setCellValue(dto.getDescripcion() != null ? dto.getDescripcion() : "");
-                row.createCell(2).setCellValue(dto.getComentario() != null ? dto.getComentario() : "");
-                row.createCell(3).setCellValue(diffusionType);
-                row.createCell(4).setCellValue(country);
-                row.createCell(5).setCellValue(dto.getLugar() != null ? dto.getLugar() : "");
-                row.createCell(6).setCellValue(dto.getNumAsistentes() != null ? dto.getNumAsistentes().toString() : "");
-                row.createCell(7).setCellValue(dto.getDuracion() != null ? dto.getDuracion().toString() : "");
-                row.createCell(8).setCellValue(dto.getFechaInicio() != null ? dto.getFechaInicio() : "");
-                row.createCell(9).setCellValue(dto.getFechaTermino() != null ? dto.getFechaTermino() : "");
-                row.createCell(10).setCellValue(targetAudience);
-                row.createCell(11).setCellValue(cluster);
-                row.createCell(12).setCellValue(dto.getProgressReport() != null ? dto.getProgressReport() : "");
-                row.createCell(13).setCellValue(dto.getCodigoANID() != null ? dto.getCodigoANID() : "");
-                row.createCell(14).setCellValue(dto.getCreatedAt() != null ? dto.getCreatedAt() : "");
-                row.createCell(15).setCellValue(mainResponsible);
-                row.createCell(16).setCellValue(participants);
+                row.createCell(0).setCellValue(excelCellValue(dto.getId() != null ? dto.getId().toString() : "", activityId, "id"));
+                row.createCell(1).setCellValue(excelCellValue(dto.getDescripcion(), activityId, "name"));
+                row.createCell(2).setCellValue(excelCellValue(dto.getComentario(), activityId, "description"));
+                row.createCell(3).setCellValue(excelCellValue(diffusionType, activityId, "diffusionType"));
+                row.createCell(4).setCellValue(excelCellValue(country, activityId, "country"));
+                row.createCell(5).setCellValue(excelCellValue(dto.getLugar(), activityId, "place"));
+                row.createCell(6).setCellValue(excelCellValue(dto.getNumAsistentes() != null ? dto.getNumAsistentes().toString() : "", activityId, "attendees"));
+                row.createCell(7).setCellValue(excelCellValue(dto.getDuracion() != null ? dto.getDuracion().toString() : "", activityId, "duration"));
+                row.createCell(8).setCellValue(excelCellValue(dto.getFechaInicio(), activityId, "startDate"));
+                row.createCell(9).setCellValue(excelCellValue(dto.getFechaTermino(), activityId, "endDate"));
+                row.createCell(10).setCellValue(excelCellValue(targetAudience, activityId, "targetAudience"));
+                row.createCell(11).setCellValue(excelCellValue(cluster, activityId, "clusters"));
+                row.createCell(12).setCellValue(excelCellValue(dto.getProgressReport(), activityId, "progressReport"));
+                row.createCell(13).setCellValue(excelCellValue(dto.getCodigoANID(), activityId, "anidCode"));
+                row.createCell(14).setCellValue(excelCellValue(dto.getCreatedAt(), activityId, "creationDate"));
+                row.createCell(15).setCellValue(excelCellValue(mainResponsible, activityId, "mainResponsible"));
+                row.createCell(16).setCellValue(excelCellValue(participants, activityId, "participants"));
+
+                Cell linkCell = row.createCell(17);
+                String activityLink = dto.getLink() != null ? dto.getLink().trim() : "";
+                if (!activityLink.isEmpty()) {
+                    String linkUrl = normalizeExternalUrl(activityLink);
+                    if (linkUrl != null) {
+                        applyExcelUrlHyperlink(linkCell, creationHelper, pdfLinkStyle, linkUrl, linkUrl, activityId, "activity link");
+                    } else {
+                        log.debug("Outreach Excel export: activity id={} link is not http(s), writing as plain text", activityId);
+                        linkCell.setCellValue(excelCellValue(activityLink, activityId, "link"));
+                    }
+                } else {
+                    linkCell.setCellValue("");
+                }
+
+                Cell pdfCell = row.createCell(18);
+                String pdfUrl = pdfFileService.buildPublicPdfUrl(request, activity.getLinkPDF());
+                if (pdfUrl != null) {
+                    applyExcelUrlHyperlink(pdfCell, creationHelper, pdfLinkStyle, pdfUrl, "PDF Document", activityId, "pdf");
+                } else {
+                    pdfCell.setCellValue("");
+                }
+                } catch (Exception rowEx) {
+                    log.error("Outreach Excel export failed while processing activity id={} (excel row {}): {}",
+                        activityId, rowNum - 1, rowEx.getMessage(), rowEx);
+                    throw rowEx;
+                }
             }
 
             for (int i = 0; i < headers.length; i++) {
-                sheet.autoSizeColumn(i);
+                try {
+                    sheet.autoSizeColumn(i);
+                } catch (Exception e) {
+                    log.warn("Could not auto-size Excel column {}: {}", i, e.getMessage());
+                    sheet.setColumnWidth(i, 20 * 256);
+                }
             }
 
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             response.setHeader("Content-Disposition", "attachment; filename=outreach-activities.xlsx");
             workbook.write(response.getOutputStream());
             workbook.close();
+            log.info("Outreach Excel export completed successfully: {} data rows written", rowNum - 1);
         } catch (Exception e) {
-            throw new RuntimeException("Error generating outreach activities Excel file", e);
+            log.error("Error generating outreach activities Excel export (sortBy={}, sortDir={}): {}",
+                sortBy, sortDir, e.getMessage(), e);
+            throw new RuntimeException("Error generating outreach activities Excel file: " + e.getMessage(), e);
         }
     }
 
@@ -656,6 +720,56 @@ public class DifusionController {
             } catch (Exception e2) {
                 return null;
             }
+        }
+    }
+
+    /** Returns a valid http(s) URL for Excel hyperlinks, or null if not link-shaped. */
+    private String normalizeExternalUrl(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        String trimmed = raw.trim();
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+            return trimmed;
+        }
+        return null;
+    }
+
+    private String excelCellValue(String value, Long activityId, String field) {
+        if (value == null) {
+            return "";
+        }
+        if (value.length() > EXCEL_CELL_MAX_LENGTH) {
+            log.warn("Outreach Excel export: field '{}' truncated for activity id={} ({} chars)",
+                field, activityId, value.length());
+            return value.substring(0, EXCEL_CELL_MAX_LENGTH);
+        }
+        return value;
+    }
+
+    private void applyExcelUrlHyperlink(
+            Cell cell,
+            CreationHelper creationHelper,
+            CellStyle linkStyle,
+            String url,
+            String displayText,
+            Long activityId,
+            String linkKind) {
+        if (url == null || url.isBlank()) {
+            cell.setCellValue("");
+            return;
+        }
+        String safeUrl = url.trim();
+        try {
+            Hyperlink hyperlink = creationHelper.createHyperlink(HyperlinkType.URL);
+            hyperlink.setAddress(safeUrl);
+            cell.setHyperlink(hyperlink);
+            cell.setCellValue(excelCellValue(displayText != null ? displayText : safeUrl, activityId, linkKind));
+            cell.setCellStyle(linkStyle);
+        } catch (Exception e) {
+            log.warn("Outreach Excel export: could not create {} hyperlink for activity id={}, url='{}': {}",
+                linkKind, activityId, safeUrl, e.getMessage());
+            cell.setCellValue(excelCellValue(safeUrl, activityId, linkKind));
         }
     }
 

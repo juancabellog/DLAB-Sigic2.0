@@ -1,0 +1,39 @@
+<section class="products-section">
+  <div class="products-section-header">
+    <div class="section-title">Associated products</div>
+    <p>
+      Add the products linked to this technology transfer. You can register one or more products.
+    </p>
+    <button mat-raised-button color="primary" type="button" (click)="addProduct()">
+      <mat-icon>add</mat-icon>
+      Add product
+    </button>
+  </div>
+
+  <div class="products-empty-state" *ngIf="productsFormArray.length === 0">
+    <mat-icon>inventory_2</mat-icon>
+    <h4>You have not added any products yet.</h4>
+    <p>Each product must include a name, an optional description, and at least one segment.</p>
+    <button mat-stroked-button color="primary" type="button" (click)="addProduct()">
+      Add product
+    </button>
+  </div>
+
+  <div class="products-list" *ngIf="productsFormArray.length > 0">
+    <app-product-card
+      *ngFor="let productControl of productsFormArray.controls; let i = index; trackBy: trackByControl"
+      [form]="productControl"
+      [index]="i"
+      [expanded]="!!expandedByIndex[i]"
+      [showErrors]="showErrors"
+      (toggle)="toggleExpanded(i)"
+      (duplicate)="duplicateProduct(i)"
+      (delete)="requestDelete(i)">
+    </app-product-card>
+
+    <button mat-stroked-button color="primary" type="button" (click)="addProduct()" class="add-another-btn">
+      <mat-icon>add</mat-icon>
+      Add another product
+    </button>
+  </div>
+</section>

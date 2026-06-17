@@ -1,0 +1,253 @@
+.agenda-preview {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 24px 48px;
+}
+
+.agenda-preview-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+
+  .toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+}
+
+.language-selector {
+  margin-bottom: 24px;
+
+  .language-selector-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .translation-warning {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 10px 0 0;
+    font-size: 13px;
+    color: #8a6d00;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
+.language-toggle-group {
+  .mat-button-toggle {
+    font-size: 13px;
+    line-height: 32px;
+  }
+
+  .mat-button-toggle-checked {
+    background-color: #e3f2fd;
+    color: #1565c0;
+    font-weight: 600;
+  }
+}
+
+.agenda-preview-header {
+  margin-bottom: 28px;
+
+  .editorial-meta {
+    margin: 0 0 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    letter-spacing: 0.01em;
+  }
+
+  .editorial-title {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1.25;
+    color: #222;
+    word-break: break-word;
+  }
+
+  .event-details-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .mode-chip {
+    background: #e8eaf6 !important;
+    color: #3949ab !important;
+  }
+
+  .past-chip {
+    background: #eceff1 !important;
+    color: #546e7a !important;
+  }
+
+  .featured-chip {
+    background: #fff8e1 !important;
+    color: #f57f17 !important;
+
+    mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-right: 4px;
+    }
+  }
+
+  .location-line {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 16px 0 0;
+    font-size: 15px;
+    color: #555;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: #888;
+    }
+  }
+
+  .category-row,
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .category-chip {
+    background: #f3e5f5;
+    color: #6a1b9a;
+  }
+}
+
+.event-details-card {
+  margin-bottom: 28px;
+
+  .card-title {
+    margin: 0 0 16px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .details-list {
+    margin: 0;
+    display: grid;
+    gap: 12px;
+
+    div {
+      display: grid;
+      grid-template-columns: 140px 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    dt {
+      margin: 0;
+      font-size: 13px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    dd {
+      margin: 0;
+      font-size: 15px;
+      color: #333;
+      word-break: break-word;
+
+      a {
+        color: #1565c0;
+      }
+    }
+  }
+}
+
+.agenda-preview-article {
+  .hero-image {
+    display: block;
+    width: 100%;
+    max-height: 420px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 28px;
+    background: #f0f0f0;
+  }
+
+  .article-lead {
+    margin: 0 0 28px;
+    font-size: 20px;
+    line-height: 1.55;
+    font-weight: 400;
+    color: #4a4a4a;
+    font-style: normal;
+  }
+
+  .body-html.agenda-body-content {
+    line-height: 1.7;
+    color: #333;
+    font-size: 16px;
+
+    :deep(p) {
+      margin: 0 0 1.15em;
+    }
+
+    :deep(h2),
+    :deep(h3) {
+      margin: 1.5em 0 0.6em;
+      color: #222;
+    }
+
+    :deep(img) {
+      max-width: 100%;
+      border-radius: 4px;
+    }
+
+    :deep(ul),
+    :deep(ol) {
+      margin: 0 0 1.15em;
+      padding-left: 1.5em;
+    }
+  }
+
+  .content-empty {
+    margin: 0;
+    font-size: 15px;
+    color: #888;
+    font-style: italic;
+  }
+
+  .cta-row {
+    margin-top: 32px;
+  }
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}

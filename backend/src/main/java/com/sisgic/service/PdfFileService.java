@@ -1,5 +1,6 @@
 package com.sisgic.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +25,9 @@ public class PdfFileService {
 
     @Value("${pdfs.path:}")
     private String pdfsPathConfig;
+
+    @Value("${app.public-base-url:}")
+    private String publicBaseUrl;
 
     /**
      * Elimina un archivo PDF basado en el linkPDF
@@ -197,6 +201,63 @@ public class PdfFileService {
                 }
             }
         }
+    }
+
+    /**
+     * Builds a public HTTP URL for downloading a PDF stored in linkPDF.
+     * Supports values like "PDF:pdfs/file.pdf" or full http(s) URLs.
+     */
+    public String buildPublicPdfUrl(HttpServletRequest request, String linkPDF) {
+        if (linkPDF == null || linkPDF.trim().isEmpty()) {
+            return null;
+        }
+        String trimmed = linkPDF.trim();
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+            return trimmed;
+        }
+
+        String relativePath;
+        if (trimmed.startsWith("PDF:")) {
+            relativePath = trimmed.substring(4).trim();
+        } else {
+            relativePath = trimmed;
+        }
+        if (relativePath.isEmpty()) {
+            return null;
+        }
+        if (!relativePath.startsWith("/")) {
+            relativePath = "/" + relativePath;
+        }
+
+        String baseUrl = resolvePublicBaseUrl(request);
+        if (baseUrl == null) {
+            return null;
+        }
+        return baseUrl + relativePath;
+    }
+
+    private String resolvePublicBaseUrl(HttpServletRequest request) {
+        if (publicBaseUrl != null && !publicBaseUrl.trim().isEmpty()) {
+            return publicBaseUrl.trim().replaceAll("/+$", "");
+        }
+        if (request == null) {
+            return null;
+        }
+
+        StringBuilder url = new StringBuilder();
+        url.append(request.getScheme()).append("://").append(request.getServerName());
+        int port = request.getServerPort();
+        boolean isDefaultPort =
+            ("http".equalsIgnoreCase(request.getScheme()) && port == 80)
+            || ("https".equalsIgnoreCase(request.getScheme()) && port == 443);
+        if (!isDefaultPort) {
+            url.append(":").append(port);
+        }
+        String contextPath = request.getContextPath();
+        if (contextPath != null && !contextPath.isEmpty()) {
+            url.append(contextPath);
+        }
+        return url.toString();
     }
 
     /**

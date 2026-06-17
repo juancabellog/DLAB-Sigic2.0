@@ -188,19 +188,21 @@ public class PublicacionController {
             header.createCell(2).setCellValue("Title");
             header.createCell(3).setCellValue("Journal");
             header.createCell(4).setCellValue("isPrePrint");
-            header.createCell(5).setCellValue("Year");
-            header.createCell(6).setCellValue("Volume");
-            header.createCell(7).setCellValue("First Page");
-            header.createCell(8).setCellValue("Last Page");
-            header.createCell(9).setCellValue("Impact Factor");
-            header.createCell(10).setCellValue("Average Impact Factor 5y");
-            header.createCell(11).setCellValue("Basal");
-            header.createCell(12).setCellValue("Progress Report");
-            header.createCell(13).setCellValue("ANID Code");
-            header.createCell(14).setCellValue("Indexes");
-            header.createCell(15).setCellValue("Funding");
-            header.createCell(16).setCellValue("Clusters");
-            header.createCell(17).setCellValue("Authors");
+            header.createCell(5).setCellValue("Publication Date");
+            header.createCell(6).setCellValue("Year");
+            header.createCell(7).setCellValue("Volume");
+            header.createCell(8).setCellValue("First Page");
+            header.createCell(9).setCellValue("Last Page");
+            header.createCell(10).setCellValue("#Citations");
+            header.createCell(11).setCellValue("Impact Factor");
+            header.createCell(12).setCellValue("Average Impact Factor 5y");
+            header.createCell(13).setCellValue("Basal");
+            header.createCell(14).setCellValue("Progress Report");
+            header.createCell(15).setCellValue("ANID Code");
+            header.createCell(16).setCellValue("Indexes");
+            header.createCell(17).setCellValue("Funding");
+            header.createCell(18).setCellValue("Clusters");
+            header.createCell(19).setCellValue("Authors");
 
             for (Publicacion pub : publicaciones) {
                 PublicacionDTO dto = convertToDTOBase(pub, null);
@@ -220,34 +222,40 @@ public class PublicacionController {
                         ? pub.getJournal().getIsPreprint().toString()
                         : ""
                 );
+                row.createCell(5).setCellValue(dto.getFechaInicio() != null ? dto.getFechaInicio() : "");
                 if (dto.getYearPublished() != null) {
-                    row.createCell(5).setCellValue(dto.getYearPublished());
+                    row.createCell(6).setCellValue(dto.getYearPublished());
                 } else {
-                    row.createCell(5).setCellValue("");
+                    row.createCell(6).setCellValue("");
                 }
-                row.createCell(6).setCellValue(dto.getVolume() != null ? dto.getVolume() : "");
-                row.createCell(7).setCellValue(dto.getFirstpage() != null ? dto.getFirstpage() : "");
-                row.createCell(8).setCellValue(dto.getLastpage() != null ? dto.getLastpage() : "");
-                if (dto.getFactorImpacto() != null) {
-                    row.createCell(9).setCellValue(dto.getFactorImpacto());
-                } else {
-                    row.createCell(9).setCellValue("");
-                }
-                if (dto.getFactorImpactoPromedio() != null) {
-                    row.createCell(10).setCellValue(dto.getFactorImpactoPromedio());
+                row.createCell(7).setCellValue(dto.getVolume() != null ? dto.getVolume() : "");
+                row.createCell(8).setCellValue(dto.getFirstpage() != null ? dto.getFirstpage() : "");
+                row.createCell(9).setCellValue(dto.getLastpage() != null ? dto.getLastpage() : "");
+                if (dto.getNumCitas() != null) {
+                    row.createCell(10).setCellValue(dto.getNumCitas());
                 } else {
                     row.createCell(10).setCellValue("");
                 }
-                row.createCell(11).setCellValue(dto.getBasal() != null ? dto.getBasal() : "");
-                row.createCell(12).setCellValue(dto.getProgressReport() != null ? dto.getProgressReport() : "");
-                row.createCell(13).setCellValue(dto.getCodigoANID() != null ? dto.getCodigoANID() : "");
-                row.createCell(14).setCellValue(resolvePublicationIndexesLabel(dto.getIndexs(), indexLabels));
-                row.createCell(15).setCellValue(resolvePublicationFundingLabel(dto.getFunding(), fundingLabels));
-                row.createCell(16).setCellValue(formatClustersAsRoman(dto.getCluster()));
-                row.createCell(17).setCellValue(buildAuthorsLabel(participaciones));
+                if (dto.getFactorImpacto() != null) {
+                    row.createCell(11).setCellValue(dto.getFactorImpacto());
+                } else {
+                    row.createCell(11).setCellValue("");
+                }
+                if (dto.getFactorImpactoPromedio() != null) {
+                    row.createCell(12).setCellValue(dto.getFactorImpactoPromedio());
+                } else {
+                    row.createCell(12).setCellValue("");
+                }
+                row.createCell(13).setCellValue(dto.getBasal() != null ? dto.getBasal() : "");
+                row.createCell(14).setCellValue(dto.getProgressReport() != null ? dto.getProgressReport() : "");
+                row.createCell(15).setCellValue(dto.getCodigoANID() != null ? dto.getCodigoANID() : "");
+                row.createCell(16).setCellValue(resolvePublicationIndexesLabel(dto.getIndexs(), indexLabels));
+                row.createCell(17).setCellValue(resolvePublicationFundingLabel(dto.getFunding(), fundingLabels));
+                row.createCell(18).setCellValue(formatClustersAsRoman(dto.getCluster()));
+                row.createCell(19).setCellValue(buildAuthorsLabel(participaciones));
             }
 
-            for (int i = 0; i <= 17; i++) {
+            for (int i = 0; i <= 19; i++) {
                 sheet.autoSizeColumn(i);
             }
 

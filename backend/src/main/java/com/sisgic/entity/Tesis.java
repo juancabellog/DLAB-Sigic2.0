@@ -35,6 +35,10 @@ public class Tesis extends ProductoCientifico {
     @Lob
     @Column(name = "tipoSector")
     private String tipoSector; // JSON string o lista separada por comas
+
+    @Lob
+    @Column(name = "resources")
+    private String resources; // JSON string o lista separada por comas
     
     @Formula("(SELECT f_getParticipantByRol(id, 7))")
     private String estudiante; // Campo calculado: nombre del estudiante (rol 7)
@@ -97,6 +101,14 @@ public class Tesis extends ProductoCientifico {
     
     public void setTipoSector(String tipoSector) {
         this.tipoSector = tipoSector;
+    }
+
+    public String getResources() {
+        return resources;
+    }
+
+    public void setResources(String resources) {
+        this.resources = resources;
     }
     
     public String getEstudiante() {

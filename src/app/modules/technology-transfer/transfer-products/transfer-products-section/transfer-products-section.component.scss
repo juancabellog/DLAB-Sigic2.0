@@ -1,0 +1,48 @@
+.products-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.products-section-header h3 {
+  margin: 0 0 6px;
+}
+
+.products-section-header p {
+  margin: 0 0 12px;
+  color: rgba(0, 0, 0, 0.72);
+}
+
+.products-empty-state {
+  border: 1px dashed #c7c7c7;
+  border-radius: 12px;
+  padding: 28px 20px;
+  text-align: center;
+  background: #fafafa;
+}
+
+.products-empty-state mat-icon {
+  font-size: 36px;
+  width: 36px;
+  height: 36px;
+  color: rgba(0, 0, 0, 0.56);
+}
+
+.products-empty-state h4 {
+  margin: 8px 0 6px;
+}
+
+.products-empty-state p {
+  margin: 0 0 14px;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.products-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.add-another-btn {
+  align-self: flex-start;
+}

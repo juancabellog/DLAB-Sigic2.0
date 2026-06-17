@@ -1,0 +1,200 @@
+.form-container {
+  padding: 20px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.form-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+
+  h1 {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 500;
+  }
+}
+
+.general-section {
+  padding: 24px 8px 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.section-title {
+  margin: 0 0 20px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.field-hint {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: #666;
+}
+
+.main-image-block {
+  margin-bottom: 16px;
+  max-width: 100%;
+}
+
+.news-main-image-preview-wrapper {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 12px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  background: #f7f7f7;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+}
+
+.news-main-image-preview {
+  max-width: 100%;
+  max-height: 420px;
+  width: auto;
+  height: auto;
+  display: block;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.tab-content {
+  padding: 24px 8px 8px;
+  overflow: visible;
+}
+
+:host ::ng-deep .mat-mdc-tab-body-wrapper,
+:host ::ng-deep .mat-mdc-tab-body,
+:host ::ng-deep .mat-mdc-tab-body-content {
+  overflow: visible;
+}
+
+:host ::ng-deep mat-card {
+  overflow: visible;
+}
+
+.shared-image-preview {
+  margin-bottom: 20px;
+  max-width: 100%;
+
+  .news-main-image-preview-wrapper {
+    margin-top: 8px;
+  }
+
+  .news-main-image-preview {
+    max-height: 140px;
+  }
+}
+
+.full-width {
+  width: 100%;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.featured-toggle-block {
+  margin-bottom: 16px;
+
+  mat-slide-toggle {
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .field-hint {
+    margin: 0;
+  }
+}
+
+.field-label {
+  display: block;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 8px;
+}
+
+.image-upload-row {
+  margin-bottom: 16px;
+
+  .image-label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+}
+
+.translation-status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.review-warning {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fff3e0;
+  border-left: 4px solid #ff9800;
+  border-radius: 4px;
+  margin-bottom: 16px;
+
+  mat-icon {
+    color: #e65100;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+.translation-progress-hint {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  border-radius: 4px;
+  margin-bottom: 16px;
+
+  mat-icon {
+    color: #1565c0;
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+.seo-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding: 16px;
+  gap: 8px;
+
+  .spacer {
+    flex: 1;
+  }
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px;
+}

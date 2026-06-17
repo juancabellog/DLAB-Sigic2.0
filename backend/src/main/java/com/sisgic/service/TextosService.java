@@ -1,5 +1,6 @@
 package com.sisgic.service;
 
+import com.sisgic.dto.LocalizedTextDTO;
 import com.sisgic.entity.Textos;
 import com.sisgic.entity.TextosId;
 import com.sisgic.repository.TextosRepository;
@@ -28,6 +29,72 @@ public class TextosService {
         return String.format("TXT%06d", nextNumber);
     }
     
+    /**
+     * Crea un texto con valores independientes por idioma (us / es).
+     */
+    @CacheEvict(value = "textos", allEntries = true)
+    public String createLocalizedText(LocalizedTextDTO texts, Integer idTipoTexto) {
+        if (texts == null || !texts.hasAnyValue()) {
+            return null;
+        }
+        String codigoTexto = generateCodigoTexto(idTipoTexto);
+        upsertLanguageValue(codigoTexto, idTipoTexto, "us", texts.getUs());
+        upsertLanguageValue(codigoTexto, idTipoTexto, "es", texts.getEs());
+        return codigoTexto;
+    }
+
+    /**
+     * Actualiza un texto existente con valores por idioma.
+     */
+    @CacheEvict(value = "textos", allEntries = true)
+    public void updateLocalizedText(String codigoTexto, LocalizedTextDTO texts, Integer idTipoTexto) {
+        if (codigoTexto == null || codigoTexto.isEmpty() || texts == null) {
+            return;
+        }
+        upsertLanguageValue(codigoTexto, idTipoTexto, "us", texts.getUs());
+        upsertLanguageValue(codigoTexto, idTipoTexto, "es", texts.getEs());
+    }
+
+    /**
+     * Obtiene los valores us/es de un código de texto.
+     */
+    @Transactional(readOnly = true)
+    public LocalizedTextDTO getLocalizedText(String codigoTexto, Integer idTipoTexto) {
+        if (codigoTexto == null || codigoTexto.isEmpty()) {
+            return new LocalizedTextDTO();
+        }
+        LocalizedTextDTO dto = new LocalizedTextDTO();
+        getTextValue(codigoTexto, idTipoTexto, "us").ifPresent(dto::setUs);
+        getTextValue(codigoTexto, idTipoTexto, "es").ifPresent(dto::setEs);
+        return dto;
+    }
+
+    /**
+     * Elimina todas las filas de un código de texto (us y es).
+     */
+    @CacheEvict(value = "textos", allEntries = true)
+    public void deleteLocalizedText(String codigoTexto, Integer idTipoTexto) {
+        if (codigoTexto == null || codigoTexto.isEmpty()) {
+            return;
+        }
+        deleteTextFromBothLanguages(codigoTexto, idTipoTexto);
+    }
+
+    private void upsertLanguageValue(String codigoTexto, Integer idTipoTexto, String lenguaje, String valor) {
+        if (valor == null) {
+            return;
+        }
+        TextosId textId = new TextosId(lenguaje, codigoTexto, idTipoTexto);
+        Optional<Textos> existing = textosRepository.findById(textId);
+        if (existing.isPresent()) {
+            Textos texto = existing.get();
+            texto.setValor(valor);
+            textosRepository.save(texto);
+        } else {
+            textosRepository.save(new Textos(textId, valor));
+        }
+    }
+
     /**
      * Crea un texto en ambos idiomas (us y es)
      * Invalida el caché de textos después de crear

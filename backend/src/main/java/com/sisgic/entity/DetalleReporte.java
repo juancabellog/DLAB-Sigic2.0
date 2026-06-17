@@ -1,6 +1,8 @@
 package com.sisgic.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "DetalleReportes")
@@ -13,8 +15,8 @@ public class DetalleReporte {
     @Column(name = "idReporte", nullable = false)
     private Long idReporte;
     
-    @Lob
-    @Column(name = "sqlQuery")
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR)
+    @Column(name = "sqlQuery", columnDefinition = "MEDIUMTEXT")
     private String sqlQuery;
     
     @Column(name = "cell", length = 5)
@@ -23,7 +25,7 @@ public class DetalleReporte {
     @Column(name = "descripcion", nullable = false, length = 500)
     private String descripcion;
     
-    @Column(name = "rowmode", nullable = false, length = 1)
+    @Column(name = "rowmode", nullable = false, length = 1, columnDefinition = "CHAR(1)")
     private String rowmode; // '1' = true, '0' = false
     
     // Getters and Setters

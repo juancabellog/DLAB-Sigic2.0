@@ -1,5 +1,7 @@
 package com.sisgic.config;
 
+import com.sisgic.service.MediaFileService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
@@ -16,6 +18,9 @@ public class WebConfig implements WebMvcConfigurer {
 
     @Value("${pdfs.path:}")
     private String pdfsPathConfig;
+
+    @Autowired
+    private MediaFileService mediaFileService;
 
     @Override
     public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
@@ -83,12 +88,23 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/pdfs/**")
                 .addResourceLocations(pdfsPath)
                 .setCachePeriod(3600); // 1 hora de caché para PDFs
-        
+
+        try {
+            String mediaPath = mediaFileService.getMediaDirectoryUri();
+            System.out.println("=== WebConfig: Registering media handler for /media/** -> " + mediaPath);
+            registry.addResourceHandler("/media/**")
+                    .addResourceLocations(mediaPath)
+                    .setCachePeriod(3600);
+        } catch (Exception e) {
+            System.err.println("=== WebConfig: could not register media handler: " + e.getMessage());
+        }
+
         // Servir archivos estáticos del frontend (debe ir DESPUÉS de handlers específicos)
         registry.addResourceHandler("/**")
                 .addResourceLocations("classpath:/static/")
                 .setCachePeriod(31556926); // 1 año de caché
     }
+
 }
 
 

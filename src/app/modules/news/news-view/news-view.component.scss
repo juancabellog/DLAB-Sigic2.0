@@ -1,0 +1,255 @@
+.news-preview {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px 24px 48px;
+}
+
+.news-preview-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+
+  .toolbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+}
+
+.language-selector {
+  margin-bottom: 24px;
+
+  .language-selector-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .translation-warning {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 10px 0 0;
+    font-size: 13px;
+    color: #8a6d00;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
+}
+
+.language-toggle-group {
+  .mat-button-toggle {
+    font-size: 13px;
+    line-height: 32px;
+  }
+
+  .mat-button-toggle-checked {
+    background-color: #e3f2fd;
+    color: #1565c0;
+    font-weight: 600;
+  }
+}
+
+.news-preview-header {
+  margin-bottom: 28px;
+
+  .editorial-meta {
+    margin: 0 0 12px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #666;
+    letter-spacing: 0.01em;
+  }
+
+  .editorial-title {
+    margin: 0;
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1.25;
+    color: #222;
+    word-break: break-word;
+  }
+
+  .category-row,
+  .tag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .category-chip {
+    background: #f3e5f5;
+    color: #6a1b9a;
+  }
+}
+
+.news-preview-article {
+  .hero-image {
+    display: block;
+    width: 100%;
+    max-height: 420px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 28px;
+    background: #f0f0f0;
+  }
+
+  .article-lead {
+    margin: 0 0 28px;
+    font-size: 20px;
+    line-height: 1.55;
+    font-weight: 400;
+    color: #4a4a4a;
+    font-style: normal;
+  }
+
+  .body-html.news-body-content {
+    line-height: 1.7;
+    color: #333;
+    font-size: 16px;
+
+    :deep(p) {
+      margin: 0 0 1.15em;
+    }
+
+    :deep(h2),
+    :deep(h3) {
+      margin: 1.5em 0 0.6em;
+      color: #222;
+    }
+
+    :deep(img) {
+      max-width: 100%;
+      border-radius: 4px;
+    }
+
+    :deep(ul),
+    :deep(ol) {
+      margin: 0 0 1.15em;
+      padding-left: 1.5em;
+    }
+  }
+
+  .content-empty {
+    margin: 0;
+    font-size: 15px;
+    color: #888;
+    font-style: italic;
+  }
+
+  .related-posts-section {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid #e8e8e8;
+  }
+
+  .related-posts-title {
+    margin: 0 0 16px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #222;
+  }
+
+  .related-posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+
+  .related-post-card {
+    display: flex;
+    gap: 12px;
+    padding: 10px;
+    border: 1px solid #e8e8e8;
+    border-radius: 10px;
+    background: #fff;
+    text-decoration: none;
+    color: inherit;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      border-color: #c5cae9;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+  }
+
+  .related-post-card-thumb {
+    flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f0f0f0;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    &--placeholder {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #9e9e9e;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+    }
+  }
+
+  .related-post-card-body {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .related-post-card-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #222;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .related-post-card-date {
+    font-size: 12px;
+    color: #666;
+  }
+
+  .related-post-card-status {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #1565c0;
+  }
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}

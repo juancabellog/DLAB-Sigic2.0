@@ -1,0 +1,112 @@
+.segment-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  width: 100%;
+}
+
+.segment-selector__label-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.125rem;
+  line-height: 1.2;
+}
+
+.segment-selector__label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.segment-selector__required {
+  color: var(--mat-form-field-error-text-color, #f44336);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.segment-selector__helper {
+  margin: 0 0 0.125rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.segment-selector__groups {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.segment-selector__group {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  padding: 0.5rem 0.625rem 0.5rem;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.segment-selector__group-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: rgba(0, 0, 0, 0.72);
+  margin: 0 0 0.375rem;
+  line-height: 1.25;
+}
+
+.segment-selector__options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 1rem;
+  row-gap: 0.25rem;
+}
+
+.segment-selector__standalone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 1rem;
+  row-gap: 0.25rem;
+  padding-top: 0.125rem;
+}
+
+.segment-selector__checkbox {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.segment-selector__error {
+  font-size: 0.75rem;
+  color: var(--mat-form-field-error-text-color, #f44336);
+  margin-top: 0.25rem;
+  line-height: 1.35;
+}
+
+/* mat-checkbox density + focus / disabled clarity */
+:host ::ng-deep .segment-selector__checkbox.mat-mdc-checkbox {
+  --mdc-checkbox-state-layer-size: 36px;
+}
+
+:host ::ng-deep .segment-selector__checkbox.mat-mdc-checkbox .mdc-label {
+  padding-left: 0;
+  letter-spacing: 0.01em;
+}
+
+:host
+  ::ng-deep
+  .segment-selector__checkbox.mat-mdc-checkbox
+  .mdc-checkbox
+  .mdc-checkbox__native-control:focus-visible
+  + .mdc-checkbox__background {
+  outline: 2px solid rgba(25, 118, 210, 0.45);
+  outline-offset: 2px;
+}
+
+:host ::ng-deep .segment-selector__checkbox.mat-mdc-checkbox.mat-mdc-checkbox-disabled {
+  opacity: 0.55;
+}
+
+:host ::ng-deep .segment-selector__checkbox.mat-mdc-checkbox.mat-mdc-checkbox-disabled .mdc-label {
+  color: rgba(0, 0, 0, 0.38);
+}

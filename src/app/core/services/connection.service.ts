@@ -176,7 +176,7 @@ export class ConnectionService {
     }).pipe(
       tap((resp) => {
         this.connectionStatusSubject.next(true);
-
+        console.log('validateToken response:', resp, this.CLIENT_VERSION, this.versionMismatchHandled);
         // Chequear versión del backend: si cambia, informar al usuario para que recargue
         if (!this.versionMismatchHandled && resp && resp.version && resp.version !== this.CLIENT_VERSION) {
           this.versionMismatchHandled = true;

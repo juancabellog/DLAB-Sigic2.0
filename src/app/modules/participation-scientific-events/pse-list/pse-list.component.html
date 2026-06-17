@@ -1,0 +1,185 @@
+<div class="list-container">
+  <div class="list-header">
+    <div class="list-header-left">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to Dashboard">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>Participation in Scientific Events</h1>
+    </div>
+    <div class="list-header-right">
+      <button mat-raised-button color="primary" routerLink="/participation-scientific-events/new" class="add-button">
+        <mat-icon>add</mat-icon>
+        Add Participation
+      </button>
+    </div>
+  </div>
+
+  <app-list-controls
+    searchPlaceholder="Search participation in scientific events..."
+    [items]="participations"
+    [showBasalFilter]="true"
+    [readonly]="true"
+    [currentViewMode]="viewMode"
+    [finalFilteredCount]="finalFilteredCount"
+    itemType="event"
+    listType="participation-scientific-events"
+    [showExportButton]="true"
+    exportLabel="Export Excel"
+    [exportLoading]="exportLoading"
+    (searchResults)="onSearchResults($event)"
+    (searchTermChange)="onSearchTermChange($event)"
+    (viewModeChange)="onViewModeChange($event)"
+    (basalFilterChange)="onBasalFilterChange($event)"
+    (exportRequested)="onExportRequested()">
+  </app-list-controls>
+
+  <mat-card>
+    <mat-card-content>
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner></mat-spinner>
+        <p>Loading participation in scientific events...</p>
+      </div>
+
+      <div *ngIf="!loading && filteredParticipations.length === 0 && !isSearching" class="empty-state">
+        <mat-icon>event</mat-icon>
+        <h3>No participation in scientific events found</h3>
+        <p>Start by adding your first scientific event participation.</p>
+        <button mat-raised-button color="primary" routerLink="/participation-scientific-events/new">
+          <mat-icon>add</mat-icon>
+          Add Participation
+        </button>
+      </div>
+
+      <div *ngIf="!loading && filteredParticipations.length === 0 && isSearching" class="empty-state">
+        <mat-icon>search_off</mat-icon>
+        <h3>No results found</h3>
+        <p>Try adjusting your search terms or filters.</p>
+      </div>
+
+      <div *ngIf="!loading && filteredParticipations.length > 0 && viewMode === 'card'" class="list-grid">
+        <mat-card *ngFor="let item of filteredParticipations" class="list-card">
+          <mat-card-header>
+            <mat-card-title>{{ getItemTitle(item) }}</mat-card-title>
+            <mat-card-subtitle>{{ getEventName(item) }} - {{ getLocation(item) }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="list-details">
+              <div class="detail-row">
+                <span class="detail-label">Event Name:</span>
+                <span class="detail-value">{{ getEventName(item) }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Participation Type:</span>
+                <span class="detail-value">{{ getParticipationType(item) }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">City:</span>
+                <span class="detail-value">{{ item.ciudad || 'Not specified' }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Country:</span>
+                <span class="detail-value">{{ item.pais?.idDescripcion || 'Not specified' }}</span>
+              </div>
+              <div class="detail-row" *ngIf="item.progressReport">
+                <span class="detail-label">Period:</span>
+                <span class="detail-value">{{ item.progressReport }}</span>
+              </div>
+              <div class="detail-row" *ngIf="item.fechaInicio">
+                <span class="detail-label">Start Date:</span>
+                <span class="detail-value">{{ item.fechaInicio | date:'MMM yyyy' }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+          <mat-card-actions>
+            <div class="card-actions-left">
+              <button mat-button color="primary" (click)="viewItem(item)">
+                <mat-icon>visibility</mat-icon>
+                View
+              </button>
+              <button mat-button (click)="editItem(item)">
+                <mat-icon>edit</mat-icon>
+                Edit
+              </button>
+              <button mat-button color="warn" (click)="deleteItem(item)">
+                <mat-icon>delete</mat-icon>
+                Delete
+              </button>
+            </div>
+            <div class="card-actions-right">
+              <button
+                *ngIf="getPdfUrl(item)"
+                mat-icon-button
+                (click)="downloadPdf($event, item)"
+                matTooltip="Download PDF"
+                class="pdf-icon-button">
+                <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+              </button>
+            </div>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+
+      <div *ngIf="!loading && filteredParticipations.length > 0 && viewMode === 'list'" class="list-view">
+        <div class="list-header-row">
+          <div class="list-cell icon-cell"></div>
+          <div class="list-cell title-cell sortable-header" [ngClass]="{ 'sortable-header-active': sortColumn === 'title' }" (click)="onSort('title')">
+            <span>Title</span>
+            <mat-icon>{{ sortColumn === 'title' ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more' }}</mat-icon>
+          </div>
+          <div class="list-cell eventname-cell sortable-header" [ngClass]="{ 'sortable-header-active': sortColumn === 'eventName' }" (click)="onSort('eventName')">
+            <span>Event Name</span>
+            <mat-icon>{{ sortColumn === 'eventName' ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more' }}</mat-icon>
+          </div>
+          <div class="list-cell type-cell sortable-header" [ngClass]="{ 'sortable-header-active': sortColumn === 'type' }" (click)="onSort('type')">
+            <span>Type</span>
+            <mat-icon>{{ sortColumn === 'type' ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more' }}</mat-icon>
+          </div>
+          <div class="list-cell location-cell sortable-header" [ngClass]="{ 'sortable-header-active': sortColumn === 'location' }" (click)="onSort('location')">
+            <span>Location</span>
+            <mat-icon>{{ sortColumn === 'location' ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more' }}</mat-icon>
+          </div>
+          <div class="list-cell period-cell sortable-header" [ngClass]="{ 'sortable-header-active': sortColumn === 'period' }" (click)="onSort('period')">
+            <span>Period</span>
+            <mat-icon>{{ sortColumn === 'period' ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more' }}</mat-icon>
+          </div>
+          <div class="list-cell date-cell sortable-header" [ngClass]="{ 'sortable-header-active': sortColumn === 'date' }" (click)="onSort('date')">
+            <span>Date</span>
+            <mat-icon>{{ sortColumn === 'date' ? (sortDirection === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more' }}</mat-icon>
+          </div>
+          <div class="list-cell actions-cell">Actions</div>
+        </div>
+
+        <div class="list-item-row" *ngFor="let item of filteredParticipations">
+          <div class="list-cell icon-cell">
+            <mat-icon class="item-icon">record_voice_over</mat-icon>
+          </div>
+          <div class="list-cell title-cell">{{ getItemTitle(item) }}</div>
+          <div class="list-cell eventname-cell">{{ getEventName(item) }}</div>
+          <div class="list-cell type-cell">{{ getParticipationType(item) }}</div>
+          <div class="list-cell location-cell">{{ getLocation(item) }}</div>
+          <div class="list-cell period-cell">{{ item.progressReport || 'N/A' }}</div>
+          <div class="list-cell date-cell">{{ item.fechaInicio | date:'MMM yyyy' }}</div>
+          <div class="list-cell actions-cell">
+            <button
+              *ngIf="getPdfUrl(item)"
+              mat-icon-button
+              (click)="downloadPdf($event, item)"
+              matTooltip="Download PDF"
+              class="action-button pdf-icon-button">
+              <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+            </button>
+            <button mat-icon-button (click)="viewItem(item)" matTooltip="View" class="action-button">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-icon-button (click)="editItem(item)" matTooltip="Edit" class="action-button">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="deleteItem(item)" matTooltip="Delete" class="action-button">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

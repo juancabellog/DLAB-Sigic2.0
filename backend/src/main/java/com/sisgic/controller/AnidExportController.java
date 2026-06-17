@@ -1063,7 +1063,7 @@ public class AnidExportController {
             row.createCell(9).setCellValue(tutorsOther);
             row.createCell(10).setCellValue(resolveInstitucionLabel(full.getInstitucionOG(), textosMap));
             row.createCell(11).setCellValue(resolveInstitucionLabel(full.getInstitucion(), textosMap));
-            row.createCell(12).setCellValue("");
+            row.createCell(12).setCellValue(full.getResources() != null ? full.getResources() : "");
             row.createCell(13).setCellValue(formatYearYYYY(full.getFechaInicioPrograma()));
             row.createCell(14).setCellValue(formatYearYYYY(full.getFechaInicio()));
             row.createCell(15).setCellValue(formatYearYYYY(full.getFechaTermino()));
@@ -1590,7 +1590,7 @@ public class AnidExportController {
             row.createCell(0).setCellValue(full.getId() != null ? full.getId().toString() : "");
             row.createCell(1).setCellValue(categoryOfTransfer);
             row.createCell(2).setCellValue(typeOfTransfer);
-            row.createCell(3).setCellValue(""); // Transfer Products: empty for now
+            row.createCell(3).setCellValue(full.getProductos() != null ? full.getProductos() : "");
             row.createCell(4).setCellValue(institution);
             row.createCell(5).setCellValue(country);
             row.createCell(6).setCellValue(full.getCiudad() != null ? full.getCiudad() : "");

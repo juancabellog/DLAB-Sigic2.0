@@ -1,0 +1,45 @@
+<div class="tags-input" [class.tags-input--disabled]="disabled">
+  <label class="tags-input-label">Tags</label>
+  <p class="tags-input-hint">Type to search or add new tags. New tags are saved when you save the news item.</p>
+
+  <mat-form-field appearance="outline" class="tags-input-field">
+    <mat-label>Add tags</mat-label>
+    <mat-chip-grid #chipGrid aria-label="Selected tags">
+      <mat-chip-row
+        *ngFor="let tag of tags"
+        [removable]="!disabled"
+        (removed)="removeTag(tag)">
+        <span class="chip-label">{{ tag.label }}</span>
+        <span class="taxonomy-pending-badge" *ngIf="isPendingTag(tag)">New</span>
+        <button matChipRemove type="button" *ngIf="!disabled" [attr.aria-label]="'Remove ' + tag.label">
+          <mat-icon>cancel</mat-icon>
+        </button>
+      </mat-chip-row>
+      <input
+        #tagInput
+        matInput
+        class="tags-inline-input"
+        [(ngModel)]="inputValue"
+        [matChipInputFor]="chipGrid"
+        [matAutocomplete]="tagAuto"
+        [disabled]="disabled || (loading && !allTags.length)"
+        placeholder="Type a tag…"
+        (focus)="onInputFocus()"
+        (keydown)="onInputKeydown($event)"
+        (matChipInputTokenEnd)="onChipInputTokenEnd()" />
+    </mat-chip-grid>
+    <mat-spinner *ngIf="loading" matSuffix diameter="20"></mat-spinner>
+    <mat-autocomplete
+      #tagAuto="matAutocomplete"
+      (optionSelected)="onSuggestionSelected($event)"
+      [displayWith]="displayTagLabel">
+      <mat-option *ngFor="let tag of filteredSuggestions" [value]="tag.id">
+        {{ tag.label }}
+      </mat-option>
+      <mat-option *ngIf="canCreateTag" [value]="'__create__:' + inputValue" class="tag-create-option">
+        <mat-icon>add</mat-icon>
+        <span>{{ createTagLabel }}</span>
+      </mat-option>
+    </mat-autocomplete>
+  </mat-form-field>
+</div>

@@ -1,0 +1,107 @@
+<div class="news-preview" *ngIf="!loading && item; else loadingTpl">
+  <div class="news-preview-toolbar">
+    <button mat-icon-button type="button" (click)="back()" matTooltip="Back to list" aria-label="Back to list">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <div class="toolbar-actions">
+      <button mat-stroked-button type="button" (click)="preview()">
+        <mat-icon>open_in_new</mat-icon>
+        Preview website
+      </button>
+      <button mat-raised-button color="primary" type="button" (click)="edit()">
+        <mat-icon>edit</mat-icon>
+        Edit
+      </button>
+    </div>
+  </div>
+
+  <div class="language-selector">
+    <span class="language-selector-label">Content language</span>
+    <mat-button-toggle-group
+      class="language-toggle-group"
+      [value]="selectedLanguage"
+      (change)="onLanguageChange($event.value)"
+      aria-label="Content language">
+      <mat-button-toggle value="es">Spanish</mat-button-toggle>
+      <mat-button-toggle
+        value="en"
+        [disabled]="isEnglishDisabled()"
+        [matTooltip]="englishDisabledTooltip()"
+        [matTooltipDisabled]="!isEnglishDisabled()"
+        [attr.title]="isEnglishDisabled() ? englishDisabledTooltip() : null"
+        matTooltipPosition="above">
+        English
+      </mat-button-toggle>
+    </mat-button-toggle-group>
+    <p class="translation-warning" *ngIf="showEnglishNotValidatedWarning()">
+      <mat-icon>info</mat-icon>
+      English translation is not validated yet.
+    </p>
+  </div>
+
+  <header class="news-preview-header">
+    <p class="editorial-meta">{{ getEditorialMetaLine() }}</p>
+    <h1 class="editorial-title">{{ getDisplayTitle() }}</h1>
+    <div class="category-row" *ngIf="item.categories?.length">
+      <mat-chip *ngFor="let category of item.categories" class="category-chip">{{ category.label }}</mat-chip>
+    </div>
+    <div class="tag-row" *ngIf="item.tags.length">
+      <mat-chip *ngFor="let tag of item.tags">{{ tag.label }}</mat-chip>
+    </div>
+  </header>
+
+  <article class="news-preview-article">
+    <img
+      *ngIf="getImageUrl() as src"
+      [src]="src"
+      class="hero-image"
+      [alt]="getImageAlt()" />
+
+    <p class="article-lead" *ngIf="getDisplaySummary()?.trim()">{{ getDisplaySummary() }}</p>
+
+    <div
+      class="body-html news-body-content rich-text-content"
+      *ngIf="hasDisplayBody(); else emptyBodyTpl"
+      [innerHTML]="getSanitizedBodyHtml()"></div>
+    <ng-template #emptyBodyTpl>
+      <p class="content-empty" *ngIf="!getDisplaySummary()?.trim()">No content available in this language.</p>
+    </ng-template>
+
+    <section class="related-posts-section" *ngIf="item.relatedPosts?.length">
+      <h2 class="related-posts-title">Related posts</h2>
+      <div class="related-posts-grid">
+        <a
+          class="related-post-card"
+          *ngFor="let post of item.relatedPosts"
+          [routerLink]="['/news', post.id, 'view']">
+          <div class="related-post-card-thumb">
+            <img
+              *ngIf="getRelatedPostThumbnail(post) as thumb; else relatedThumbPlaceholder"
+              [src]="thumb"
+              [alt]="getRelatedPostTitle(post)" />
+            <ng-template #relatedThumbPlaceholder>
+              <div class="related-post-card-thumb related-post-card-thumb--placeholder">
+                <mat-icon>image</mat-icon>
+              </div>
+            </ng-template>
+          </div>
+          <div class="related-post-card-body">
+            <span class="related-post-card-title">{{ getRelatedPostTitle(post) }}</span>
+            <span class="related-post-card-date" *ngIf="getRelatedPostDate(post)">
+              {{ getRelatedPostDate(post) }}
+            </span>
+            <span class="related-post-card-status" *ngIf="getRelatedPostStatusLabel(post)">
+              {{ getRelatedPostStatusLabel(post) }}
+            </span>
+          </div>
+        </a>
+      </div>
+    </section>
+  </article>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-container">
+    <mat-spinner></mat-spinner>
+  </div>
+</ng-template>

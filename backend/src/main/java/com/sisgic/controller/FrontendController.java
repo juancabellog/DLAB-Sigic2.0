@@ -17,6 +17,7 @@ public class FrontendController {
         "/dashboard",
         "/publications",
         "/scientific-events",
+        "/participation-scientific-events",
         "/technology-transfer",
         "/postdoctoral-fellows",
         "/outreach-activities",
@@ -26,7 +27,8 @@ public class FrontendController {
         "/researchers",
         "/projects",
         "/login",
-        "/register"
+        "/register",
+        "/news"
     })
     public String forward() {
         return "forward:/index.html";

@@ -1,0 +1,36 @@
+<mat-card class="product-card" [class.product-card-pending]="!isComplete">
+  <div class="product-card-header">
+    <div
+      class="product-card-summary"
+      role="button"
+      tabindex="0"
+      [attr.aria-expanded]="expanded"
+      [attr.aria-label]="expanded ? 'Collapse product details' : 'Expand product details'"
+      (click)="onSummaryToggle()"
+      (keydown)="onSummaryKeydown($event)">
+      <div class="product-card-title">{{ title }}</div>
+      <div class="product-card-subtitle">{{ segmentSummary }}</div>
+    </div>
+
+    <div class="product-card-status" [class.pending]="!isComplete">
+      {{ isComplete ? 'Complete' : 'Pending' }}
+    </div>
+
+    <div class="product-card-actions">
+      <button mat-icon-button type="button" (click)="toggle.emit()" matTooltip="{{ expanded ? 'Collapse' : 'Expand' }}">
+        <mat-icon>{{ expanded ? 'expand_less' : 'expand_more' }}</mat-icon>
+      </button>
+      <button mat-icon-button type="button" (click)="duplicate.emit()" matTooltip="Duplicate">
+        <mat-icon>content_copy</mat-icon>
+      </button>
+      <button mat-icon-button type="button" color="warn" (click)="delete.emit()" matTooltip="Delete">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="product-card-content" *ngIf="expanded">
+    <app-product-form [form]="form" [showErrors]="showErrors">
+    </app-product-form>
+  </div>
+</mat-card>

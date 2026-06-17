@@ -1,0 +1,231 @@
+<div class="form-container" *ngIf="!loading; else loadingTpl">
+  <div class="form-header">
+    <button mat-icon-button (click)="backToList()" matTooltip="Back to list">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1>{{ pageTitle }}</h1>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <section class="general-section">
+        <h2 class="section-title">General</h2>
+
+        <div class="main-image-block">
+          <label class="image-label">Main image *</label>
+          <p class="field-hint">This image is shared across all languages.</p>
+          <div class="image-upload-row">
+            <input type="file" accept="image/*" (change)="onImageSelected($event)" [disabled]="uploadingImage" />
+            <mat-spinner *ngIf="uploadingImage" diameter="24"></mat-spinner>
+          </div>
+          <div *ngIf="getImagePreviewUrl() as src" class="news-main-image-preview-wrapper">
+            <img
+              [src]="src"
+              class="news-main-image-preview"
+              [alt]="item.mainImageAltEs || 'Main image preview'" />
+          </div>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Publication date</mat-label>
+          <input matInput type="date" [(ngModel)]="item.publicationDate" />
+          <mat-hint>Stored as start date (fecha de inicio). Editable before publishing.</mat-hint>
+        </mat-form-field>
+
+        <div class="featured-toggle-block">
+          <mat-slide-toggle [(ngModel)]="item.featured" color="primary">
+            Feature this post
+          </mat-slide-toggle>
+          <p class="field-hint">Highlight this news item on the website.</p>
+        </div>
+
+        <app-news-category-select [(categories)]="item.categories"></app-news-category-select>
+
+        <app-news-tags-input [(tags)]="item.tags"></app-news-tags-input>
+
+        <app-news-related-posts-field
+          [(relatedPosts)]="item.relatedPosts"
+          [currentNewsId]="itemId">
+        </app-news-related-posts-field>
+      </section>
+
+      <mat-tab-group [(selectedIndex)]="selectedTabIndex" animationDuration="0ms">
+        <!-- Spanish -->
+        <mat-tab label="Spanish">
+          <div class="tab-content">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Title</mat-label>
+              <input matInput [(ngModel)]="item.titleEs" (ngModelChange)="onSpanishFieldChange()" required />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Image alt text (Spanish)</mat-label>
+              <input matInput [(ngModel)]="item.mainImageAltEs" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Summary</mat-label>
+              <textarea matInput rows="3" [(ngModel)]="item.summaryEs" (ngModelChange)="onSpanishFieldChange()" required></textarea>
+            </mat-form-field>
+
+            <label class="field-label">Body content *</label>
+            <app-rich-text-editor
+              [(ngModel)]="item.bodyEs"
+              (ngModelChange)="onSpanishFieldChange()"
+              placeholder="Write the news body in Spanish...">
+            </app-rich-text-editor>
+          </div>
+        </mat-tab>
+
+        <!-- English -->
+        <mat-tab label="English">
+          <div class="tab-content">
+            <div class="translation-status-bar">
+              <mat-chip selected>
+                {{ translationStatusLabels[item.translationStatus] }}
+              </mat-chip>
+              <button mat-stroked-button type="button" (click)="generateAutomaticTranslation()" [disabled]="translating">
+                <mat-icon>auto_awesome</mat-icon>
+                Generate automatic translation
+              </button>
+              <button mat-stroked-button color="primary" type="button" (click)="validateTranslation()">
+                <mat-icon>verified</mat-icon>
+                Validate translation
+              </button>
+              <mat-spinner *ngIf="translating" diameter="24"></mat-spinner>
+            </div>
+
+            <div *ngIf="translating" class="translation-progress-hint" role="status">
+              <mat-icon>hourglass_top</mat-icon>
+              <p>
+                Translation in progress. This may take several minutes — please wait.
+              </p>
+            </div>
+
+            <div *ngIf="translationReviewWarning" class="review-warning" role="alert">
+              <mat-icon>warning</mat-icon>
+              <p>
+                The Spanish content was modified after the English translation was validated.
+                Please review and validate the English version again.
+              </p>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Title in English</mat-label>
+              <input matInput [(ngModel)]="item.titleEn" (ngModelChange)="onEnglishFieldChange()" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Image alt text (English)</mat-label>
+              <input matInput [(ngModel)]="item.mainImageAltEn" />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Summary in English</mat-label>
+              <textarea matInput rows="3" [(ngModel)]="item.summaryEn" (ngModelChange)="onEnglishFieldChange()"></textarea>
+            </mat-form-field>
+
+            <label class="field-label">Body content in English</label>
+            <app-rich-text-editor
+              [(ngModel)]="item.bodyEn"
+              (ngModelChange)="onEnglishFieldChange()"
+              placeholder="Write or edit the English body...">
+            </app-rich-text-editor>
+          </div>
+        </mat-tab>
+
+        <!-- SEO & Publication -->
+        <mat-tab label="SEO & Publication" *ngIf="false">
+          <div class="tab-content">
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Slug</mat-label>
+              <input matInput [(ngModel)]="item.slug" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Meta title</mat-label>
+              <input matInput [(ngModel)]="item.metaTitle" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Meta description</mat-label>
+              <textarea matInput rows="2" [(ngModel)]="item.metaDescription"></textarea>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Open Graph title</mat-label>
+              <input matInput [(ngModel)]="item.ogTitle" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Open Graph description</mat-label>
+              <textarea matInput rows="2" [(ngModel)]="item.ogDescription"></textarea>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Open Graph image</mat-label>
+              <input matInput [(ngModel)]="item.ogImageUrl" />
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Publication status</mat-label>
+              <mat-select [(ngModel)]="item.publicationStatus">
+                <mat-option *ngFor="let opt of publicationStatusOptions" [value]="opt.value">{{ opt.label }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Website URL / Public URL</mat-label>
+              <input matInput [(ngModel)]="item.publicUrl" />
+            </mat-form-field>
+            <div class="seo-actions">
+              <button mat-stroked-button type="button" (click)="autoFillSeoFromSpanish()">
+                <mat-icon>refresh</mat-icon>
+                Auto-fill from Spanish
+              </button>
+              <button mat-stroked-button type="button" (click)="preview()">
+                <mat-icon>open_in_new</mat-icon>
+                Preview
+              </button>
+            </div>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card-content>
+
+    <mat-card-actions class="form-actions">
+      <button mat-button type="button" (click)="backToList()">Back to list</button>
+      <span class="spacer"></span>
+      <button
+        mat-stroked-button
+        type="button"
+        (click)="saveDraft()"
+        [disabled]="saving || !canSave"
+        [matTooltip]="!canSave ? 'Complete title, summary and body (Spanish) to save' : ''"
+        [matTooltipDisabled]="canSave">
+        Save draft
+      </button>
+      <button
+        mat-stroked-button
+        type="button"
+        (click)="saveChanges()"
+        [disabled]="saving || !canSave"
+        [matTooltip]="!canSave ? 'Complete title, summary and body (Spanish) to save' : ''"
+        [matTooltipDisabled]="canSave">
+        Save changes
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        type="button"
+        (click)="publish()"
+        [disabled]="saving || !canSave"
+        [matTooltip]="!canSave ? 'Complete title, summary and body (Spanish) to publish' : ''"
+        [matTooltipDisabled]="canSave">
+        Publish
+      </button>
+      <button *ngIf="isEditMode && isPublished" mat-stroked-button type="button" (click)="unpublish()" [disabled]="saving">Unpublish</button>
+      <button mat-stroked-button type="button" (click)="preview()">Preview</button>
+    </mat-card-actions>
+  </mat-card>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading...</p>
+  </div>
+</ng-template>

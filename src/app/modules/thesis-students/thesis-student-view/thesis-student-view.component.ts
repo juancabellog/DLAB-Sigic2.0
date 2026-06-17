@@ -17,7 +17,7 @@ import { ResearcherService } from '../../../core/services/researcher.service';
 import { BaseHttpService } from '../../../core/services/base-http.service';
 import { UtilsService } from '../../../core/services/utils.service';
 import { CatalogService } from '../../../core/services/catalog.service';
-import { TesisDTO, RRHHDTO, TipoSectorDTO } from '../../../core/models/backend-dtos';
+import { TesisDTO, RRHHDTO, TipoSectorDTO, ResourceDTO } from '../../../core/models/backend-dtos';
 import { TipoParticipacionDTO } from '../../../core/models/catalog-types';
 
 @Component({
@@ -38,10 +38,13 @@ import { TipoParticipacionDTO } from '../../../core/models/catalog-types';
   styleUrls: ['./thesis-student-view.component.scss']
 })
 export class ThesisStudentViewComponent implements OnInit {
+  private readonly RESOURCE_OTHER_ID = 4;
+
   thesis: TesisDTO | null = null;
   loading: boolean = false;
   participants: Array<{ name: string; role: string; roleName: string; corresponding: boolean }> = [];
   sectorTypes: TipoSectorDTO[] = [];
+  resourceCatalog: ResourceDTO[] = [];
   participationTypes: TipoParticipacionDTO[] = [];
 
   constructor(
@@ -57,6 +60,7 @@ export class ThesisStudentViewComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadSectorTypes();
+    this.loadResources();
     this.loadParticipationTypes();
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
@@ -72,6 +76,17 @@ export class ThesisStudentViewComponent implements OnInit {
       })
     ).subscribe(items => {
       this.sectorTypes = items;
+    });
+  }
+
+  loadResources(): void {
+    this.baseHttp.get<ResourceDTO[]>('/catalogs/resources').pipe(
+      catchError(error => {
+        console.error('Error loading resources:', error);
+        return of([]);
+      })
+    ).subscribe(items => {
+      this.resourceCatalog = items || [];
     });
   }
 
@@ -185,6 +200,44 @@ export class ThesisStudentViewComponent implements OnInit {
     } catch (e) {
       return [];
     }
+  }
+
+  getResources(): string[] {
+    if (!this.thesis?.resources) return [];
+    const raw = this.thesis.resources.trim();
+    let parsedAny: any[] = [];
+    if (raw.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          parsedAny = parsed;
+        }
+      } catch {
+        /* fall through */
+      }
+    }
+    if (!parsedAny.length) {
+      const ids = raw
+        .split(',')
+        .map(s => parseInt(s.trim(), 10))
+        .filter(n => !isNaN(n));
+      parsedAny = ids.map(id => ({ id }));
+    }
+    const labels: string[] = [];
+    for (const item of parsedAny) {
+      const id = Number(item?.id);
+      if (isNaN(id)) continue;
+      if (id === this.RESOURCE_OTHER_ID) {
+        const cat = this.resourceCatalog.find(r => r.id === id);
+        const base = cat?.idDescripcion || 'Other';
+        const text = item?.text != null ? String(item.text).trim() : '';
+        labels.push(text ? `${base}: ${text}` : base);
+      } else {
+        const resource = this.resourceCatalog.find(r => r.id === id);
+        labels.push(resource?.idDescripcion || `Resource ${id}`);
+      }
+    }
+    return labels;
   }
 
   goBack(): void {

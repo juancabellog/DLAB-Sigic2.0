@@ -36,6 +36,7 @@ public class TesisDTO {
     private String fechaInicioPrograma; // LocalDate como string
     private String nombreCompletoTitulo;
     private String tipoSector; // JSON string o lista separada por comas
+    private String resources; // JSON string o lista separada por comas
     private String estudiante; // Campo calculado: nombre del estudiante (rol 7)
     
     // Participantes
@@ -95,6 +96,8 @@ public class TesisDTO {
     public void setNombreCompletoTitulo(String nombreCompletoTitulo) { this.nombreCompletoTitulo = nombreCompletoTitulo; }
     public String getTipoSector() { return tipoSector; }
     public void setTipoSector(String tipoSector) { this.tipoSector = tipoSector; }
+    public String getResources() { return resources; }
+    public void setResources(String resources) { this.resources = resources; }
     public String getEstudiante() { return estudiante; }
     public void setEstudiante(String estudiante) { this.estudiante = estudiante; }
     

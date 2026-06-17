@@ -1,0 +1,213 @@
+<div class="scientific-events-container">
+  <div class="header">
+    <div class="header-left">
+      <button mat-icon-button (click)="goBack()" matTooltip="Back to Participation in Scientific Events List">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>{{ pageTitle }}</h1>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading participation in scientific events...</p>
+  </div>
+
+  <mat-card class="form-card" *ngIf="!loading">
+    <mat-card-header>
+      <mat-card-subtitle *ngIf="isEditMode">ID: {{ itemId }}</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="form-section">
+        <div class="section-title">Basic Information</div>
+
+        <mat-form-field class="full-width">
+          <mat-label>Title</mat-label>
+          <input matInput [(ngModel)]="item.descripcion" placeholder="Enter title" required>
+        </mat-form-field>
+
+        <mat-form-field class="full-width">
+          <mat-label>Event Name</mat-label>
+          <input matInput [(ngModel)]="item.eventName" placeholder="Enter event name" required>
+        </mat-form-field>
+
+        <div class="form-row">
+          <mat-form-field class="half-width">
+            <mat-label>Event Type</mat-label>
+            <mat-select
+              [(ngModel)]="item.tipoParticipacionEvento"
+              [disabled]="loadingParticipationEventTypes"
+              (selectionChange)="onEventTypeChange()"
+              [compareWith]="compareParticipationTypes">
+              <mat-option [value]="null">-- Select an Event Type --</mat-option>
+              <mat-option *ngFor="let eventType of participationEventTypes" [value]="eventType">
+                {{ eventType.idDescripcion }}
+              </mat-option>
+            </mat-select>
+            <mat-spinner *ngIf="loadingParticipationEventTypes" matSuffix diameter="20"></mat-spinner>
+          </mat-form-field>
+
+          <mat-form-field class="half-width">
+            <mat-label>Modality</mat-label>
+            <mat-select
+              [(ngModel)]="item.idModalidadPresentacion"
+              [required]="isModalityRequired()"
+              [disabled]="loadingPresentationModalities || !isModalityRequired()">
+              <mat-option [value]="null">-- Select a Modality --</mat-option>
+              <mat-option *ngFor="let modality of presentationModalities" [value]="modality.id">
+                {{ modality.idDescripcion }}
+              </mat-option>
+            </mat-select>
+            <mat-spinner *ngIf="loadingPresentationModalities" matSuffix diameter="20"></mat-spinner>
+            <mat-hint *ngIf="!isModalityRequired()">Required only for Event Type 1 or 2</mat-hint>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field class="half-width">
+            <mat-label>City</mat-label>
+            <input matInput [(ngModel)]="item.ciudad" placeholder="Enter city" required>
+          </mat-form-field>
+
+          <mat-form-field class="half-width">
+            <mat-label>Country</mat-label>
+            <mat-select
+              [(ngModel)]="item.pais"
+              [disabled]="loadingCountries"
+              [compareWith]="compareCountries">
+              <mat-option [value]="null">-- Select a Country --</mat-option>
+              <mat-option *ngFor="let country of countries" [value]="country">
+                {{ country.idDescripcion }}
+              </mat-option>
+            </mat-select>
+            <mat-spinner *ngIf="loadingCountries" matSuffix diameter="20"></mat-spinner>
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field class="half-width">
+            <mat-label>Start Date</mat-label>
+            <input
+              matInput
+              type="date"
+              [(ngModel)]="item.fechaInicio"
+              (ngModelChange)="onStartDateChange($event)"
+              required>
+          </mat-form-field>
+
+          <mat-form-field class="half-width">
+            <mat-label>End Date</mat-label>
+            <input
+              matInput
+              type="date"
+              [(ngModel)]="item.fechaTermino"
+              [value]="item.fechaTermino ? item.fechaTermino : ''">
+          </mat-form-field>
+        </div>
+
+        <div class="form-row">
+          <mat-checkbox [(ngModel)]="isBasal" (change)="onBasalChange($event.checked)" color="primary">
+            Product associated with Basal funding
+          </mat-checkbox>
+        </div>
+
+        <div class="form-row">
+          <mat-form-field class="half-width">
+            <mat-label>Progress Report (Period)</mat-label>
+            <input matInput [(ngModel)]="item.progressReport" readonly>
+          </mat-form-field>
+
+          <mat-form-field class="half-width">
+            <mat-label>ANID Code</mat-label>
+            <input matInput [(ngModel)]="item.codigoANID" readonly>
+          </mat-form-field>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="form-section">
+          <div class="section-title">Clusters</div>
+          <div class="form-row">
+            <div class="full-width cluster">
+              <div class="checkbox-group">
+                <mat-checkbox
+                  *ngFor="let cluster of clusterOptions"
+                  [checked]="isClusterSelected(cluster.id)"
+                  (change)="onClusterChange(cluster.id, $event.checked)"
+                  color="primary">
+                  {{ cluster.label }}
+                </mat-checkbox>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider style="margin-top: 0px !important;"></mat-divider>
+
+        <div class="form-row">
+          <div class="full-width pdf-upload-field">
+            <label class="pdf-upload-label">PDF Document</label>
+            <div class="file-upload-container">
+              <input
+                type="file"
+                #fileInput
+                (change)="onFileSelected($event)"
+                accept=".pdf"
+                style="display: none"
+                id="pdf-upload">
+              <button
+                mat-stroked-button
+                type="button"
+                (click)="fileInput.click()"
+                [disabled]="uploadingPdf">
+                <mat-icon>upload</mat-icon>
+                {{ selectedPdfFile ? selectedPdfFile.name : 'Select PDF File' }}
+              </button>
+              <button
+                *ngIf="selectedPdfFile"
+                mat-icon-button
+                type="button"
+                (click)="clearSelectedFile()"
+                [disabled]="loading"
+                matTooltip="Clear selection">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+            <div class="pdf-hint" *ngIf="item.linkPDF">
+              <span>Current PDF: {{ getPdfFileName() }}</span>
+              <a
+                *ngIf="getPdfUrl()"
+                [href]="getPdfUrl()!"
+                target="_blank"
+                download
+                [attr.download]="getItemName() + '.pdf'"
+                class="pdf-download-link"
+                matTooltip="Download PDF">
+                <mat-icon class="pdf-icon">picture_as_pdf</mat-icon>
+                Download
+              </a>
+            </div>
+            <div class="pdf-hint" *ngIf="!item.linkPDF && !selectedPdfFile">No PDF file selected</div>
+          </div>
+        </div>
+      </div>
+
+      <mat-divider></mat-divider>
+
+      <div class="form-section">
+        <div class="section-title">Research Team</div>
+        <app-participant-manager
+          [participants]="getParticipants()"
+          [productType]="'participation-scientific-events'"
+          (participantsChange)="onParticipantsChange($event)">
+        </app-participant-manager>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions class="action-buttons">
+      <button mat-button (click)="cancelEdit()">{{ backButtonText }}</button>
+      <button mat-raised-button color="primary" (click)="saveItem()" [disabled]="loading">{{ saveButtonText }}</button>
+    </mat-card-actions>
+  </mat-card>
+</div>

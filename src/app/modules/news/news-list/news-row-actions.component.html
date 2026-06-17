@@ -1,0 +1,37 @@
+<div class="row-actions-icons">
+  <button mat-icon-button type="button" matTooltip="View" (click)="view.emit()">
+    <mat-icon>visibility</mat-icon>
+  </button>
+  <button mat-icon-button type="button" matTooltip="Edit" (click)="edit.emit()">
+    <mat-icon>edit</mat-icon>
+  </button>
+  <button mat-icon-button type="button" matTooltip="Preview on website" (click)="preview.emit()">
+    <mat-icon>open_in_new</mat-icon>
+  </button>
+  <button
+    mat-icon-button
+    type="button"
+    [matMenuTriggerFor]="moreMenu"
+    matTooltip="More actions"
+    (click)="$event.stopPropagation()">
+    <mat-icon>more_vert</mat-icon>
+  </button>
+  <mat-menu #moreMenu="matMenu">
+    <button mat-menu-item (click)="duplicate.emit()">
+      <mat-icon>content_copy</mat-icon>
+      <span>Duplicate</span>
+    </button>
+    <button *ngIf="isPublished" mat-menu-item (click)="unpublish.emit()">
+      <mat-icon>visibility_off</mat-icon>
+      <span>Unpublish</span>
+    </button>
+    <button *ngIf="!isPublished" mat-menu-item (click)="publish.emit()">
+      <mat-icon>publish</mat-icon>
+      <span>Publish</span>
+    </button>
+    <button mat-menu-item class="menu-item-danger" (click)="delete.emit()">
+      <mat-icon color="warn">delete</mat-icon>
+      <span>Delete</span>
+    </button>
+  </mat-menu>
+</div>

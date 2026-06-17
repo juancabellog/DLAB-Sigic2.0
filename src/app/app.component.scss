@@ -10,6 +10,12 @@
   padding: 20px 0;
 }
 
+.sidebar-nav-divider {
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  margin: 8px 16px;
+  height: 0;
+}
+
 .mat-mdc-list-item.active {
   background-color: #e3f2fd;
   color: #1976d2;

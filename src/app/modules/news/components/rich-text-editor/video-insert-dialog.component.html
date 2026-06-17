@@ -1,0 +1,73 @@
+<div class="video-insert-dialog">
+  <div class="video-insert-dialog-header">
+    <h2 class="video-insert-dialog-title">{{ isEditing ? 'Edit video' : 'Add a video' }}</h2>
+    <button mat-icon-button type="button" aria-label="Close" (click)="cancel()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="video-insert-dialog-content">
+    <mat-button-toggle-group
+      class="video-source-toggle"
+      [(ngModel)]="source"
+      (change)="onSourceChange()"
+      aria-label="Video source">
+      <mat-button-toggle value="embed">Embed</mat-button-toggle>
+      <mat-button-toggle value="upload">Upload</mat-button-toggle>
+    </mat-button-toggle-group>
+
+    <ng-container *ngIf="source === 'embed'">
+      <p class="video-insert-helper">
+        Paste a URL from YouTube, Vimeo or Facebook
+      </p>
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Video URL</mat-label>
+        <input
+          matInput
+          [(ngModel)]="videoUrl"
+          placeholder="e.g., www.youtube.com/example"
+          (keyup.enter)="embedVideo()" />
+      </mat-form-field>
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        class="video-primary-btn"
+        (click)="embedVideo()">
+        {{ isEditing ? 'Update video' : 'Embed Video' }}
+      </button>
+    </ng-container>
+
+    <ng-container *ngIf="source === 'upload'">
+      <p class="video-insert-helper">
+        Upload a video file from your computer.
+      </p>
+      <p class="video-insert-hint">
+        Supported formats: MP4, WebM. Maximum size: {{ maxUploadMb }} MB.
+      </p>
+      <label class="video-file-label">
+        <input
+          type="file"
+          accept="video/mp4,video/webm,.mp4,.webm"
+          (change)="onFileSelected($event)" />
+        <span class="video-file-button">Choose file</span>
+        <span class="video-file-name">{{ selectedFile?.name || 'No file selected' }}</span>
+      </label>
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        class="video-primary-btn"
+        [disabled]="!uploadEnabled || uploading || !selectedFile"
+        (click)="uploadVideo()">
+        <mat-spinner *ngIf="uploading" diameter="18" class="video-upload-spinner"></mat-spinner>
+        <span>{{ uploading ? 'Uploading…' : 'Upload Video' }}</span>
+      </button>
+      <p *ngIf="!uploadEnabled" class="video-insert-disabled-msg">
+        Video upload is not available yet. Use Embed for now.
+      </p>
+    </ng-container>
+
+    <p *ngIf="errorMessage" class="video-insert-error" role="alert">{{ errorMessage }}</p>
+  </mat-dialog-content>
+</div>
