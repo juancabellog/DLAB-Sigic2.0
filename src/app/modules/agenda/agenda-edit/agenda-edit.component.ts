@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -10,13 +10,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { finalize } from 'rxjs/operators';
 
 import { RichTextEditorComponent } from '../../news/components/rich-text-editor/rich-text-editor.component';
-import { NewsCategorySelectComponent } from '../../news/components/news-category-select/news-category-select.component';
+import { AgendaCategorySelectComponent } from '../components/agenda-category-select/agenda-category-select.component';
 import { MessageService } from '../../../core/services/message.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { AgendaService } from '../services/agenda.service';
@@ -31,12 +30,12 @@ import {
   PUBLICATION_STATUS_LABELS,
   PublicationStatus,
   TRANSLATION_STATUS,
-  TRANSLATION_STATUS_LABELS,
   buildSpanishSnapshot,
   createEmptyAgendaEvent,
   hasEnglishContent,
-  hasRequiredSpanishContent,
+  hasRichTextContent,
   isEndTimeAfterStart,
+  plainTextFromHtml,
   slugify
 } from '../models/agenda.models';
 
@@ -55,16 +54,17 @@ import {
     MatTabsModule,
     MatSelectModule,
     MatProgressSpinnerModule,
-    MatChipsModule,
     MatTooltipModule,
     MatSlideToggleModule,
     RichTextEditorComponent,
-    NewsCategorySelectComponent
+    AgendaCategorySelectComponent
   ],
   templateUrl: './agenda-edit.component.html',
   styleUrls: ['./agenda-edit.component.scss']
 })
 export class AgendaEditComponent implements OnInit {
+  @ViewChildren(RichTextEditorComponent) richTextEditors!: QueryList<RichTextEditorComponent>;
+
   isEditMode = false;
   itemId: number | null = null;
   loading = false;
@@ -90,7 +90,6 @@ export class AgendaEditComponent implements OnInit {
     { value: EVENT_MODE.ONLINE, label: EVENT_MODE_LABELS.online },
     { value: EVENT_MODE.HYBRID, label: EVENT_MODE_LABELS.hybrid }
   ];
-  readonly translationStatusLabels = TRANSLATION_STATUS_LABELS;
   readonly eventModeLabels = EVENT_MODE_LABELS;
 
   constructor(
@@ -99,7 +98,8 @@ export class AgendaEditComponent implements OnInit {
     private agendaService: AgendaService,
     private agendaSaveService: AgendaSaveService,
     private messageService: MessageService,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -125,7 +125,34 @@ export class AgendaEditComponent implements OnInit {
   }
 
   get canSave(): boolean {
-    return hasRequiredSpanishContent(this.item) && this.hasRequiredEventFields() && !this.endTimeError;
+    console.log('canSave', this.hasMinimumContent(), this.hasRequiredEventFields(), !this.endTimeError);
+    return this.hasMinimumContent() && this.hasRequiredEventFields() && !this.endTimeError;
+  }
+
+  get saveBlockedReason(): string {
+    const missing: string[] = [];
+    if (!this.item.titleEs?.trim()) {
+      missing.push('Spanish title');
+    }
+    if (!hasRichTextContent(this.item.descriptionEs) && !hasRichTextContent(this.item.descriptionEn)) {
+      missing.push('Spanish or English description');
+    }
+    if (!this.item.eventDate?.trim()) {
+      missing.push('event date');
+    }
+    if (!this.item.startTime?.trim()) {
+      missing.push('start time');
+    }
+    if (!this.item.eventMode) {
+      missing.push('event mode');
+    }
+    if (this.endTimeError) {
+      missing.push('valid end time');
+    }
+    if (missing.length === 0) {
+      return '';
+    }
+    return `Complete required fields: ${missing.join(', ')}`;
   }
 
   get showLocationField(): boolean {
@@ -178,7 +205,7 @@ export class AgendaEditComponent implements OnInit {
         this.item.translationStatus === TRANSLATION_STATUS.AUTO_GENERATED ||
         this.item.translationStatus === TRANSLATION_STATUS.NO_TRANSLATION
       ) {
-        if (this.item.titleEn || this.item.summaryEn || this.item.descriptionEn) {
+        if (this.item.titleEn || this.item.descriptionEn) {
           this.item.translationStatus = TRANSLATION_STATUS.MANUALLY_EDITED;
         }
       }
@@ -187,6 +214,11 @@ export class AgendaEditComponent implements OnInit {
 
   onEventFieldChange(): void {
     this.validateEndTime();
+  }
+
+  onTabChange(index: number): void {
+    this.flushRichTextEditors();
+    this.selectedTabIndex = index;
   }
 
   onEventModeChange(): void {
@@ -209,11 +241,60 @@ export class AgendaEditComponent implements OnInit {
     );
   }
 
+  private hasMinimumContent(): boolean {
+    if (!this.item.titleEs?.trim()) {
+      return false;
+    }
+    return hasRichTextContent(this.item.descriptionEs) || hasRichTextContent(this.item.descriptionEn);
+  }
+
+  private flushRichTextEditors(): void {
+    this.richTextEditors?.forEach(editor => editor.flushToModel());
+  }
+
   generateAutomaticTranslation(): void {
-    if (!this.item.titleEs && !this.item.summaryEs && !this.item.descriptionEs) {
+    this.translateFromSpanish();
+  }
+
+  translateFromSpanish(): void {
+    this.flushRichTextEditors();
+    if (!this.item.titleEs?.trim() && !hasRichTextContent(this.item.descriptionEs)) {
       this.messageService.warn('Add Spanish content before generating a translation.');
       return;
     }
+    this.confirmOverwriteIfNeeded(
+      !!this.item.titleEn?.trim() || hasRichTextContent(this.item.descriptionEn),
+      'Existing English title and/or description will be overwritten. Do you want to continue?',
+      () => this.runTranslation('es_to_en')
+    );
+  }
+
+  translateFromEnglish(): void {
+    this.flushRichTextEditors();
+    if (!this.item.titleEn?.trim() && !hasRichTextContent(this.item.descriptionEn)) {
+      this.messageService.warn('Add English content before generating a translation.');
+      return;
+    }
+    this.confirmOverwriteIfNeeded(
+      !!this.item.titleEs?.trim() || hasRichTextContent(this.item.descriptionEs),
+      'Existing Spanish title and/or description will be overwritten. Do you want to continue?',
+      () => this.runTranslation('en_to_es')
+    );
+  }
+
+  private confirmOverwriteIfNeeded(hasContent: boolean, message: string, onConfirm: () => void): void {
+    if (!hasContent) {
+      onConfirm();
+      return;
+    }
+    this.messageService.confirm(message, (accepted: boolean) => {
+      if (accepted) {
+        onConfirm();
+      }
+    }, 'Overwrite content?');
+  }
+
+  private runTranslation(direction: 'es_to_en' | 'en_to_es'): void {
     this.translating = true;
     this.messageService.show(
       'This process may take several minutes. Please keep this page open until it completes.',
@@ -221,24 +302,29 @@ export class AgendaEditComponent implements OnInit {
       'info',
       10_000
     );
-    this.agendaService.generateTranslation(this.item).pipe(
+    this.agendaService.generateTranslation(this.item, direction).pipe(
       finalize(() => { this.translating = false; })
     ).subscribe({
       next: updated => {
-        this.item.titleEn = updated.titleEn;
-        this.item.summaryEn = updated.summaryEn;
-        this.item.descriptionEn = updated.descriptionEn;
+        if (direction === 'en_to_es') {
+          this.item.titleEs = updated.titleEs;
+          this.item.descriptionEs = updated.descriptionEs;
+          this.messageService.success('Spanish translation generated.');
+        } else {
+          this.item.titleEn = updated.titleEn;
+          this.item.descriptionEn = updated.descriptionEn;
+          this.messageService.success('English translation generated.');
+        }
         this.item.translationStatus = TRANSLATION_STATUS.AUTO_GENERATED;
         this.translationReviewWarning = false;
-        this.messageService.success('Translation generated', 'Review and validate the English content.');
-        this.selectedTabIndex = 1;
+        this.cdr.detectChanges();
       },
       error: () => this.messageService.error('Translation could not be generated.')
     });
   }
 
   validateTranslation(): void {
-    if (!this.item.titleEn && !this.item.summaryEn && !this.item.descriptionEn) {
+    if (!this.item.titleEn && !this.item.descriptionEn) {
       this.messageService.warn('No English content to validate.');
       return;
     }
@@ -277,14 +363,15 @@ export class AgendaEditComponent implements OnInit {
     if (this.item.titleEs && !this.item.metaTitle) {
       this.item.metaTitle = this.item.titleEs;
     }
-    if (this.item.summaryEs && !this.item.metaDescription) {
-      this.item.metaDescription = this.item.summaryEs.replace(/<[^>]*>/g, '').slice(0, 160);
+    const descriptionText = plainTextFromHtml(this.item.descriptionEs);
+    if (descriptionText && !this.item.metaDescription) {
+      this.item.metaDescription = descriptionText.slice(0, 160);
     }
     if (this.item.titleEs && !this.item.ogTitle) {
       this.item.ogTitle = this.item.titleEs;
     }
-    if (this.item.summaryEs && !this.item.ogDescription) {
-      this.item.ogDescription = this.item.summaryEs.replace(/<[^>]*>/g, '').slice(0, 200);
+    if (descriptionText && !this.item.ogDescription) {
+      this.item.ogDescription = descriptionText.slice(0, 200);
     }
     if (this.item.mainImageUrl && !this.item.ogImageUrl) {
       this.item.ogImageUrl = this.item.mainImageUrl;
@@ -347,9 +434,10 @@ export class AgendaEditComponent implements OnInit {
   }
 
   private validateBeforeSave(): boolean {
-    if (!hasRequiredSpanishContent(this.item)) {
-      this.messageService.warn('Title, summary and description (Spanish) are required.');
-      this.selectedTabIndex = 0;
+    this.flushRichTextEditors();
+    if (!this.hasMinimumContent()) {
+      this.messageService.warn('Title (Spanish) and a description (Spanish or English) are required.');
+      this.selectedTabIndex = hasRichTextContent(this.item.descriptionEs) ? 0 : 1;
       return false;
     }
     if (!this.hasRequiredEventFields()) {

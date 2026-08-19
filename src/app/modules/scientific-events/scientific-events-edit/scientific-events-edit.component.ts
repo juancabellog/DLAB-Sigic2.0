@@ -98,7 +98,7 @@ export class ScientificEventsEditComponent implements OnInit {
     numParticipantes: undefined,
     codigoANID: '',
     progressReport: undefined,
-    tipoProducto: { id: 5 } // ID 5 para organizaciones de eventos científicos (ajustar según necesidad)
+    tipoProducto: { id: 15 } // ORGANIZACION_EVENTOS_CIENTIFICOS
   };
 
   constructor(
@@ -207,7 +207,7 @@ export class ScientificEventsEditComponent implements OnInit {
       numParticipantes: undefined,
       codigoANID: '',
       progressReport: undefined,
-      tipoProducto: { id: 5 },
+      tipoProducto: { id: 15 },
       fechaInicio: null,
       fechaTermino: null,
       basal: 'N',
@@ -243,9 +243,9 @@ export class ScientificEventsEditComponent implements OnInit {
         }
         
         if (!event.tipoProducto) {
-          event.tipoProducto = { id: 5 };
-        } else if (event.tipoProducto.id !== 5) {
-          event.tipoProducto.id = 5;
+          event.tipoProducto = { id: 15 };
+        } else if (event.tipoProducto.id !== 15) {
+          event.tipoProducto.id = 15;
         }
         
         this.event = event;
@@ -330,9 +330,9 @@ export class ScientificEventsEditComponent implements OnInit {
         }
 
         if (!event.tipoProducto) {
-          event.tipoProducto = { id: 5 };
-        } else if (event.tipoProducto.id !== 5) {
-          event.tipoProducto.id = 5;
+          event.tipoProducto = { id: 15 };
+        } else if (event.tipoProducto.id !== 15) {
+          event.tipoProducto.id = 15;
         }
 
         // Limpiar identificadores para tratarlo como nuevo
@@ -502,7 +502,7 @@ export class ScientificEventsEditComponent implements OnInit {
       switchMap((uploadResult) => {
         const eventToSave: OrganizacionEventosCientificosDTO = {
           ...this.event,
-          tipoProducto: { id: 5 },
+          tipoProducto: { id: 15 },
           fechaInicio: this.event.fechaInicio, // Obligatorio - validado en validateForm
           fechaTermino: this.event.fechaTermino || undefined,
           linkPDF: this.event.linkPDF || undefined, // Asegurar que linkPDF se incluya explícitamente

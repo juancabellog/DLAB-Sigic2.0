@@ -50,8 +50,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -193,11 +195,14 @@ public class ParticipacionEventoCientificoController {
             header.createCell(10).setCellValue("ANID Code");
             header.createCell(11).setCellValue("Clusters");
             header.createCell(12).setCellValue("Participants");
+            header.createCell(13).setCellValue("# Men");
+            header.createCell(14).setCellValue("# Women");
 
             for (ParticipacionEventoCientifico item : items) {
                 ParticipacionEventoCientificoDTO dto = toDto(item, textosMap, false);
+                List<ParticipacionProducto> participaciones = participacionProductoRepository.findByProductoId(item.getId());
                 String participantsStr = "";
-                for (ParticipacionProducto pp : participacionProductoRepository.findByProductoId(item.getId())) {
+                for (ParticipacionProducto pp : participaciones) {
                     String part = formatParticipantWithTipoRRHH(pp);
                     participantsStr = appendWithSeparator(participantsStr, part);
                 }
@@ -219,9 +224,11 @@ public class ParticipacionEventoCientificoController {
                 row.createCell(10).setCellValue(dto.getCodigoANID() != null ? dto.getCodigoANID() : "");
                 row.createCell(11).setCellValue(formatClustersAsRoman(dto.getCluster()));
                 row.createCell(12).setCellValue(participantsStr);
+                row.createCell(13).setCellValue(countParticipantsByGender(participaciones, "M"));
+                row.createCell(14).setCellValue(countParticipantsByGender(participaciones, "F"));
             }
 
-            for (int i = 0; i <= 12; i++) {
+            for (int i = 0; i <= 14; i++) {
                 sheet.autoSizeColumn(i);
             }
 
@@ -567,5 +574,32 @@ public class ParticipacionEventoCientificoController {
                     }
                 })
                 .collect(Collectors.joining(", "));
+    }
+
+    /** Unique RRHH per record with codigoGenero M or F (case-insensitive). */
+    private int countParticipantsByGender(List<ParticipacionProducto> participaciones, String genderCode) {
+        if (participaciones == null || participaciones.isEmpty() || genderCode == null || genderCode.isBlank()) {
+            return 0;
+        }
+        Set<Long> seenRrhhIds = new HashSet<>();
+        int count = 0;
+        for (ParticipacionProducto pp : participaciones) {
+            if (pp == null || pp.getRrhh() == null) {
+                continue;
+            }
+            RRHH rrhh = pp.getRrhh();
+            Long rrhhId = rrhh.getId();
+            if (rrhhId != null) {
+                if (seenRrhhIds.contains(rrhhId)) {
+                    continue;
+                }
+                seenRrhhIds.add(rrhhId);
+            }
+            String codigoGenero = rrhh.getCodigoGenero();
+            if (codigoGenero != null && genderCode.equalsIgnoreCase(codigoGenero.trim())) {
+                count++;
+            }
+        }
+        return count;
     }
 }

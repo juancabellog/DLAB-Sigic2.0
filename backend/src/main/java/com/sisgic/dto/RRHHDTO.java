@@ -14,6 +14,7 @@ public class RRHHDTO {
     private String email;
     private String iniciales;
     private String orcid;
+    private String profileImageUrl;
     private String codigoGenero; // M o F
     private String createdAt;
     private String updatedAt;
@@ -110,6 +111,14 @@ public class RRHHDTO {
     
     public void setOrcid(String orcid) {
         this.orcid = orcid;
+    }
+
+    public String getProfileImageUrl() {
+        return profileImageUrl;
+    }
+
+    public void setProfileImageUrl(String profileImageUrl) {
+        this.profileImageUrl = profileImageUrl;
     }
     
     public String getCodigoGenero() {

@@ -74,6 +74,8 @@ export interface NewsItem {
   ogDescription: string;
   ogImageUrl: string;
   publicUrl: string;
+  /** Public media / website URL — producto.linkVisualizacion */
+  mediaLink: string;
   featured: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -125,10 +127,21 @@ export interface NewsSpanishContent {
   bodyEs: string;
 }
 
-export interface NewsTranslationResult {
+export interface NewsEnglishContent {
   titleEn: string;
   summaryEn: string;
   bodyEn: string;
+}
+
+export type NewsTranslationDirection = 'es_to_en' | 'en_to_es';
+
+export interface NewsTranslationResult {
+  titleEn?: string;
+  summaryEn?: string;
+  bodyEn?: string;
+  titleEs?: string;
+  summaryEs?: string;
+  bodyEs?: string;
 }
 
 export const PUBLICATION_STATUS_LABELS: Record<PublicationStatus, string> = {
@@ -170,6 +183,7 @@ export function createEmptyNewsItem(): NewsItem {
     ogDescription: '',
     ogImageUrl: '',
     publicUrl: '',
+    mediaLink: '',
     featured: false,
     basal: 'N'
   };

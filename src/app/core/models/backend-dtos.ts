@@ -106,6 +106,8 @@ export interface InstitucionDTO {
   id?: number;
   idDescripcion?: string; // Mantener por compatibilidad
   descripcion?: string; // Texto traducido desde la vista
+  codigoPais?: string;
+  countryLabel?: string;
 }
 
 // DTO para GradoAcademico
@@ -296,6 +298,7 @@ export interface RRHHDTO {
   email?: string;
   iniciales?: string;
   orcid?: string;
+  profileImageUrl?: string;
   codigoGenero?: string; // M o F
   createdAt?: string;
   updatedAt?: string;
@@ -323,6 +326,106 @@ export interface ProyectoDTO {
   totalProductos?: number; // Conteo de productos asociados
   createdAt?: string; // LocalDateTime como string
   updatedAt?: string; // LocalDateTime como string
+}
+
+/** Scientific product Project (producto + proyecto). */
+export interface ProjectProductDTO {
+  id?: number;
+  descripcion?: string;
+  comentario?: string | null;
+  fechaInicio?: string;
+  fechaTermino?: string;
+  tipoProducto?: TipoProductoDTO;
+  progressReport?: string;
+  codigoANID?: string;
+  basal?: string;
+  cluster?: string;
+  participantesNombres?: string;
+  mainResponsible?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  participantes?: ParticipanteDTO[];
+
+  projectCode?: string;
+  awardDate?: string;
+  duration?: number;
+  totalAmount?: number;
+  totalAmountCenter?: number;
+  fundingType?: FundingTypeDTO;
+  idFundingtype?: number;
+  otherFundingType?: string | null;
+  projectTypes?: string;
+  otherProjectType?: string | null;
+  nameSocialOrganizations?: string | null;
+  namePublicSectorEntities?: string | null;
+  namePrivateSectorEntities?: string | null;
+  nameTradeRegionalAssociations?: string | null;
+  nameSTEntities?: string | null;
+  projectTypesLabels?: string;
+  fundingTypeLabel?: string;
+}
+
+export interface BookTypeDTO {
+  id?: number;
+  idDescripcion?: string;
+}
+
+/** Scientific product Books (producto + book). idTipoProducto = 20. */
+export interface BookProductDTO {
+  id?: number;
+  descripcion?: string;
+  comentario?: string | null;
+  fechaInicio?: string;
+  fechaTermino?: string;
+  tipoProducto?: TipoProductoDTO;
+  progressReport?: string;
+  codigoANID?: string;
+  basal?: string;
+  cluster?: string;
+  participantesNombres?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  participantes?: ParticipanteDTO[];
+
+  idBookType?: number | null;
+  bookType?: BookTypeDTO;
+  bookTypeLabel?: string;
+  chapterTitle?: string | null;
+  firstPage?: number;
+  lastPage?: number;
+  editorialCityCountry?: string | null;
+  year?: number;
+  isbn?: string | null;
+}
+
+/** Scientific product Awards (producto + award). idTipoProducto = 21. */
+export interface AwardProductDTO {
+  id?: number;
+  descripcion?: string;
+  comentario?: string | null;
+  fechaInicio?: string;
+  fechaTermino?: string;
+  tipoProducto?: TipoProductoDTO;
+  progressReport?: string;
+  codigoANID?: string;
+  basal?: string;
+  cluster?: string;
+  participantesNombres?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  participantes?: ParticipanteDTO[];
+
+  year?: number;
+  idInstitucion?: number | null;
+  institucion?: InstitucionDTO | null;
+  institutionLabel?: string;
+  codigoPais?: string;
+  countryLabel?: string;
+}
+
+export interface TipoProyectoDTO {
+  id?: number;
+  idDescripcion?: string;
 }
 
 // DTO para Participación en Producto

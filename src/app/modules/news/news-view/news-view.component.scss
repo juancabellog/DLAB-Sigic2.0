@@ -95,6 +95,16 @@
     background: #f3e5f5;
     color: #6a1b9a;
   }
+
+  .media-link-row {
+    margin: 12px 0 0;
+    font-size: 14px;
+
+    a {
+      color: #1565c0;
+      word-break: break-all;
+    }
+  }
 }
 
 .news-preview-article {

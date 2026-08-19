@@ -16,6 +16,9 @@ public class Institucion {
     @Column(name = "descripcion")
     private String descripcion;
 
+    @Column(name = "codigoPais", length = 3, columnDefinition = "CHAR(3)")
+    private String codigoPais;
+
     // Constructors
     public Institucion() {}
     
@@ -45,6 +48,14 @@ public class Institucion {
     
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    public String getCodigoPais() {
+        return codigoPais;
+    }
+
+    public void setCodigoPais(String codigoPais) {
+        this.codigoPais = codigoPais;
     }
 
 }

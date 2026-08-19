@@ -1,0 +1,105 @@
+<div class="detail-container">
+  <div class="header-actions">
+    <button mat-button type="button" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back
+    </button>
+    <button mat-raised-button color="primary" type="button" (click)="editBook()" *ngIf="book">
+      <mat-icon>edit</mat-icon>
+      Edit
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading book...</p>
+  </div>
+
+  <ng-container *ngIf="!loading && book">
+    <h1 class="page-title">Book Detail</h1>
+
+    <mat-card class="detail-card">
+      <mat-card-header>
+        <mat-card-title>{{ book.descripcion || 'Untitled book' }}</mat-card-title>
+        <mat-card-subtitle>{{ getWorkTypeLabel() }} · {{ book.year || '—' }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="detail-section">
+          <h3>Basic Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <strong>Work Type</strong>
+              <span>{{ getWorkTypeLabel() }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Book Title</strong>
+              <span>{{ book.descripcion || '—' }}</span>
+            </div>
+            <div class="detail-item" *ngIf="isChapter() && book.chapterTitle">
+              <strong>Book Chapter</strong>
+              <span>{{ book.chapterTitle }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Pages</strong>
+              <span>{{ getPages() }}</span>
+            </div>
+            <div class="detail-item" *ngIf="book.editorialCityCountry">
+              <strong>Editorial / City / Country</strong>
+              <span>{{ book.editorialCityCountry }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Year</strong>
+              <span>{{ book.year != null ? book.year : '—' }}</span>
+            </div>
+            <div class="detail-item" *ngIf="book.isbn">
+              <strong>ISBN</strong>
+              <span>{{ book.isbn }}</span>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="detail-section">
+          <h3>Product Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <strong>Product associated with Basal funding</strong>
+              <span>{{ getBasalLabel() }}</span>
+            </div>
+            <div class="detail-item" *ngIf="book.progressReport">
+              <strong>Progress Report</strong>
+              <span>Period {{ book.progressReport }}</span>
+            </div>
+            <div class="detail-item" *ngIf="book.codigoANID">
+              <strong>ANID Code</strong>
+              <span>{{ book.codigoANID }}</span>
+            </div>
+            <div class="detail-item" *ngIf="getClusters()">
+              <strong>Clusters</strong>
+              <span>{{ getClusters() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="detail-section">
+          <h3>Participants</h3>
+          <div class="participant-list" *ngIf="book.participantesNombres">
+            <strong>Authors Summary</strong>
+            <p>{{ book.participantesNombres }}</p>
+          </div>
+          <div class="participant-list" *ngIf="participants.length">
+            <strong>Author Details</strong>
+            <ul>
+              <li *ngFor="let p of participants">{{ p.fullName || ('RRHH #' + p.rrhhId) }}</li>
+            </ul>
+          </div>
+          <p *ngIf="!book.participantesNombres && !participants.length">No participants recorded.</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </ng-container>
+</div>

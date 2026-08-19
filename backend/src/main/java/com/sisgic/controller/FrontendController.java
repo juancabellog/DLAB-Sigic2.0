@@ -25,6 +25,7 @@ public class FrontendController {
         "/thesis-students",
         "/catalogs",
         "/researchers",
+        "/laboratories",
         "/projects",
         "/login",
         "/register",

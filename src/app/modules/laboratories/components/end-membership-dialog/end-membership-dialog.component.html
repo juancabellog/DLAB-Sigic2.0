@@ -1,0 +1,29 @@
+<h2 mat-dialog-title>End membership</h2>
+<mat-dialog-content>
+  <p *ngIf="data.context === 'member'">
+    <strong>{{ data.personName }}</strong> will be moved to Former Members.
+    The historical record will be preserved.
+  </p>
+  <p *ngIf="data.context === 'manager'">
+    <strong>{{ data.personName }}</strong> will be moved to Former Lab Managers.
+    The historical record will be preserved.
+  </p>
+  <p *ngIf="!data.context">
+    This will preserve <strong>{{ data.personName }}</strong> in the laboratory history and set an end date.
+    The record will not be deleted.
+  </p>
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>End date</mat-label>
+    <input matInput type="date" [(ngModel)]="endDate" />
+  </mat-form-field>
+  <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="warn" type="button" (click)="confirm()">End membership</button>
+</mat-dialog-actions>
+
+<style>
+  .full-width { width: 100%; }
+  .error-message { color: #d32f2f; font-size: 13px; }
+</style>

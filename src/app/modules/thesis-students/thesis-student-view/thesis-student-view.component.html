@@ -58,15 +58,15 @@
             </div>
             <div class="detail-item" *ngIf="thesis.fechaInicioPrograma">
               <strong>Program Start Date:</strong>
-              <span>{{ thesis.fechaInicioPrograma | date:'MMM dd, yyyy' }}</span>
+              <span>{{ thesis.fechaInicioPrograma | localDate:'MMM dd, yyyy' }}</span>
             </div>
             <div class="detail-item" *ngIf="thesis.fechaInicio">
               <strong>Qualifying Exam Date:</strong>
-              <span>{{ thesis.fechaInicio | date:'MMM dd, yyyy' }}</span>
+              <span>{{ thesis.fechaInicio | localDate:'MMM dd, yyyy' }}</span>
             </div>
             <div class="detail-item" *ngIf="thesis.fechaTermino">
               <strong>Degree Award Date:</strong>
-              <span>{{ thesis.fechaTermino | date:'MMM dd, yyyy' }}</span>
+              <span>{{ thesis.fechaTermino | localDate:'MMM dd, yyyy' }}</span>
             </div>
           </div>
         </div>

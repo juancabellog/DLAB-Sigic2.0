@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LocalDatePipe } from '../../../shared/pipes/local-date.pipe';
 import { Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -18,12 +19,14 @@ import { ScientificCollaborationsService } from '../../../core/services/scientif
 import { UtilsService } from '../../../core/services/utils.service';
 import { ListStateService } from '../../../core/services/list-state.service';
 import { ColaboracionDTO } from '../../../core/models/backend-dtos';
+import { formatLocalDate } from '../../../core/utils/date.util';
 
 @Component({
   selector: 'app-sc-list',
   standalone: true,
   imports: [
     CommonModule,
+    LocalDatePipe,
     RouterModule,
     MatCardModule,
     MatButtonModule,
@@ -42,6 +45,7 @@ export class SCListComponent implements OnInit, OnDestroy {
   collaborations: ColaboracionDTO[] = [];
   isSearching: boolean = false;
   loading: boolean = false;
+  exportLoading: boolean = false;
   basalOnly: boolean = false;
   finalFilteredCount: number = 0;
   private searchResults: ColaboracionDTO[] = [];
@@ -128,6 +132,61 @@ export class SCListComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
+  onExportRequested(): void {
+    if (this.filteredCollaborations.length === 0) {
+      this.messageService.info('There are no results to export.');
+      return;
+    }
+    this.exportLoading = true;
+    this.scientificCollaborationsService
+      .exportScientificCollaborationsToExcel({
+        sort: this.mapExportSortColumn(this.sortColumn),
+        direction: this.sortDirection === 'asc' ? 'ASC' : 'DESC'
+      })
+      .pipe(
+        catchError(error => {
+          console.error('Error exporting scientific collaborations to Excel:', error);
+          this.messageService.error('Error exporting scientific collaborations. Please try again later.');
+          return of(null as any);
+        }),
+        finalize(() => {
+          this.exportLoading = false;
+        })
+      )
+      .subscribe(blob => {
+        if (!blob) {
+          return;
+        }
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'scientific-collaborations.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        this.messageService.success('Export started. Your download should begin shortly.');
+      });
+  }
+
+  private mapExportSortColumn(
+    column: 'description' | 'type' | 'institution' | 'origin' | 'destination' | 'period' | 'date' | null
+  ): string {
+    const map: Record<string, string> = {
+      description: 'descripcion',
+      type: 'tipoColaboracion.id',
+      institution: 'institucion.id',
+      origin: 'ciudadOrigen',
+      destination: 'ciudadDestino',
+      period: 'progressReport',
+      date: 'fechaInicio'
+    };
+    if (column && map[column]) {
+      return map[column];
+    }
+    return 'id';
+  }
+
   private applyFilters(): void {
     let filtered = [...this.searchResults];
     
@@ -182,11 +241,11 @@ export class SCListComponent implements OnInit, OnDestroy {
       return 'N/A';
     }
     
-    const startDate = collaboration.fechaInicio 
-      ? new Date(collaboration.fechaInicio).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    const startDate = collaboration.fechaInicio
+      ? formatLocalDate(collaboration.fechaInicio, 'MMM yyyy', 'en-US')
       : null;
-    const endDate = collaboration.fechaTermino 
-      ? new Date(collaboration.fechaTermino).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+    const endDate = collaboration.fechaTermino
+      ? formatLocalDate(collaboration.fechaTermino, 'MMM yyyy', 'en-US')
       : null;
     
     if (startDate && endDate) {

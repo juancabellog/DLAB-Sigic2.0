@@ -1,0 +1,2 @@
+-- DEPRECATED: Laboratories use legacy tables `laboratorio` and `laboratorio_rrhh`.
+-- Do not run this script on production databases that already have the legacy schema.

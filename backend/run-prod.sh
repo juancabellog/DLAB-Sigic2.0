@@ -10,4 +10,10 @@ if [ -z "$JAR" ]; then
 fi
 
 echo "Iniciando $JAR con spring.profiles.active=prod"
+
+if [ -f "$(dirname "$0")/setenv.sh" ]; then
+  # shellcheck source=/dev/null
+  source "$(dirname "$0")/setenv.sh"
+fi
+
 exec java -jar "$JAR" --spring.profiles.active=prod "$@"

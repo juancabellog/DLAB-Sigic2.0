@@ -44,6 +44,14 @@ export class TechnologyTransferService {
   deleteTechnologyTransfer(id: number): Observable<boolean> {
     return this.baseHttp.delete<boolean>(`/technology-transfer/${id}`);
   }
+
+  /**
+   * Exporta las transferencias tecnológicas visibles a Excel
+   */
+  exportTechnologyTransfersToExcel(params: { sort: string; direction: 'ASC' | 'DESC' }): Observable<Blob> {
+    const { sort, direction } = params;
+    return this.baseHttp.getFile(`/technology-transfer/export?sortBy=${sort}&sortDir=${direction}`);
+  }
 }
 
 

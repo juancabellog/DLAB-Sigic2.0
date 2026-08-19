@@ -35,10 +35,8 @@ export const AGENDA_PUBLISH_CONFIG = {
 export interface AgendaEvent {
   id?: number;
   titleEs: string;
-  summaryEs: string;
   descriptionEs: string;
   titleEn: string;
-  summaryEn: string;
   descriptionEn: string;
   mainImageUrl: string;
   mainImageAltEs: string;
@@ -53,15 +51,6 @@ export interface AgendaEvent {
   location: string;
   eventMode: EventMode | '';
   onlineUrl: string;
-  organizerEs: string;
-  organizerEn: string;
-  speakerEs: string;
-  speakerEn: string;
-  audienceEs: string;
-  audienceEn: string;
-  ctaLabelEs: string;
-  ctaLabelEn: string;
-  ctaUrl: string;
   slug: string;
   metaTitle: string;
   metaDescription: string;
@@ -109,27 +98,25 @@ export interface AgendaEditorialMetadata {
   eventMode?: EventMode | '';
   onlineUrl?: string;
   endTime?: string;
-  organizerEs?: string;
-  organizerEn?: string;
-  speakerEs?: string;
-  speakerEn?: string;
-  audienceEs?: string;
-  audienceEn?: string;
-  ctaLabelEs?: string;
-  ctaLabelEn?: string;
-  ctaUrl?: string;
 }
 
 export interface AgendaSpanishContent {
   titleEs: string;
-  summaryEs: string;
   descriptionEs: string;
 }
 
-export interface AgendaTranslationResult {
+export interface AgendaEnglishContent {
   titleEn: string;
-  summaryEn: string;
   descriptionEn: string;
+}
+
+export type AgendaTranslationDirection = 'es_to_en' | 'en_to_es';
+
+export interface AgendaTranslationResult {
+  titleEn?: string;
+  descriptionEn?: string;
+  titleEs?: string;
+  descriptionEs?: string;
 }
 
 export const PUBLICATION_STATUS_LABELS: Record<PublicationStatus, string> = {
@@ -154,12 +141,12 @@ export const EVENT_MODE_LABELS: Record<EventMode, string> = {
 };
 
 export function createEmptyAgendaEvent(): AgendaEvent {
+  const today = new Date();
+  const eventDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   return {
     titleEs: '',
-    summaryEs: '',
     descriptionEs: '',
     titleEn: '',
-    summaryEn: '',
     descriptionEn: '',
     mainImageUrl: '',
     mainImageAltEs: '',
@@ -168,21 +155,12 @@ export function createEmptyAgendaEvent(): AgendaEvent {
     author: '',
     publicationStatus: PUBLICATION_STATUS.DRAFT,
     translationStatus: TRANSLATION_STATUS.NO_TRANSLATION,
-    eventDate: null,
-    startTime: '',
+    eventDate,
+    startTime: '09:00',
     endTime: '',
     location: '',
-    eventMode: '',
+    eventMode: EVENT_MODE.IN_PERSON,
     onlineUrl: '',
-    organizerEs: '',
-    organizerEn: '',
-    speakerEs: '',
-    speakerEn: '',
-    audienceEs: '',
-    audienceEn: '',
-    ctaLabelEs: '',
-    ctaLabelEn: '',
-    ctaUrl: '',
     slug: '',
     metaTitle: '',
     metaDescription: '',
@@ -205,40 +183,39 @@ export function slugify(value: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
+export function plainTextFromHtml(html: string | null | undefined): string {
+  if (!html?.trim()) return '';
+  return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim();
+}
+
 export function buildSpanishSnapshot(
-  item: Pick<AgendaEvent, 'titleEs' | 'summaryEs' | 'descriptionEs'>
+  item: Pick<AgendaEvent, 'titleEs' | 'descriptionEs'>
 ): string {
   return JSON.stringify({
     titleEs: item.titleEs || '',
-    summaryEs: item.summaryEs || '',
     descriptionEs: item.descriptionEs || ''
   });
 }
 
 export function hasRichTextContent(html: string | null | undefined): boolean {
   if (!html?.trim()) return false;
-  const text = html
-    .replace(/<[^>]*>/g, '')
-    .replace(/&nbsp;/gi, ' ')
-    .trim();
-  return text.length > 0;
+  return plainTextFromHtml(html).length > 0;
 }
 
 export function hasRequiredSpanishContent(
-  item: Pick<AgendaEvent, 'titleEs' | 'summaryEs' | 'descriptionEs'>
+  item: Pick<AgendaEvent, 'titleEs' | 'descriptionEs'>
 ): boolean {
-  if (!item.titleEs?.trim() || !item.summaryEs?.trim()) {
+  if (!item.titleEs?.trim()) {
     return false;
   }
   return hasRichTextContent(item.descriptionEs);
 }
 
 export function hasEnglishContent(
-  item: Pick<AgendaEvent, 'titleEn' | 'summaryEn' | 'descriptionEn'>
+  item: Pick<AgendaEvent, 'titleEn' | 'descriptionEn'>
 ): boolean {
   return Boolean(
     (item.titleEn && item.titleEn.trim()) ||
-    (item.summaryEn && item.summaryEn.trim()) ||
     (item.descriptionEn && item.descriptionEn.trim())
   );
 }

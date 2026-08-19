@@ -2,33 +2,15 @@ import {
   AgendaEvent,
   EVENT_MODE,
   PUBLICATION_STATUS,
-  TRANSLATION_STATUS,
-  createEmptyAgendaEvent
+  TRANSLATION_STATUS
 } from '../models/agenda.models';
-
-const emptyExtras = () => {
-  const e = createEmptyAgendaEvent();
-  return {
-    organizerEs: e.organizerEs,
-    organizerEn: e.organizerEn,
-    speakerEs: e.speakerEs,
-    speakerEn: e.speakerEn,
-    audienceEs: e.audienceEs,
-    audienceEn: e.audienceEn,
-    ctaLabelEs: e.ctaLabelEs,
-    ctaLabelEn: e.ctaLabelEn,
-    ctaUrl: e.ctaUrl
-  };
-};
 
 export const MOCK_AGENDA_EVENTS: AgendaEvent[] = [
   {
     id: 8001,
     titleEs: 'Jornada de divulgación científica',
-    summaryEs: 'Actividades abiertas al público sobre investigación marina.',
     descriptionEs: '<p>Programa completo de charlas y talleres para toda la familia.</p>',
     titleEn: 'Science outreach day',
-    summaryEn: 'Open activities on marine research for the general public.',
     descriptionEn: '<p>Full programme of talks and workshops for all ages.</p>',
     mainImageUrl: '',
     mainImageAltEs: 'Jornada de divulgación',
@@ -43,20 +25,11 @@ export const MOCK_AGENDA_EVENTS: AgendaEvent[] = [
     location: 'Auditorio principal',
     eventMode: EVENT_MODE.IN_PERSON,
     onlineUrl: '',
-    organizerEs: 'Fundación Ciencia & Vida',
-    organizerEn: 'Ciencia & Vida Foundation',
-    speakerEs: 'Dra. María López',
-    speakerEn: 'Dr. María López',
-    audienceEs: 'Público general',
-    audienceEn: 'General public',
-    ctaLabelEs: 'Inscribirse',
-    ctaLabelEn: 'Register',
-    ctaUrl: 'https://example.org/register/outreach-day',
     slug: 'jornada-divulgacion-cientifica',
     metaTitle: 'Jornada de divulgación científica',
-    metaDescription: 'Actividades abiertas al público sobre investigación marina.',
+    metaDescription: 'Programa completo de charlas y talleres para toda la familia.',
     ogTitle: 'Jornada de divulgación científica',
-    ogDescription: 'Actividades abiertas al público sobre investigación marina.',
+    ogDescription: 'Programa completo de charlas y talleres para toda la familia.',
     ogImageUrl: '',
     publicUrl: 'https://example.org/agenda/jornada-divulgacion-cientifica',
     featured: true,
@@ -66,10 +39,8 @@ export const MOCK_AGENDA_EVENTS: AgendaEvent[] = [
   {
     id: 8002,
     titleEs: 'Seminario online de oceanografía',
-    summaryEs: 'Sesión virtual con investigadores invitados.',
     descriptionEs: '<p>Seminario mensual sobre tendencias en oceanografía.</p>',
     titleEn: 'Online oceanography seminar',
-    summaryEn: 'Virtual session with guest researchers.',
     descriptionEn: '<p>Monthly seminar on oceanography trends.</p>',
     mainImageUrl: '',
     mainImageAltEs: '',
@@ -84,12 +55,11 @@ export const MOCK_AGENDA_EVENTS: AgendaEvent[] = [
     location: '',
     eventMode: EVENT_MODE.ONLINE,
     onlineUrl: 'https://example.org/live/oceanography-seminar',
-    ...emptyExtras(),
     slug: 'seminario-online-oceanografia',
     metaTitle: 'Seminario online de oceanografía',
-    metaDescription: 'Sesión virtual con investigadores invitados.',
+    metaDescription: 'Seminario mensual sobre tendencias en oceanografía.',
     ogTitle: 'Seminario online de oceanografía',
-    ogDescription: 'Sesión virtual con investigadores invitados.',
+    ogDescription: 'Seminario mensual sobre tendencias en oceanografía.',
     ogImageUrl: '',
     publicUrl: 'https://example.org/agenda/seminario-online-oceanografia',
     featured: false,
@@ -98,10 +68,8 @@ export const MOCK_AGENDA_EVENTS: AgendaEvent[] = [
   {
     id: 8003,
     titleEs: 'Taller híbrido de metodología',
-    summaryEs: 'Borrador de evento formativo presencial y en línea.',
     descriptionEs: '<p>Contenido del taller en preparación.</p>',
     titleEn: '',
-    summaryEn: '',
     descriptionEn: '',
     mainImageUrl: '',
     mainImageAltEs: '',
@@ -116,7 +84,6 @@ export const MOCK_AGENDA_EVENTS: AgendaEvent[] = [
     location: 'Sala B',
     eventMode: EVENT_MODE.HYBRID,
     onlineUrl: 'https://example.org/live/methodology-workshop',
-    ...emptyExtras(),
     slug: 'taller-hibrido-metodologia',
     metaTitle: '',
     metaDescription: '',
@@ -129,10 +96,8 @@ export const MOCK_AGENDA_EVENTS: AgendaEvent[] = [
   {
     id: 8004,
     titleEs: 'Conferencia anual (archivada)',
-    summaryEs: 'Evento del año pasado, ya finalizado.',
     descriptionEs: '<p>Resumen del evento celebrado el año anterior.</p>',
     titleEn: 'Annual conference (archived)',
-    summaryEn: 'Past event from last year.',
     descriptionEn: '<p>Summary of the event held last year.</p>',
     mainImageUrl: '',
     mainImageAltEs: '',
@@ -147,7 +112,6 @@ export const MOCK_AGENDA_EVENTS: AgendaEvent[] = [
     location: 'Campus central',
     eventMode: EVENT_MODE.IN_PERSON,
     onlineUrl: '',
-    ...emptyExtras(),
     slug: 'conferencia-anual-archivada',
     metaTitle: 'Conferencia anual',
     metaDescription: 'Evento del año pasado.',

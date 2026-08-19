@@ -44,6 +44,7 @@ export interface NoticiaApiDTO {
   createdAt?: string;
   updatedAt?: string;
   basal?: string;
+  linkVisualizacion?: string;
 }
 
 export interface PaginatedNewsApi {
@@ -139,6 +140,7 @@ export function mergeApiWithMetadata(dto: NoticiaApiDTO, meta: NewsEditorialMeta
     ogDescription: meta.ogDescription,
     ogImageUrl: meta.ogImageUrl || dto.image || '',
     publicUrl: meta.publicUrl,
+    mediaLink: dto.linkVisualizacion || '',
     featured: mapFeatureToBoolean(dto.feature) ?? meta.featured ?? false,
     categories: categories.length ? categories : (meta.categories || []),
     relatedPosts,
@@ -158,6 +160,7 @@ export function mapNewsItemToApiPayload(item: NewsItem): NoticiaApiDTO {
     excerpt: { es: item.summaryEs, us: item.summaryEn },
     body: { es: item.bodyEs, us: item.bodyEn },
     image: item.mainImageUrl,
+    linkVisualizacion: (item.mediaLink || '').trim(),
     firstPublishedDate: item.publicationDate || undefined,
     lastPublishedDate:
       item.publicationStatus === PUBLICATION_STATUS.PUBLISHED

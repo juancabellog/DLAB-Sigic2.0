@@ -26,9 +26,11 @@ export class BaseHttpService {
   /**
    * Realiza una petición POST
    */
-  post<T>(endpoint: string, data: any): Observable<T> {
+  post<T>(endpoint: string, data: any, params?: any): Observable<T> {
+    const httpParams = this.buildHttpParams(params);
     return this.http.post<T>(`${this.baseUrl}${endpoint}`, data, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      params: httpParams
     }).pipe(
       catchError(this.handleError)
     );
@@ -37,9 +39,11 @@ export class BaseHttpService {
   /**
    * Realiza una petición PUT
    */
-  put<T>(endpoint: string, data: any): Observable<T> {
+  put<T>(endpoint: string, data: any, params?: any): Observable<T> {
+    const httpParams = this.buildHttpParams(params);
     return this.http.put<T>(`${this.baseUrl}${endpoint}`, data, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      params: httpParams
     }).pipe(
       catchError(this.handleError)
     );
@@ -48,9 +52,11 @@ export class BaseHttpService {
   /**
    * Realiza una petición PATCH
    */
-  patch<T>(endpoint: string, data: any): Observable<T> {
+  patch<T>(endpoint: string, data: any, params?: any): Observable<T> {
+    const httpParams = this.buildHttpParams(params);
     return this.http.patch<T>(`${this.baseUrl}${endpoint}`, data, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      params: httpParams
     }).pipe(
       catchError(this.handleError)
     );
@@ -59,9 +65,11 @@ export class BaseHttpService {
   /**
    * Realiza una petición DELETE
    */
-  delete<T>(endpoint: string): Observable<T> {
+  delete<T>(endpoint: string, params?: any): Observable<T> {
+    const httpParams = this.buildHttpParams(params);
     return this.http.delete<T>(`${this.baseUrl}${endpoint}`, {
-      headers: this.getHeaders()
+      headers: this.getHeaders(),
+      params: httpParams
     }).pipe(
       catchError(this.handleError)
     );

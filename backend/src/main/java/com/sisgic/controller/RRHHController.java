@@ -11,11 +11,19 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.sisgic.service.DocumentoService;
+import com.sisgic.service.RrhhTipoHistoryService;
+
+import java.io.IOException;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.regex.Pattern;
 
@@ -32,6 +40,14 @@ public class RRHHController {
 
     @Autowired
     private com.sisgic.service.ResearcherMatchingService researcherMatchingService;
+
+    @Autowired
+    private DocumentoService documentoService;
+
+    @Autowired
+    private RrhhTipoHistoryService rrhhTipoHistoryService;
+
+    private static final long MAX_PROFILE_IMAGE_BYTES = 5L * 1024L * 1024L;
 
     @GetMapping
     @Transactional(readOnly = true)
@@ -206,6 +222,10 @@ public class RRHHController {
         nuevoRRHH.setCodigoGenero(gender);
         
         nuevoRRHH = rrhhRepository.save(nuevoRRHH);
+
+        if (tipoRRHH != null && tipoRRHH.getId() != null) {
+            rrhhTipoHistoryService.recordInitialTipo(nuevoRRHH.getId(), tipoRRHH.getId());
+        }
         
         // Recargar el investigador para obtener el fullname calculado por la función MySQL
         RRHH reloadedRRHH = rrhhRepository.findByIdWithTipoRRHH(nuevoRRHH.getId());
@@ -242,6 +262,103 @@ public class RRHHController {
         }
         
         return ResponseEntity.ok(dto);
+    }
+
+    @PutMapping("/{id}")
+    @Transactional
+    public ResponseEntity<?> updateResearcher(@PathVariable Long id, @RequestBody RRHHDTO request) {
+        RRHH existing = rrhhRepository.findByIdWithTipoRRHH(id);
+        if (existing == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (request.getEmail() != null) {
+            existing.setEmail(request.getEmail().isBlank() ? null : request.getEmail().trim());
+        }
+        if (request.getOrcid() != null) {
+            String orcid = request.getOrcid().trim();
+            existing.setOrcid(orcid.isEmpty() ? null : normalizeOrcid(orcid));
+        }
+        if (request.getNumCelular() != null) {
+            existing.setNumCelular(request.getNumCelular().isBlank() ? null : request.getNumCelular().trim());
+        }
+
+        if (request.getIdTipoRRHH() != null) {
+            rrhhTipoHistoryService.changeTipoRrhh(id, request.getIdTipoRRHH());
+        }
+
+        rrhhRepository.save(existing);
+        RRHH reloaded = rrhhRepository.findByIdWithTipoRRHH(id);
+        return ResponseEntity.ok(convertToDTO(reloaded != null ? reloaded : existing));
+    }
+
+    @PostMapping("/{id}/profile-image")
+    @Transactional
+    public ResponseEntity<?> uploadProfileImage(
+            @PathVariable Long id,
+            @RequestParam("file") MultipartFile file) {
+        Optional<RRHH> optional = rrhhRepository.findById(id);
+        if (optional.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        if (file == null || file.isEmpty()) {
+            return ResponseEntity.badRequest().body("File is required.");
+        }
+        if (file.getSize() > MAX_PROFILE_IMAGE_BYTES) {
+            return ResponseEntity.badRequest().body("Image must be 5 MB or smaller.");
+        }
+
+        String contentType = file.getContentType();
+        String originalFilename = file.getOriginalFilename();
+        String extension = resolveProfileImageExtension(contentType, originalFilename);
+        if (extension == null) {
+            return ResponseEntity.badRequest().body("Only JPG, JPEG, PNG and WEBP images are allowed.");
+        }
+
+        try {
+            byte[] imageData = file.getBytes();
+            RRHH rrhh = optional.get();
+            String documentUrl = documentoService.saveImageForRrhh(
+                id,
+                imageData,
+                rrhh.getUrlImagen(),
+                extension
+            );
+            rrhh.setUrlImagen(documentUrl);
+            rrhh = rrhhRepository.save(rrhh);
+
+            RRHH reloaded = rrhhRepository.findByIdWithTipoRRHH(rrhh.getId());
+            if (reloaded != null) {
+                rrhh = reloaded;
+            }
+            return ResponseEntity.ok(convertToDTO(rrhh));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Could not store profile image.");
+        }
+    }
+
+    private String resolveProfileImageExtension(String contentType, String originalFilename) {
+        if (contentType != null) {
+            switch (contentType.toLowerCase(Locale.ROOT)) {
+                case "image/jpeg":
+                    return ".jpg";
+                case "image/png":
+                    return ".png";
+                case "image/webp":
+                    return ".webp";
+                default:
+                    break;
+            }
+        }
+        if (originalFilename != null && originalFilename.contains(".")) {
+            String ext = originalFilename.substring(originalFilename.lastIndexOf('.')).toLowerCase(Locale.ROOT);
+            if (".jpg".equals(ext) || ".jpeg".equals(ext) || ".png".equals(ext) || ".webp".equals(ext)) {
+                return ".jpg".equals(ext) || ".jpeg".equals(ext) ? ".jpg" : ext;
+            }
+        }
+        return null;
     }
     
     private String normalizeOrcid(String orcid) {
@@ -356,6 +473,7 @@ public class RRHHController {
         dto.setEmail(rrhh.getEmail());
         dto.setIniciales(rrhh.getIniciales());
         dto.setOrcid(rrhh.getOrcid());
+        dto.setProfileImageUrl(rrhh.getUrlImagen());
         dto.setCodigoGenero(rrhh.getCodigoGenero());
         dto.setCreatedAt(rrhh.getCreatedAt() != null ? rrhh.getCreatedAt().toString() : null);
         dto.setUpdatedAt(rrhh.getUpdatedAt() != null ? rrhh.getUpdatedAt().toString() : null);

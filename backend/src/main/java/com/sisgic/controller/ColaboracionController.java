@@ -13,13 +13,20 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -119,6 +126,144 @@ public class ColaboracionController {
         );
 
         return ResponseEntity.ok(colaboracionesDTO);
+    }
+
+    /**
+     * Exporta las colaboraciones científicas visibles a Excel.
+     */
+    @GetMapping("/export")
+    @Transactional(readOnly = true)
+    public void exportScientificCollaborationsToExcel(
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            HttpServletResponse response) {
+        try {
+            Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+            Long idRRHH = userService.getCurrentUserIdRRHH().orElse(null);
+            String userName = userService.getCurrentUsername().orElse(null);
+            List<Colaboracion> colaboraciones = colaboracionRepository
+                .findVisibleByUserIdRRHH(idRRHH, userName, Pageable.unpaged(sort))
+                .getContent();
+
+            List<String> codigosTexto = new ArrayList<>();
+            for (Colaboracion c : colaboraciones) {
+                if (c.getDescripcion() != null && !c.getDescripcion().isEmpty()) {
+                    codigosTexto.add(c.getDescripcion());
+                }
+                if (c.getComentario() != null && !c.getComentario().isEmpty()) {
+                    codigosTexto.add(c.getComentario());
+                }
+                if (c.getTipoColaboracion() != null && c.getTipoColaboracion().getIdDescripcion() != null) {
+                    codigosTexto.add(c.getTipoColaboracion().getIdDescripcion());
+                }
+                if (c.getInstitucion() != null && c.getInstitucion().getIdDescripcion() != null) {
+                    codigosTexto.add(c.getInstitucion().getIdDescripcion());
+                }
+                if (c.getPaisOrigen() != null && c.getPaisOrigen().getIdDescripcion() != null) {
+                    codigosTexto.add(c.getPaisOrigen().getIdDescripcion());
+                }
+                if (c.getCodigoPaisDestino() != null && !c.getCodigoPaisDestino().isBlank()) {
+                    paisRepository.findById(c.getCodigoPaisDestino())
+                        .map(Pais::getIdDescripcion)
+                        .filter(desc -> desc != null && !desc.isEmpty())
+                        .ifPresent(codigosTexto::add);
+                }
+            }
+            Map<String, String> textosMap = textosService.getTextValuesBatch(codigosTexto, 2, "us");
+
+            Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("Scientific Collaborations");
+
+            int rowIdx = 0;
+            Row header = sheet.createRow(rowIdx++);
+            header.createCell(0).setCellValue("Id");
+            header.createCell(1).setCellValue("Description");
+            header.createCell(2).setCellValue("Title");
+            header.createCell(3).setCellValue("Type");
+            header.createCell(4).setCellValue("Institution");
+            header.createCell(5).setCellValue("Origin City");
+            header.createCell(6).setCellValue("Origin Country");
+            header.createCell(7).setCellValue("Destination City");
+            header.createCell(8).setCellValue("Destination Country");
+            header.createCell(9).setCellValue("Start Date");
+            header.createCell(10).setCellValue("End Date");
+            header.createCell(11).setCellValue("Progress Report");
+            header.createCell(12).setCellValue("ANID Code");
+            header.createCell(13).setCellValue("Clusters");
+            header.createCell(14).setCellValue("Participants");
+            header.createCell(15).setCellValue("# Men");
+            header.createCell(16).setCellValue("# Women");
+
+            for (Colaboracion colaboracion : colaboraciones) {
+                ColaboracionDTO dto = convertToDTOWithoutParticipants(colaboracion, textosMap);
+                List<ParticipacionProducto> participaciones =
+                    participacionProductoRepository.findByProductoId(colaboracion.getId());
+
+                String participants = participaciones.stream()
+                    .map(this::formatParticipantWithTipoRRHH)
+                    .filter(name -> name != null && !name.isBlank())
+                    .distinct()
+                    .collect(Collectors.joining("; "));
+
+                String institution = "";
+                if (colaboracion.getInstitucion() != null) {
+                    if (colaboracion.getInstitucion().getDescripcion() != null
+                            && !colaboracion.getInstitucion().getDescripcion().isBlank()) {
+                        institution = colaboracion.getInstitucion().getDescripcion().trim();
+                    } else {
+                        institution = resolveText(textosMap, colaboracion.getInstitucion().getIdDescripcion());
+                    }
+                }
+
+                String originCountry = colaboracion.getPaisOrigen() != null
+                    ? resolveText(textosMap, colaboracion.getPaisOrigen().getIdDescripcion())
+                    : "";
+
+                String destinationCountry = "";
+                if (colaboracion.getCodigoPaisDestino() != null && !colaboracion.getCodigoPaisDestino().isBlank()) {
+                    destinationCountry = paisRepository.findById(colaboracion.getCodigoPaisDestino())
+                        .map(Pais::getIdDescripcion)
+                        .map(code -> resolveText(textosMap, code))
+                        .orElse(colaboracion.getCodigoPaisDestino());
+                }
+
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(dto.getId() != null ? dto.getId().toString() : "");
+                row.createCell(1).setCellValue(dto.getDescripcion() != null ? dto.getDescripcion() : "");
+                row.createCell(2).setCellValue(dto.getComentario() != null ? dto.getComentario() : "");
+                row.createCell(3).setCellValue(dto.getTipoColaboracion() != null
+                    ? resolveText(textosMap, dto.getTipoColaboracion().getIdDescripcion())
+                    : "");
+                row.createCell(4).setCellValue(institution);
+                row.createCell(5).setCellValue(dto.getCiudadOrigen() != null ? dto.getCiudadOrigen() : "");
+                row.createCell(6).setCellValue(originCountry);
+                row.createCell(7).setCellValue(dto.getCiudadDestino() != null ? dto.getCiudadDestino() : "");
+                row.createCell(8).setCellValue(destinationCountry);
+                row.createCell(9).setCellValue(dto.getFechaInicio() != null ? dto.getFechaInicio() : "");
+                row.createCell(10).setCellValue(dto.getFechaTermino() != null ? dto.getFechaTermino() : "");
+                row.createCell(11).setCellValue(dto.getProgressReport() != null ? dto.getProgressReport() : "");
+                row.createCell(12).setCellValue(dto.getCodigoANID() != null ? dto.getCodigoANID() : "");
+                row.createCell(13).setCellValue(formatClustersAsRoman(dto.getCluster()));
+                row.createCell(14).setCellValue(participants);
+                row.createCell(15).setCellValue(countParticipantsByGender(participaciones, "M"));
+                row.createCell(16).setCellValue(countParticipantsByGender(participaciones, "F"));
+            }
+
+            for (int i = 0; i <= 16; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=scientific-collaborations.xlsx");
+            workbook.write(response.getOutputStream());
+            workbook.close();
+            response.flushBuffer();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -568,6 +713,83 @@ public class ColaboracionController {
                 participacionProductoRepository.save(participacion);
             }
         }
+    }
+
+    private String resolveText(Map<String, String> textosMap, String code) {
+        if (code == null || code.isBlank()) {
+            return "";
+        }
+        if (textosMap != null && textosMap.containsKey(code)) {
+            return textosMap.get(code);
+        }
+        return textosService.getTextValue(code, 2, "us").orElse(code);
+    }
+
+    private String formatParticipantWithTipoRRHH(ParticipacionProducto participacion) {
+        if (participacion == null || participacion.getRrhh() == null) {
+            return "";
+        }
+        RRHH rrhh = participacion.getRrhh();
+        String fullname = rrhh.getFullname() != null ? rrhh.getFullname().trim() : "";
+        if (fullname.isEmpty()) {
+            return "";
+        }
+        String tipoRRHH = "";
+        if (rrhh.getTipoRRHH() != null) {
+            if (rrhh.getTipoRRHH().getDescripcion() != null && !rrhh.getTipoRRHH().getDescripcion().trim().isEmpty()) {
+                tipoRRHH = rrhh.getTipoRRHH().getDescripcion().trim();
+            } else if (rrhh.getTipoRRHH().getCodigoDescripcion() != null) {
+                tipoRRHH = rrhh.getTipoRRHH().getCodigoDescripcion().trim();
+            }
+        }
+        return tipoRRHH.isEmpty() ? fullname : fullname + " (" + tipoRRHH + ")";
+    }
+
+    private String formatClustersAsRoman(String cluster) {
+        if (cluster == null || cluster.isEmpty()) {
+            return "";
+        }
+        return java.util.Arrays.stream(cluster.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .map(s -> {
+                switch (s) {
+                    case "1": return "I";
+                    case "2": return "II";
+                    case "3": return "III";
+                    case "4": return "IV";
+                    case "5": return "V";
+                    default: return s;
+                }
+            })
+            .collect(Collectors.joining(", "));
+    }
+
+    /** Unique RRHH per collaboration with codigoGenero M or F (case-insensitive). */
+    private int countParticipantsByGender(List<ParticipacionProducto> participaciones, String genderCode) {
+        if (participaciones == null || participaciones.isEmpty() || genderCode == null || genderCode.isBlank()) {
+            return 0;
+        }
+        Set<Long> seenRrhhIds = new HashSet<>();
+        int count = 0;
+        for (ParticipacionProducto pp : participaciones) {
+            if (pp == null || pp.getRrhh() == null) {
+                continue;
+            }
+            RRHH rrhh = pp.getRrhh();
+            Long rrhhId = rrhh.getId();
+            if (rrhhId != null) {
+                if (seenRrhhIds.contains(rrhhId)) {
+                    continue;
+                }
+                seenRrhhIds.add(rrhhId);
+            }
+            String codigoGenero = rrhh.getCodigoGenero();
+            if (codigoGenero != null && genderCode.equalsIgnoreCase(codigoGenero.trim())) {
+                count++;
+            }
+        }
+        return count;
     }
 }
 

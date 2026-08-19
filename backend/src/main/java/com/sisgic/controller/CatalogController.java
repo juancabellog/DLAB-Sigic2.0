@@ -16,6 +16,8 @@ import com.sisgic.dto.CategoriaTransferenciaDTO;
 import com.sisgic.dto.ResourceDTO;
 import com.sisgic.dto.FundingTypeDTO;
 import com.sisgic.dto.TipoDifusionDTO;
+import com.sisgic.dto.TipoProyectoDTO;
+import com.sisgic.dto.BookTypeDTO;
 import com.sisgic.dto.PublicoObjetivoDTO;
 import com.sisgic.dto.TipoColaboracionDTO;
 import com.sisgic.dto.TipoRRHHDTO;
@@ -36,6 +38,8 @@ import com.sisgic.entity.CategoriaTransferencia;
 import com.sisgic.entity.Resource;
 import com.sisgic.entity.FundingType;
 import com.sisgic.entity.TipoDifusion;
+import com.sisgic.entity.TipoProyecto;
+import com.sisgic.entity.BookType;
 import com.sisgic.entity.PublicoObjetivo;
 import com.sisgic.entity.TipoColaboracion;
 import com.sisgic.entity.VIndexType;
@@ -55,6 +59,8 @@ import com.sisgic.repository.CategoriaTransferenciaRepository;
 import com.sisgic.repository.ResourceRepository;
 import com.sisgic.repository.FundingTypeRepository;
 import com.sisgic.repository.TipoDifusionRepository;
+import com.sisgic.repository.TipoProyectoRepository;
+import com.sisgic.repository.BookTypeRepository;
 import com.sisgic.repository.PublicoObjetivoRepository;
 import com.sisgic.repository.TipoColaboracionRepository;
 import com.sisgic.repository.TipoRRHHRepository;
@@ -71,6 +77,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -116,6 +123,12 @@ public class CatalogController {
     
     @Autowired
     private FundingTypeRepository fundingTypeRepository;
+
+    @Autowired
+    private TipoProyectoRepository tipoProyectoRepository;
+
+    @Autowired
+    private BookTypeRepository bookTypeRepository;
     
     @Autowired
     private TipoDifusionRepository tipoDifusionRepository;
@@ -603,12 +616,89 @@ public class CatalogController {
             .map(institution -> ResponseEntity.ok(convertInstitutionToDTO(institution)))
             .orElse(ResponseEntity.notFound().build());
     }
+
+    /**
+     * Create a new institution.
+     * Creates bilingüe textos (es/us, idTipoTexto=2) and a row in {@code institucion}.
+     * Body: { "descripcion": "Name", "codigoPais": "CHL" }
+     */
+    @PostMapping("/institutions")
+    @org.springframework.transaction.annotation.Transactional
+    public ResponseEntity<?> createInstitution(@RequestBody InstitucionDTO request) {
+        try {
+            String name = request.getDescripcion() != null
+                ? request.getDescripcion().trim()
+                : (request.getIdDescripcion() != null ? request.getIdDescripcion().trim() : null);
+            if (name == null || name.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Institution name is required"));
+            }
+            if (name.length() > 100) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Institution name must be at most 100 characters"));
+            }
+
+            String codigoPais = request.getCodigoPais() != null ? request.getCodigoPais().trim() : null;
+            if (codigoPais == null || codigoPais.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Country is required"));
+            }
+            if (!paisRepository.existsById(codigoPais)) {
+                return ResponseEntity.badRequest().body(Map.of("message", "Invalid country code"));
+            }
+
+            Optional<Institucion> existing = institucionRepository.findByDescripcionIgnoreCase(name);
+            if (existing.isPresent()) {
+                InstitucionDTO existingDto = convertInstitutionToDTO(existing.get());
+                Map<String, Object> body = new HashMap<>();
+                body.put("message", "This institution already exists: " +
+                    (existingDto.getDescripcion() != null ? existingDto.getDescripcion() : name));
+                body.put("existing", existingDto);
+                return ResponseEntity.status(409).body(body);
+            }
+
+            // Textos for both languages (us/es), idTipoTexto = 2; same display value
+            String codigoTexto = textosService.createTextInBothLanguages(name, 2);
+            Long nextId = institucionRepository.getNextId();
+            if (nextId == null || nextId < 1) {
+                nextId = 1L;
+            }
+            institucionRepository.insertInstitution(nextId, codigoTexto, codigoPais);
+
+            // Reload from view so descripcion is resolved
+            Institucion created = institucionRepository.findById(nextId).orElse(null);
+            if (created == null) {
+                // Fallback DTO if view lag
+                InstitucionDTO fallback = new InstitucionDTO();
+                fallback.setId(nextId);
+                fallback.setIdDescripcion(codigoTexto);
+                fallback.setDescripcion(name);
+                fallback.setCodigoPais(codigoPais);
+                paisRepository.findById(codigoPais).ifPresent(pais ->
+                    fallback.setCountryLabel(pais.getIdDescripcion()));
+                return ResponseEntity.ok(fallback);
+            }
+            InstitucionDTO dto = convertInstitutionToDTO(created);
+            if (dto.getDescripcion() == null || dto.getDescripcion().isBlank()) {
+                dto.setDescripcion(name);
+            }
+            return ResponseEntity.ok(dto);
+        } catch (Exception e) {
+            System.err.println("Error creating institution: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body(Map.of(
+                "message", e.getMessage() != null ? e.getMessage() : "Could not create institution"
+            ));
+        }
+    }
     
     private InstitucionDTO convertInstitutionToDTO(Institucion institucion) {
         InstitucionDTO dto = new InstitucionDTO();
         dto.setId(institucion.getId());
         dto.setIdDescripcion(institucion.getIdDescripcion());
         dto.setDescripcion(institucion.getDescripcion());
+        dto.setCodigoPais(institucion.getCodigoPais());
+        if (institucion.getCodigoPais() != null && !institucion.getCodigoPais().isBlank()) {
+            paisRepository.findById(institucion.getCodigoPais().trim())
+                .ifPresent(pais -> dto.setCountryLabel(pais.getIdDescripcion()));
+        }
         return dto;
     }
     
@@ -843,7 +933,7 @@ public class CatalogController {
     @GetMapping("/funding-types")
     public ResponseEntity<List<FundingTypeDTO>> getAllFundingTypes() {
         System.out.println("CatalogController: GET /api/catalogs/funding-types");
-        List<FundingType> results = fundingTypeRepository.findAll();
+        List<FundingType> results = fundingTypeRepository.findAllWithOtherLast();
         
         System.out.println("CatalogController: Encontrados " + results.size() + " tipos de financiamiento");
         
@@ -872,7 +962,45 @@ public class CatalogController {
         dto.setIdDescripcion(fundingType.getIdDescripcion());
         return dto;
     }
-    
+
+    // ========================================
+    // PROJECT TYPES (tipoproyecto)
+    // ========================================
+
+    @GetMapping("/project-types")
+    public ResponseEntity<List<TipoProyectoDTO>> getAllProjectTypes() {
+        List<TipoProyectoDTO> dtos = tipoProyectoRepository.findAllByOrderByIdAsc().stream()
+            .map(t -> new TipoProyectoDTO(t.getId(), t.getIdDescripcion()))
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/project-types/{id}")
+    public ResponseEntity<TipoProyectoDTO> getProjectTypeById(@PathVariable Long id) {
+        return tipoProyectoRepository.findById(id)
+            .map(t -> ResponseEntity.ok(new TipoProyectoDTO(t.getId(), t.getIdDescripcion())))
+            .orElse(ResponseEntity.notFound().build());
+    }
+
+    // ========================================
+    // BOOK TYPE ENDPOINTS
+    // ========================================
+
+    @GetMapping("/book-types")
+    public ResponseEntity<List<BookTypeDTO>> getAllBookTypes() {
+        List<BookTypeDTO> dtos = bookTypeRepository.findAllByOrderByIdAsc().stream()
+            .map(t -> new BookTypeDTO(t.getId(), t.getIdDescripcion()))
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+
+    @GetMapping("/book-types/{id}")
+    public ResponseEntity<BookTypeDTO> getBookTypeById(@PathVariable Long id) {
+        return bookTypeRepository.findById(id)
+            .map(t -> ResponseEntity.ok(new BookTypeDTO(t.getId(), t.getIdDescripcion())))
+            .orElse(ResponseEntity.notFound().build());
+    }
+
     // ========================================
     // TIPO DIFUSION ENDPOINTS
     // ========================================

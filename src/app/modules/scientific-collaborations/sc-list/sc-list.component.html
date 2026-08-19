@@ -24,6 +24,9 @@
     [items]="collaborations"
     [showBasalFilter]="true"
     [readonly]="true"
+    [showExportButton]="true"
+    exportLabel="Export Excel"
+    [exportLoading]="exportLoading"
     [currentViewMode]="viewMode"
     [finalFilteredCount]="finalFilteredCount"
     itemType="collaboration"
@@ -31,7 +34,8 @@
     (searchResults)="onSearchResults($event)"
     (searchTermChange)="onSearchTermChange($event)"
     (viewModeChange)="onViewModeChange($event)"
-    (basalFilterChange)="onBasalFilterChange($event)">
+    (basalFilterChange)="onBasalFilterChange($event)"
+    (exportRequested)="onExportRequested()">
   </app-list-controls>
 
   <div *ngIf="loading" class="loading-container">
@@ -79,7 +83,7 @@
               </div>
               <div class="detail-row" *ngIf="collaboration.fechaInicio">
                 <span class="detail-label">Start Date:</span>
-                <span class="detail-value">{{ collaboration.fechaInicio | date:'MMM yyyy' }}</span>
+                <span class="detail-value">{{ collaboration.fechaInicio | localDate:'MMM yyyy' }}</span>
               </div>
               <div class="detail-row" *ngIf="collaboration.progressReport">
                 <span class="detail-label">Period:</span>
@@ -216,7 +220,7 @@
           <div class="list-cell origin-cell">{{ getOrigin(collaboration) }}</div>
           <div class="list-cell destination-cell">{{ getDestination(collaboration) }}</div>
           <div class="list-cell period-cell">{{ collaboration.progressReport || 'N/A' }}</div>
-          <div class="list-cell date-cell">{{ collaboration.fechaInicio | date:'MMM yyyy' }}</div>
+          <div class="list-cell date-cell">{{ collaboration.fechaInicio | localDate:'MMM yyyy' }}</div>
           <div class="list-cell actions-cell">
             <button 
               *ngIf="getPdfUrl(collaboration)" 

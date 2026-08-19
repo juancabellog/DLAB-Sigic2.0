@@ -1,7 +1,10 @@
 package com.sisgic.controller;
 
 import com.sisgic.dto.AgendaDTO;
+import com.sisgic.dto.CategoryDTO;
+import com.sisgic.dto.CreateCategoryRequest;
 import com.sisgic.dto.EstadoNoticiaDTO;
+import com.sisgic.dto.TipoEventoAgendaDTO;
 import com.sisgic.dto.TranslateNewsRequest;
 import com.sisgic.dto.TranslateNewsResponse;
 import com.sisgic.service.AgendaService;
@@ -53,6 +56,25 @@ public class AgendaController {
     @GetMapping("/states")
     public ResponseEntity<List<EstadoNoticiaDTO>> listStates() {
         return ResponseEntity.ok(agendaService.listEstados());
+    }
+
+    @GetMapping("/event-types")
+    public ResponseEntity<List<TipoEventoAgendaDTO>> listEventTypes() {
+        return ResponseEntity.ok(agendaService.listEventTypes());
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<List<CategoryDTO>> listCategories() {
+        return ResponseEntity.ok(agendaService.listCategories());
+    }
+
+    @PostMapping("/categories")
+    public ResponseEntity<CategoryDTO> createCategory(@RequestBody CreateCategoryRequest request) {
+        try {
+            return ResponseEntity.ok(agendaService.createCategory(request));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/{id}")
@@ -120,12 +142,32 @@ public class AgendaController {
             return ResponseEntity.status(503)
                 .body(Map.of("error", "Translation service is not configured"));
         }
-        log.info("POST /api/agenda/translate: title={} chars, summary={} chars, body={} chars",
-            textLength(req.getTitleEs()), textLength(req.getSummaryEs()), textLength(req.getBodyEs()));
+
+        boolean enToEs = isEnToEs(req.getDirection());
+        String title = enToEs ? req.getTitleEn() : req.getTitleEs();
+        String summary = enToEs ? req.getSummaryEn() : req.getSummaryEs();
+        String body = enToEs ? req.getBodyEn() : req.getBodyEs();
+
+        if (isBlank(title) && isBlank(summary) && isBlank(body)) {
+            return ResponseEntity.badRequest()
+                .body(Map.of("error", enToEs
+                    ? "English content is required for translation to Spanish"
+                    : "Spanish content is required for translation to English"));
+        }
+
+        log.info("POST /api/agenda/translate: direction={}, title={} chars, summary={} chars, body={} chars",
+            enToEs ? "en_to_es" : "es_to_en", textLength(title), textLength(summary), textLength(body));
         try {
             GeminiTranslationService.TranslationResult result = geminiTranslationService.translate(
-                req.getTitleEs(), req.getSummaryEs(), req.getBodyEs());
-            return ResponseEntity.ok(new TranslateNewsResponse(
+                title, summary, body,
+                enToEs
+                    ? GeminiTranslationService.TranslationDirection.EN_TO_ES
+                    : GeminiTranslationService.TranslationDirection.ES_TO_EN);
+            if (enToEs) {
+                return ResponseEntity.ok(TranslateNewsResponse.fromSpanish(
+                    result.titleEn(), result.excerptEn(), result.bodyEn()));
+            }
+            return ResponseEntity.ok(TranslateNewsResponse.fromEnglish(
                 result.titleEn(), result.excerptEn(), result.bodyEn()));
         } catch (IllegalStateException e) {
             log.error("POST /api/agenda/translate: {}", e.getMessage(), e);
@@ -150,5 +192,13 @@ public class AgendaController {
 
     private static int textLength(String value) {
         return value != null ? value.length() : 0;
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private static boolean isEnToEs(String direction) {
+        return direction != null && "en_to_es".equalsIgnoreCase(direction.trim());
     }
 }

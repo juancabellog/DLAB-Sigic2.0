@@ -41,6 +41,7 @@ export class TTListComponent implements OnInit, OnDestroy {
   transfers: TransferenciaTecnologicaDTO[] = [];
   isSearching: boolean = false;
   loading: boolean = false;
+  exportLoading: boolean = false;
   basalOnly: boolean = false;
   finalFilteredCount: number | null = null;
   private searchResults: TransferenciaTecnologicaDTO[] = [];
@@ -182,6 +183,59 @@ export class TTListComponent implements OnInit, OnDestroy {
     this.basalOnly = basalOnly;
     this.listStateService.saveState('technology-transfer', { basalOnly });
     this.applyFilters();
+  }
+
+  onExportRequested(): void {
+    if (this.filteredTransfers.length === 0) {
+      this.messageService.info('There are no results to export.');
+      return;
+    }
+    this.exportLoading = true;
+    this.technologyTransferService
+      .exportTechnologyTransfersToExcel({
+        sort: this.mapExportSortColumn(this.sortColumn),
+        direction: this.sortDirection === 'asc' ? 'ASC' : 'DESC'
+      })
+      .pipe(
+        catchError(error => {
+          console.error('Error exporting technology transfers to Excel:', error);
+          this.messageService.error('Error exporting technology transfers. Please try again later.');
+          return of(null as any);
+        }),
+        finalize(() => {
+          this.exportLoading = false;
+        })
+      )
+      .subscribe(blob => {
+        if (!blob) {
+          return;
+        }
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'technology-transfer.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        this.messageService.success('Export started. Your download should begin shortly.');
+      });
+  }
+
+  private mapExportSortColumn(
+    column: 'description' | 'type' | 'beneficiary' | 'location' | 'year' | null
+  ): string {
+    const map: Record<string, string> = {
+      description: 'descripcion',
+      type: 'tipoTransferencia.id',
+      beneficiary: 'institucion.id',
+      location: 'ciudad',
+      year: 'agno'
+    };
+    if (column && map[column]) {
+      return map[column];
+    }
+    return 'id';
   }
 
   private applyFilters(): void {

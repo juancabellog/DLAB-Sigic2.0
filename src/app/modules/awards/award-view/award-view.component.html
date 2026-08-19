@@ -1,0 +1,105 @@
+<div class="detail-container">
+  <div class="header-actions">
+    <button mat-button type="button" (click)="goBack()">
+      <mat-icon>arrow_back</mat-icon>
+      Back
+    </button>
+    <button mat-raised-button color="primary" type="button" (click)="editAward()" *ngIf="award">
+      <mat-icon>edit</mat-icon>
+      Edit
+    </button>
+  </div>
+
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading award...</p>
+  </div>
+
+  <ng-container *ngIf="!loading && award">
+    <h1 class="page-title">Award Detail</h1>
+
+    <mat-card class="detail-card">
+      <mat-card-header>
+        <mat-card-title>{{ award.descripcion || 'Untitled award' }}</mat-card-title>
+        <mat-card-subtitle>{{ award.year || '—' }} · {{ getInstitutionLabel() }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="detail-section">
+          <h3>Award Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <strong>Name</strong>
+              <span>{{ award.descripcion || '—' }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Year</strong>
+              <span>{{ award.year != null ? award.year : '—' }}</span>
+            </div>
+            <div class="detail-item full-span" *ngIf="award.comentario">
+              <strong>Contribution</strong>
+              <span class="multiline">{{ award.comentario }}</span>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="detail-section">
+          <h3>Organization</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <strong>Institution</strong>
+              <span>{{ getInstitutionLabel() }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Country</strong>
+              <span>{{ getCountryLabel() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="detail-section">
+          <h3>Product Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <strong>Product associated with Basal funding</strong>
+              <span>{{ getBasalLabel() }}</span>
+            </div>
+            <div class="detail-item" *ngIf="award.progressReport">
+              <strong>Progress Report</strong>
+              <span>Period {{ award.progressReport }}</span>
+            </div>
+            <div class="detail-item" *ngIf="award.codigoANID">
+              <strong>ANID Code</strong>
+              <span>{{ award.codigoANID }}</span>
+            </div>
+            <div class="detail-item" *ngIf="getClusters()">
+              <strong>Clusters</strong>
+              <span>{{ getClusters() }}</span>
+            </div>
+          </div>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="detail-section">
+          <h3>Participants</h3>
+          <div class="participant-list" *ngIf="award.participantesNombres">
+            <strong>Summary</strong>
+            <p>{{ award.participantesNombres }}</p>
+          </div>
+          <div class="participant-list" *ngIf="participants.length">
+            <strong>Details</strong>
+            <ul>
+              <li *ngFor="let p of participants">{{ p.fullName || ('RRHH #' + p.rrhhId) }}</li>
+            </ul>
+          </div>
+          <p *ngIf="!award.participantesNombres && !participants.length">No participants recorded.</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </ng-container>
+</div>

@@ -28,6 +28,8 @@ public class NoticiaDTO {
     private String username;
     /** S / N — producto.basal */
     private String basal;
+    /** producto.linkVisualizacion — public media / website URL */
+    private String linkVisualizacion;
 
     public NoticiaDTO() {}
 
@@ -181,5 +183,13 @@ public class NoticiaDTO {
 
     public void setBasal(String basal) {
         this.basal = basal;
+    }
+
+    public String getLinkVisualizacion() {
+        return linkVisualizacion;
+    }
+
+    public void setLinkVisualizacion(String linkVisualizacion) {
+        this.linkVisualizacion = linkVisualizacion;
     }
 }

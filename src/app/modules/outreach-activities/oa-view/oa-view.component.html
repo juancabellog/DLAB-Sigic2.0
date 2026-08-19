@@ -67,11 +67,11 @@
             </div>
             <div class="detail-item" *ngIf="activity.fechaInicio">
               <strong>Start Date:</strong>
-              <span>{{ activity.fechaInicio | date:'MMM dd, yyyy' }}</span>
+              <span>{{ activity.fechaInicio | localDate:'MMM dd, yyyy' }}</span>
             </div>
             <div class="detail-item" *ngIf="activity.fechaTermino">
               <strong>End Date:</strong>
-              <span>{{ activity.fechaTermino | date:'MMM dd, yyyy' }}</span>
+              <span>{{ activity.fechaTermino | localDate:'MMM dd, yyyy' }}</span>
             </div>
           </div>
         </div>

@@ -51,6 +51,8 @@ public class SecurityConfig {
                     .requestMatchers("/api/health").permitAll() // Health check accesible
                     .requestMatchers("/api/catalogs/**").permitAll() // Catálogos accesibles
                     .requestMatchers("/api/projects/**").permitAll() // Proyectos accesibles
+                    .requestMatchers("/api/books/**").permitAll() // Books accesibles
+                    .requestMatchers("/api/awards/**").permitAll() // Awards accesibles
                     .requestMatchers("/api/publications/**").permitAll() // Publicaciones accesibles
                     .requestMatchers("/api/journals/**").permitAll() // Revistas accesibles
                     .requestMatchers("/api/researchers/**").permitAll() // Investigadores accesibles
@@ -66,7 +68,9 @@ public class SecurityConfig {
                     .requestMatchers("/api/analysis/**").permitAll() // Analysis Center endpoints accesibles
                     .requestMatchers("/api/news/**").permitAll() // Noticias accesibles
                     .requestMatchers("/api/agenda/**").permitAll() // Agenda accesible
+                    .requestMatchers("/api/laboratories/**").permitAll() // Laboratories accesible
                     .requestMatchers("/media/**").permitAll() // Imágenes de noticias accesibles
+                    .requestMatchers("/images/**").permitAll() // Imágenes RRHH/documento accesibles
                     .requestMatchers("/pdfs/**").permitAll() // PDFs accesibles
                     .requestMatchers("/h2-console/**").permitAll()
                     .requestMatchers("/error").permitAll()
@@ -83,7 +87,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOriginPatterns(Arrays.asList("*"));
-        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
         

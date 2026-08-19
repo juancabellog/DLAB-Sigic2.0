@@ -1,0 +1,58 @@
+<div class="category-select" [class.category-select--disabled]="disabled">
+  <label class="category-select-label">Categories</label>
+  <p class="category-select-hint">Select one or more categories. New categories are saved when you save the agenda event.</p>
+
+  <mat-chip-set class="category-chip-set" *ngIf="categories.length">
+    <mat-chip
+      *ngFor="let category of categories"
+      [removable]="!disabled"
+      (removed)="removeCategory(category)">
+      <span class="chip-label">{{ category.label }}</span>
+      <span class="taxonomy-pending-badge" *ngIf="isPendingCategory(category)">New</span>
+      <button matChipRemove type="button" *ngIf="!disabled" aria-label="Remove category">
+        <mat-icon>cancel</mat-icon>
+      </button>
+    </mat-chip>
+  </mat-chip-set>
+
+  <mat-form-field appearance="outline" class="category-search-field">
+    <mat-label>Search categories</mat-label>
+    <input
+      matInput
+      [(ngModel)]="searchText"
+      [matAutocomplete]="categoryAuto"
+      [disabled]="disabled || (loading && !allCategories.length)"
+      placeholder="Type to filter or create…"
+      (focus)="onSearchFocus()" />
+    <mat-spinner *ngIf="loading" matSuffix diameter="20"></mat-spinner>
+    <mat-autocomplete
+      #categoryAuto="matAutocomplete"
+      (optionSelected)="onOptionSelected($event.option.value)"
+      [displayWith]="displayCategoryLabel">
+      <mat-option
+        *ngFor="let category of filteredCategories"
+        [value]="category.id"
+        class="category-option">
+        <span class="category-option-row">
+          <mat-checkbox
+            [checked]="isSelected(category)"
+            [disableRipple]="true"
+            tabindex="-1"
+            class="category-option-checkbox">
+          </mat-checkbox>
+          <span>{{ category.label }}</span>
+        </span>
+      </mat-option>
+      <mat-option
+        *ngIf="canCreateCategory"
+        [value]="'__create__:' + searchText"
+        class="category-create-option">
+        <mat-icon>add</mat-icon>
+        <span>{{ createCategoryLabel }}</span>
+      </mat-option>
+      <mat-option *ngIf="!loading && searchText && !filteredCategories.length && !canCreateCategory" disabled>
+        No categories found
+      </mat-option>
+    </mat-autocomplete>
+  </mat-form-field>
+</div>

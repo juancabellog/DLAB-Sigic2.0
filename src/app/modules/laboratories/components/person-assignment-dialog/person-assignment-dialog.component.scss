@@ -1,0 +1,76 @@
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 440px;
+  max-width: 520px;
+  padding-top: 8px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.field-block {
+  margin-bottom: 8px;
+}
+
+.field-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 8px;
+  color: #444;
+}
+
+.field-hint {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.contact-hint {
+  margin: -4px 0 8px;
+}
+
+.person-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  margin-bottom: 8px;
+}
+
+.person-preview__name {
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.profile-link {
+  font-size: 13px;
+  color: #1565c0;
+  text-decoration: none;
+}
+
+.profile-link:hover {
+  text-decoration: underline;
+}
+
+.profile-image-block {
+  margin-bottom: 4px;
+}
+
+.profile-image-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.error-message {
+  color: #d32f2f;
+  font-size: 13px;
+  margin: 0;
+}

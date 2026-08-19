@@ -2,12 +2,20 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { BaseHttpService } from '../../../core/services/base-http.service';
-import { NewsSpanishContent, NewsTranslationResult } from '../models/news.models';
+import {
+  NewsEnglishContent,
+  NewsSpanishContent,
+  NewsTranslationDirection,
+  NewsTranslationResult
+} from '../models/news.models';
 
 interface TranslateApiResponse {
-  titleEn: string;
-  summaryEn: string;
-  bodyEn: string;
+  titleEn?: string;
+  summaryEn?: string;
+  bodyEn?: string;
+  titleEs?: string;
+  summaryEs?: string;
+  bodyEs?: string;
 }
 
 @Injectable({
@@ -17,11 +25,32 @@ export class NewsTranslationService {
 
   constructor(private http: BaseHttpService) {}
 
-  translateNewsContent(content: NewsSpanishContent): Observable<NewsTranslationResult> {
+  translateNewsContent(
+    direction: NewsTranslationDirection,
+    content: NewsSpanishContent | NewsEnglishContent
+  ): Observable<NewsTranslationResult> {
+    if (direction === 'en_to_es') {
+      const en = content as NewsEnglishContent;
+      return this.http.post<TranslateApiResponse>('/news/translate', {
+        direction,
+        titleEn: en.titleEn || '',
+        summaryEn: en.summaryEn || '',
+        bodyEn: en.bodyEn || ''
+      }).pipe(
+        map(resp => ({
+          titleEs: resp.titleEs ?? '',
+          summaryEs: resp.summaryEs ?? '',
+          bodyEs: resp.bodyEs ?? ''
+        }))
+      );
+    }
+
+    const es = content as NewsSpanishContent;
     return this.http.post<TranslateApiResponse>('/news/translate', {
-      titleEs: content.titleEs || '',
-      summaryEs: content.summaryEs || '',
-      bodyEs: content.bodyEs || ''
+      direction: 'es_to_en',
+      titleEs: es.titleEs || '',
+      summaryEs: es.summaryEs || '',
+      bodyEs: es.bodyEs || ''
     }).pipe(
       map(resp => ({
         titleEn: resp.titleEn ?? '',

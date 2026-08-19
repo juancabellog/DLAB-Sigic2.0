@@ -27,6 +27,9 @@ public class ResearcherMatchingService {
     
     @Autowired
     private TipoRRHHRepository tipoRRHHRepository;
+
+    @Autowired
+    private RrhhTipoHistoryService rrhhTipoHistoryService;
     
     // Cache en memoria de todos los RRHH indexados por nombre normalizado
     private HashMap<String, HashMap<String, Object>> hsRRHH;
@@ -357,6 +360,10 @@ public class ResearcherMatchingService {
         
         // Guardar
         nuevoRRHH = rrhhRepository.save(nuevoRRHH);
+
+        if (tipoRRHH != null && tipoRRHH.getId() != null) {
+            rrhhTipoHistoryService.recordInitialTipo(nuevoRRHH.getId(), tipoRRHH.getId());
+        }
         
         // Recargar cache para incluir el nuevo investigador
         reloadRRHH();

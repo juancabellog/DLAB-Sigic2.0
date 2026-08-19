@@ -1,0 +1,34 @@
+<div class="row-actions-icons">
+  <button mat-icon-button type="button" matTooltip="View" (click)="view.emit()">
+    <mat-icon>visibility</mat-icon>
+  </button>
+  <button mat-icon-button type="button" matTooltip="Edit" (click)="edit.emit()">
+    <mat-icon>edit</mat-icon>
+  </button>
+  <button
+    mat-icon-button
+    type="button"
+    [matMenuTriggerFor]="moreMenu"
+    matTooltip="More actions"
+    (click)="$event.stopPropagation()">
+    <mat-icon>more_vert</mat-icon>
+  </button>
+  <mat-menu #moreMenu="matMenu">
+    <button mat-menu-item (click)="duplicate.emit()">
+      <mat-icon>content_copy</mat-icon>
+      <span>Duplicate</span>
+    </button>
+    <button *ngIf="!isActive" mat-menu-item (click)="activate.emit()">
+      <mat-icon>check_circle</mat-icon>
+      <span>Activate</span>
+    </button>
+    <button *ngIf="isActive" mat-menu-item (click)="deactivate.emit()">
+      <mat-icon>block</mat-icon>
+      <span>Deactivate</span>
+    </button>
+    <button *ngIf="canDelete" mat-menu-item class="menu-item-danger" (click)="delete.emit()">
+      <mat-icon color="warn">delete</mat-icon>
+      <span>Delete</span>
+    </button>
+  </mat-menu>
+</div>

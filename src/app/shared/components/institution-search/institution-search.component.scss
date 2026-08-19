@@ -9,18 +9,15 @@
 .institution-option {
   display: flex;
   flex-direction: column;
-  padding: 8px 0;
+  padding: 6px 0;
+  line-height: 1.35;
+  white-space: normal;
 }
 
 .name {
   font-weight: 500;
   color: #333;
-}
-
-.details {
-  font-size: 12px;
-  color: #666;
-  margin-top: 2px;
+  font-size: 14px;
 }
 
 .no-results {
@@ -37,4 +34,34 @@
   &:hover {
     background: transparent;
   }
+}
+
+.add-new-option {
+  padding: 8px 0;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 4px;
+}
+
+.add-new-institution {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1976d2;
+  font-weight: 500;
+
+  mat-icon {
+    color: #1976d2;
+  }
+
+  &:hover {
+    color: #1565c0;
+
+    mat-icon {
+      color: #1565c0;
+    }
+  }
+}
+
+.first-result {
+  margin-top: 4px;
 }

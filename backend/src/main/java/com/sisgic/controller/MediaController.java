@@ -1,9 +1,12 @@
 package com.sisgic.controller;
 
+import com.sisgic.service.DocumentoService;
 import com.sisgic.service.MediaFileService;
+import com.sisgic.entity.Documento;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +21,7 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 
 /**
  * Sirve imágenes bajo /sigic2.0/media/**
@@ -32,6 +36,9 @@ public class MediaController {
     @Autowired
     private MediaFileService mediaFileService;
 
+    @Autowired
+    private DocumentoService documentoService;
+
     @GetMapping("/media/**")
     public ResponseEntity<Resource> serveMedia(HttpServletRequest request) {
         try {
@@ -42,6 +49,15 @@ public class MediaController {
 
             Path file = mediaFileService.resolveMediaFile(relativePath);
             if (file == null || !Files.isRegularFile(file)) {
+                Optional<Documento> documento = documentoService.findByUrl(relativePath);
+                if (documento.isPresent() && documento.get().getData() != null && documento.get().getData().length > 0) {
+                    Documento doc = documento.get();
+                    String contentType = documentoService.resolveContentType(doc.getUrl(), doc.getData());
+                    return ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(contentType))
+                        .header(HttpHeaders.CACHE_CONTROL, "public, max-age=3600")
+                        .body(new ByteArrayResource(doc.getData()));
+                }
                 log.warn("Media file not found for path '{}' (requested URI: {})",
                     relativePath, request.getRequestURI());
                 return ResponseEntity.notFound().build();

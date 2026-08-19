@@ -16,6 +16,7 @@ public interface AgendaRepository extends JpaRepository<Agenda, Long> {
 
     @Query("SELECT DISTINCT a FROM Agenda a " +
            "LEFT JOIN FETCH a.estado " +
+           "LEFT JOIN FETCH a.tipoEvento " +
            "WHERE (:estadoId IS NULL OR a.estado.id = :estadoId) " +
            "AND (:fromDate IS NULL OR a.fechaInicio >= :fromDate) " +
            "AND (:toDate IS NULL OR a.fechaInicio <= :toDate) " +
@@ -32,6 +33,10 @@ public interface AgendaRepository extends JpaRepository<Agenda, Long> {
         @Param("title") String title,
         Pageable pageable);
 
-    @Query("SELECT a FROM Agenda a LEFT JOIN FETCH a.estado WHERE a.id = :id")
+    @Query("SELECT DISTINCT a FROM Agenda a " +
+           "LEFT JOIN FETCH a.estado " +
+           "LEFT JOIN FETCH a.tipoEvento " +
+           "LEFT JOIN FETCH a.categories " +
+           "WHERE a.id = :id")
     Optional<Agenda> findByIdWithRelations(@Param("id") Long id);
 }

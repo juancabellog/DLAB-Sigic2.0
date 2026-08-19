@@ -1,13 +1,18 @@
 package com.sisgic.controller;
 
+import com.sisgic.dto.ForgotPasswordRequest;
 import com.sisgic.dto.LoginRequest;
 import com.sisgic.dto.LoginResponse;
+import com.sisgic.dto.MessageResponse;
+import com.sisgic.dto.ResetPasswordRequest;
 import com.sisgic.entity.Role;
 import com.sisgic.entity.User;
 import com.sisgic.repository.RoleRepository;
 import com.sisgic.repository.UserRepository;
 import com.sisgic.security.JwtUtils;
 import com.sisgic.security.UserPrincipal;
+import com.sisgic.service.PasswordResetService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,6 +53,9 @@ public class AuthController {
     @Autowired
     com.sisgic.repository.RRHHRepository rrhhRepository;
 
+    @Autowired
+    private PasswordResetService passwordResetService;
+
     @Value("${app.version:2026.06.04-01}")
     private String appVersion;
 
@@ -69,6 +77,50 @@ public class AuthController {
                 userDetails.getUsername(),
                 userDetails.getEmail(),
                 roles));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<MessageResponse> forgotPassword(
+            @RequestBody ForgotPasswordRequest request,
+            HttpServletRequest httpRequest) {
+        String identifier = request != null ? request.getIdentifier() : null;
+        String message = passwordResetService.forgotPassword(
+            identifier,
+            resolveClientIp(httpRequest),
+            httpRequest.getHeader("User-Agent")
+        );
+        return ResponseEntity.ok(new MessageResponse(message));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<MessageResponse> resetPassword(@RequestBody ResetPasswordRequest request) {
+        try {
+            String token = request != null ? request.getToken() : null;
+            String newPassword = request != null ? request.getNewPassword() : null;
+            String message = passwordResetService.resetPassword(token, newPassword);
+            return ResponseEntity.ok(new MessageResponse(message));
+        } catch (IllegalArgumentException e) {
+            String message = e.getMessage();
+            if (message == null || message.isBlank()
+                || message.toLowerCase().contains("token")
+                || message.toLowerCase().contains("expired")
+                || message.toLowerCase().contains("invalid")) {
+                return ResponseEntity.badRequest()
+                    .body(new MessageResponse(passwordResetService.getInvalidTokenMessage()));
+            }
+            return ResponseEntity.badRequest().body(new MessageResponse(message));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError()
+                .body(new MessageResponse("We could not reset your password. Please try again later."));
+        }
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+        String forwarded = request.getHeader("X-Forwarded-For");
+        if (forwarded != null && !forwarded.isBlank()) {
+            return forwarded.split(",")[0].trim();
+        }
+        return request.getRemoteAddr();
     }
 
     @PostMapping("/register")

@@ -1,139 +1,170 @@
-<div class="detail-container" *ngIf="project && !loading">
+<div class="detail-container">
   <div class="header-actions">
-    <button mat-button (click)="goBack()">
+    <button mat-button type="button" (click)="goBack()">
       <mat-icon>arrow_back</mat-icon>
-      Back to Projects
+      Back
     </button>
-    <button mat-raised-button color="primary" (click)="editProject()">
+    <button mat-raised-button color="primary" type="button" (click)="editProject()" *ngIf="project">
       <mat-icon>edit</mat-icon>
       Edit
     </button>
   </div>
 
-  <mat-card class="detail-card">
-    <mat-card-header>
-      <mat-card-title>{{ project.descripcion }}</mat-card-title>
-      <mat-card-subtitle>
-        <mat-chip [color]="getStatusColor(project)" selected>
-          {{ project.fechaTermino ? (getStatusColor(project) === 'primary' ? 'Active' : 'Completed') : 'Active' }}
-        </mat-chip>
-      </mat-card-subtitle>
-    </mat-card-header>
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading project...</p>
+  </div>
 
-    <mat-card-content>
-      <div class="detail-section">
-        <h3>Project Information</h3>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="detail-label">Description:</span>
-            <span class="detail-value">{{ project.descripcion }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Code:</span>
-            <span class="detail-value">{{ project.codigo }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">External Code:</span>
-            <span class="detail-value">{{ project.codigoExterno || 'N/A' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Status:</span>
-            <span class="detail-value">
-              <mat-chip [color]="getStatusColor(project)" selected>
-                {{ project.fechaTermino ? (getStatusColor(project) === 'primary' ? 'Active' : 'Completed') : 'Active' }}
-              </mat-chip>
-            </span>
+  <ng-container *ngIf="!loading && project">
+    <h1 class="page-title">Project Detail</h1>
+
+    <mat-card class="detail-card">
+      <mat-card-header>
+        <mat-card-title>{{ project.descripcion || 'Untitled project' }}</mat-card-title>
+        <mat-card-subtitle>{{ project.projectCode }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="detail-section">
+          <h3>Basic Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <strong>Project Title</strong>
+              <span>{{ project.descripcion || '—' }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Project Code</strong>
+              <span>{{ project.projectCode || '—' }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Funding Source</strong>
+              <span>{{ getFundingLabel() }}</span>
+            </div>
+            <div class="detail-item" *ngIf="project.otherFundingType">
+              <strong>Other Funding Source</strong>
+              <span>{{ project.otherFundingType }}</span>
+            </div>
+            <div class="detail-item">
+              <strong>Project Type</strong>
+              <span>{{ project.projectTypesLabels || project.projectTypes || '—' }}</span>
+            </div>
+            <div class="detail-item" *ngIf="project.otherProjectType">
+              <strong>Other Project Type</strong>
+              <span>{{ project.otherProjectType }}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <mat-divider></mat-divider>
+        <mat-divider></mat-divider>
 
-      <div class="detail-section">
-        <h3>Project Details</h3>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="detail-label">Start Date:</span>
-            <span class="detail-value">{{ formatDate(project.fechaInicio) }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">End Date:</span>
-            <span class="detail-value">{{ formatDate(project.fechaTermino) }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Total Products:</span>
-            <span class="detail-value">{{ project.totalProductos || 0 }}</span>
-          </div>
-        </div>
-      </div>
-
-      <mat-divider></mat-divider>
-
-      <div class="detail-section">
-        <h3>Financing Information</h3>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="detail-label">Financing Types:</span>
-            <span class="detail-value">
-              <div class="financing-types">
-                <mat-chip *ngFor="let type of getFinancingTypes(project.tipoFinanciamiento)" 
-                         class="financing-chip">
-                  {{ type }}
-                </mat-chip>
-              </div>
-            </span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Collaboration:</span>
-            <span class="detail-value">
-              <div class="collaboration-types">
-                <mat-chip *ngFor="let type of getCollaborationTypes(project.realizaCon)" 
-                         class="collaboration-chip">
-                  {{ type }}
-                </mat-chip>
-              </div>
-            </span>
+        <div class="detail-section" *ngIf="project.nameSocialOrganizations || project.namePublicSectorEntities || project.namePrivateSectorEntities || project.nameTradeRegionalAssociations || project.nameSTEntities">
+          <h3>Associated Entities</h3>
+          <div class="detail-grid">
+            <div class="detail-item" *ngIf="project.nameSocialOrganizations">
+              <strong>Social Organizations</strong>
+              <span>{{ project.nameSocialOrganizations }}</span>
+            </div>
+            <div class="detail-item" *ngIf="project.namePublicSectorEntities">
+              <strong>Public Sector Entities</strong>
+              <span>{{ project.namePublicSectorEntities }}</span>
+            </div>
+            <div class="detail-item" *ngIf="project.namePrivateSectorEntities">
+              <strong>Private Sector Entities</strong>
+              <span>{{ project.namePrivateSectorEntities }}</span>
+            </div>
+            <div class="detail-item" *ngIf="project.nameTradeRegionalAssociations">
+              <strong>Trade and Regional Associations</strong>
+              <span>{{ project.nameTradeRegionalAssociations }}</span>
+            </div>
+            <div class="detail-item" *ngIf="project.nameSTEntities">
+              <strong>S&amp;T Entities</strong>
+              <span>{{ project.nameSTEntities }}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <mat-divider></mat-divider>
+        <mat-divider *ngIf="project.nameSocialOrganizations || project.namePublicSectorEntities || project.namePrivateSectorEntities || project.nameTradeRegionalAssociations || project.nameSTEntities"></mat-divider>
 
-      <div class="detail-section">
-        <h3>Project Metadata</h3>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="detail-label">Created:</span>
-            <span class="detail-value">{{ formatDate(project.createdAt) }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Last Updated:</span>
-            <span class="detail-value">{{ formatDate(project.updatedAt) }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">Description ID:</span>
-            <span class="detail-value">{{ project.idDescripcion || 'N/A' }}</span>
+        <div class="detail-section">
+          <h3>Dates and Amounts</h3>
+          <div class="detail-grid">
+            <div class="detail-item" *ngIf="project.awardDate">
+              <strong>Award Date</strong>
+              <span>{{ project.awardDate | localDate:'MMM dd, yyyy' }}</span>
+            </div>
+            <div class="detail-item" *ngIf="project.duration != null">
+              <strong>Duration (months)</strong>
+              <span>{{ project.duration }}</span>
+            </div>
+            <div class="detail-item" *ngIf="project.fechaInicio">
+              <strong>Start Date</strong>
+              <span>{{ project.fechaInicio | localDate:'MMM dd, yyyy' }}</span>
+            </div>
+            <div class="detail-item" *ngIf="project.fechaTermino">
+              <strong>Ending Date</strong>
+              <span>{{ project.fechaTermino | localDate:'MMM dd, yyyy' }}</span>
+            </div>
+            <div class="detail-item" *ngIf="project.totalAmount != null">
+              <strong>Total amount of the project (M$)</strong>
+              <span>{{ project.totalAmount }}</span>
+            </div>
+            <div class="detail-item" *ngIf="project.totalAmountCenter != null">
+              <strong>Total amount awarded by the center (M$)</strong>
+              <span>{{ project.totalAmountCenter }}</span>
+            </div>
           </div>
         </div>
-      </div>
-    </mat-card-content>
 
-    <mat-card-actions>
-      <button mat-button color="warn" (click)="deleteProject()">
-        <mat-icon>delete</mat-icon>
-        Delete
-      </button>
-    </mat-card-actions>
-  </mat-card>
-</div>
+        <mat-divider></mat-divider>
 
-<div *ngIf="loading" class="loading-container">
-  <mat-spinner></mat-spinner>
-  <p>Loading project details...</p>
-</div>
+        <div class="detail-section">
+          <h3>Product Information</h3>
+          <div class="detail-grid">
+            <div class="detail-item">
+              <strong>Product associated with Basal funding</strong>
+              <span>{{ getBasalLabel() }}</span>
+            </div>
+            <div class="detail-item" *ngIf="project.progressReport">
+              <strong>Progress Report</strong>
+              <span>Period {{ project.progressReport }}</span>
+            </div>
+            <div class="detail-item" *ngIf="project.codigoANID">
+              <strong>ANID Code</strong>
+              <span>{{ project.codigoANID }}</span>
+            </div>
+            <div class="detail-item" *ngIf="getClusters()">
+              <strong>Clusters</strong>
+              <span>{{ getClusters() }}</span>
+            </div>
+          </div>
+        </div>
 
-<div *ngIf="!project && !loading" class="error-container">
-  <mat-icon>error</mat-icon>
-  <p>Project not found</p>
-  <button mat-button (click)="goBack()">Back to Projects</button>
+        <mat-divider></mat-divider>
+
+        <div class="detail-section">
+          <h3>Participants</h3>
+          <div class="detail-item" *ngIf="project.participantesNombres || project.mainResponsible">
+            <strong>Participant Summary</strong>
+            <span>{{ project.participantesNombres || project.mainResponsible || '—' }}</span>
+          </div>
+          <div class="participant-list" *ngIf="participants.length">
+            <strong>Participant Details</strong>
+            <ul>
+              <li *ngFor="let p of participants">
+                {{ p.fullName || ('RRHH #' + p.rrhhId) }}
+              </li>
+            </ul>
+          </div>
+          <p *ngIf="!participants.length && !project.participantesNombres">No participants recorded.</p>
+        </div>
+
+        <mat-divider *ngIf="project.comentario"></mat-divider>
+
+        <div class="detail-section" *ngIf="project.comentario">
+          <h3>Observations</h3>
+          <p class="observations">{{ project.comentario }}</p>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </ng-container>
 </div>

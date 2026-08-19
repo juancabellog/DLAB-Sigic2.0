@@ -12,9 +12,9 @@ import {
   TranslationStatus,
   createEmptyAgendaEvent
 } from '../models/agenda.models';
+import { NewsCategory } from '../../news/models/news.models';
 import { AgendaEditorialMetadataService } from './agenda-editorial-metadata.service';
 import { AgendaTranslationService } from './agenda-translation.service';
-import { NewsTaxonomyService } from '../../news/services/news-taxonomy.service';
 import {
   AgendaApiDTO,
   PaginatedAgendaApi,
@@ -37,7 +37,7 @@ export interface AgendaListResponse {
 /**
  * Set to true to use in-memory mock data instead of the REST API.
  */
-const USE_MOCK_DATA = true;
+const USE_MOCK_DATA = false;
 
 @Injectable({
   providedIn: 'root'
@@ -48,8 +48,7 @@ export class AgendaService {
   constructor(
     private baseHttp: BaseHttpService,
     private metadataService: AgendaEditorialMetadataService,
-    private translationService: AgendaTranslationService,
-    private taxonomyService: NewsTaxonomyService
+    private translationService: AgendaTranslationService
   ) {}
 
   getAgendaList(filters: AgendaListFilters = {}): Observable<AgendaListResponse> {
@@ -78,7 +77,7 @@ export class AgendaService {
         ),
         totalElements: res.totalElements ?? 0
       })),
-      catchError(() => of(this.filterMockList(filters)))
+      catchError(err => throwError(() => err))
     );
   }
 
@@ -171,17 +170,31 @@ export class AgendaService {
     );
   }
 
-  generateTranslation(item: AgendaEvent): Observable<AgendaEvent> {
-    return this.translationService.translateAgendaContent({
+  generateTranslation(
+    item: AgendaEvent,
+    direction: 'es_to_en' | 'en_to_es' = 'es_to_en'
+  ): Observable<AgendaEvent> {
+    if (direction === 'en_to_es') {
+      return this.translationService.translateAgendaContent(direction, {
+        titleEn: item.titleEn,
+        descriptionEn: item.descriptionEn
+      }).pipe(
+        map(result => ({
+          ...item,
+          titleEs: result.titleEs ?? item.titleEs,
+          descriptionEs: result.descriptionEs ?? item.descriptionEs,
+          translationStatus: TRANSLATION_STATUS.AUTO_GENERATED as TranslationStatus
+        }))
+      );
+    }
+    return this.translationService.translateAgendaContent(direction, {
       titleEs: item.titleEs,
-      summaryEs: item.summaryEs,
       descriptionEs: item.descriptionEs
     }).pipe(
       map(result => ({
         ...item,
-        titleEn: result.titleEn,
-        summaryEn: result.summaryEn,
-        descriptionEn: result.descriptionEn,
+        titleEn: result.titleEn ?? item.titleEn,
+        descriptionEn: result.descriptionEn ?? item.descriptionEn,
         translationStatus: TRANSLATION_STATUS.AUTO_GENERATED as TranslationStatus
       }))
     );
@@ -195,12 +208,25 @@ export class AgendaService {
     };
   }
 
-  getCategories() {
-    return this.taxonomyService.getCategories(USE_MOCK_DATA);
+  getCategories(): Observable<NewsCategory[]> {
+    if (USE_MOCK_DATA) {
+      return of([
+        { id: 'cat-research', label: 'Research', slug: 'research' },
+        { id: 'cat-events', label: 'Events', slug: 'events' }
+      ]);
+    }
+    return this.baseHttp.get<NewsCategory[]>('/agenda/categories');
   }
 
-  createCategory(name: string) {
-    return this.taxonomyService.createCategory(name, USE_MOCK_DATA);
+  createCategory(name: string): Observable<NewsCategory> {
+    const label = name.trim();
+    if (!label) {
+      return throwError(() => new Error('Category name is required'));
+    }
+    if (USE_MOCK_DATA) {
+      return of({ id: `cat-${Date.now()}`, label, slug: label.toLowerCase().replace(/\s+/g, '-') });
+    }
+    return this.baseHttp.post<NewsCategory>('/agenda/categories', { label });
   }
 
   uploadImage(file: File): Observable<string> {

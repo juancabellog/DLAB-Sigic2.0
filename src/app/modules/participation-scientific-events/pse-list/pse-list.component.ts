@@ -1,5 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LocalDatePipe } from '../../../shared/pipes/local-date.pipe';
 import { Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -22,6 +23,7 @@ import { UtilsService } from '../../../core/services/utils.service';
   standalone: true,
   imports: [
     CommonModule,
+    LocalDatePipe,
     RouterModule,
     MatCardModule,
     MatButtonModule,

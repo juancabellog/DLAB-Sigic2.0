@@ -64,6 +64,9 @@ public class DataInitializer implements CommandLineRunner {
 
     @Autowired
     private FundingTypeRepository fundingTypeRepository;
+
+    @Autowired
+    private TipoProyectoRepository tipoProyectoRepository;
     
     @Autowired
     private TipoDifusionRepository tipoDifusionRepository;
@@ -96,6 +99,7 @@ public class DataInitializer implements CommandLineRunner {
         initializeTransferCategories();
         initializeResources();
         initializeFundingTypes();
+        initializeTipoProyecto();
         initializeTipoDifusion();
         initializePublicoObjetivo();
         initializeTipoColaboracion();
@@ -425,9 +429,30 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("✅ Funding types created successfully");
         } else {
             System.out.println("📦 Funding types already exist: " + fundingTypeRepository.count() + " items");
+            // Ensure "Other" exists for project forms (idFundingtype is NOT NULL)
+            if (fundingTypeRepository.findByIdDescripcionIgnoreCase("Other").isEmpty()) {
+                fundingTypeRepository.save(new FundingType("Other"));
+                System.out.println("  Added missing FundingType: Other");
+            }
         }
     }
-    
+
+    private void initializeTipoProyecto() {
+        System.out.println("🔍 Initializing project types...");
+        if (tipoProyectoRepository.count() == 0) {
+            System.out.println("📦 Creating project types...");
+            tipoProyectoRepository.save(new TipoProyecto("Basic Research"));
+            tipoProyectoRepository.save(new TipoProyecto("Applied Research"));
+            tipoProyectoRepository.save(new TipoProyecto("Technological Development"));
+            tipoProyectoRepository.save(new TipoProyecto("Innovation"));
+            tipoProyectoRepository.save(new TipoProyecto("Infrastructure"));
+            tipoProyectoRepository.save(new TipoProyecto("Training / Human Capital"));
+            System.out.println("✅ Project types created successfully");
+        } else {
+            System.out.println("📦 Project types already exist: " + tipoProyectoRepository.count() + " items");
+        }
+    }
+
     private void initializeTipoDifusion() {
         System.out.println("🔍 Initializing diffusion types...");
         if (tipoDifusionRepository.count() == 0) {

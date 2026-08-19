@@ -51,11 +51,11 @@
             </div>
             <div class="detail-item" *ngIf="transfer.fechaInicio">
               <strong>Start Date:</strong>
-              <span>{{ transfer.fechaInicio | date:'MMM dd, yyyy' }}</span>
+              <span>{{ transfer.fechaInicio | localDate:'MMM dd, yyyy' }}</span>
             </div>
             <div class="detail-item" *ngIf="transfer.fechaTermino">
               <strong>End Date:</strong>
-              <span>{{ transfer.fechaTermino | date:'MMM dd, yyyy' }}</span>
+              <span>{{ transfer.fechaTermino | localDate:'MMM dd, yyyy' }}</span>
             </div>
           </div>
         </div>

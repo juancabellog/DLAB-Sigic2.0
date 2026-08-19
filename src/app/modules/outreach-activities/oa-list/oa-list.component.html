@@ -83,7 +83,7 @@
               </div>
               <div class="detail-row" *ngIf="activity.fechaInicio">
                 <span class="detail-label">Start Date:</span>
-                <span class="detail-value">{{ activity.fechaInicio | date:'MMM yyyy' }}</span>
+                <span class="detail-value">{{ activity.fechaInicio | localDate:'MMM yyyy' }}</span>
               </div>
               <div class="detail-row" *ngIf="activity.mainResponsible">
                 <span class="detail-label">Main Responsible:</span>
@@ -219,7 +219,7 @@
           <div class="list-cell location-cell">{{ getLocation(activity) }}</div>
           <div class="list-cell attendees-cell">{{ activity.numAsistentes || 'N/A' }}</div>
           <div class="list-cell period-cell">{{ activity.progressReport || 'N/A' }}</div>
-          <div class="list-cell date-cell">{{ activity.fechaInicio | date:'MMM yyyy' }}</div>
+          <div class="list-cell date-cell">{{ activity.fechaInicio | localDate:'MMM yyyy' }}</div>
           <div class="list-cell responsible-cell">{{ activity.mainResponsible || 'N/A' }}</div>
           <div class="list-cell actions-cell">
             <button 

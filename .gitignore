@@ -4,6 +4,7 @@
 /dist
 /tmp
 /out-tsc
+/backend/tmp
 # Only exists if Bazel was run
 /bazel-out
 
@@ -103,6 +104,8 @@ typings/
 .env
 .env.test
 backend/wix.properties
+backend/setenv.sh
+backend/gemini-local.yml
 backend/media/
 
 # parcel-bundler cache (https://parceljs.org/)

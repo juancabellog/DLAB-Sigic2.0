@@ -26,8 +26,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -148,6 +150,8 @@ public class OrganizacionEventosCientificosController {
             header.createCell(11).setCellValue("Clusters");
             header.createCell(12).setCellValue("Organizers");
             header.createCell(13).setCellValue("Speakers");
+            header.createCell(14).setCellValue("# Men");
+            header.createCell(15).setCellValue("# Women");
 
             for (OrganizacionEventosCientificos evento : eventos) {
                 OrganizacionEventosCientificosDTO dto = convertToDTOBase(evento, null);
@@ -187,9 +191,11 @@ public class OrganizacionEventosCientificosController {
                 row.createCell(11).setCellValue(formatClustersAsRoman(dto.getCluster()));
                 row.createCell(12).setCellValue(organizers);
                 row.createCell(13).setCellValue(speakers);
+                row.createCell(14).setCellValue(countParticipantsByGender(participaciones, "M"));
+                row.createCell(15).setCellValue(countParticipantsByGender(participaciones, "F"));
             }
 
-            for (int i = 0; i <= 13; i++) {
+            for (int i = 0; i <= 15; i++) {
                 sheet.autoSizeColumn(i);
             }
 
@@ -223,12 +229,8 @@ public class OrganizacionEventosCientificosController {
     public ResponseEntity<OrganizacionEventosCientificosDTO> createScientificEvent(@RequestBody OrganizacionEventosCientificosDTO dto) {
         try {
             OrganizacionEventosCientificos evento = convertFromDTO(dto);
-            // Establecer el username del usuario actual solo al crear
+            // TipoProducto is set in convertFromDTO (always id=15)
             userService.getCurrentUsername().ifPresent(evento::setUsername);
-            // Establecer automáticamente el tipoProducto con ID 15 (ORGANIZACION_EVENTOS_CIENTIFICOS)
-            TipoProducto tipoProducto = tipoProductoRepository.findById(15L)
-                .orElseThrow(() -> new IllegalStateException("TipoProducto with id=15 (ORGANIZACION_EVENTOS_CIENTIFICOS) not found"));
-            evento.setTipoProducto(tipoProducto);
             OrganizacionEventosCientificos saved = organizacionEventosCientificosRepository.save(evento);
 
             if (dto.getParticipantes() != null && !dto.getParticipantes().isEmpty()) {
@@ -315,11 +317,9 @@ public class OrganizacionEventosCientificosController {
                     existingEvento.setCluster(dto.getCluster());
                 }
 
-                // Actualizar relaciones de ProductoCientifico
-                if (dto.getTipoProducto() != null && dto.getTipoProducto().getId() != null) {
-                    tipoProductoRepository.findById(dto.getTipoProducto().getId())
-                        .ifPresent(existingEvento::setTipoProducto);
-                }
+                // Always force Organization of Scientific Events product type (id=15)
+                tipoProductoRepository.findById(15L)
+                    .ifPresent(existingEvento::setTipoProducto);
                 if (dto.getEstadoProducto() != null && dto.getEstadoProducto().getId() != null) {
                     estadoProductoRepository.findById(dto.getEstadoProducto().getId())
                         .ifPresent(existingEvento::setEstadoProducto);
@@ -562,11 +562,10 @@ public class OrganizacionEventosCientificosController {
         evento.setLineasInvestigacion(dto.getLineasInvestigacion());
         evento.setCluster(dto.getCluster());
 
-        // Relaciones de ProductoCientifico
-        if (dto.getTipoProducto() != null && dto.getTipoProducto().getId() != null) {
-            tipoProductoRepository.findById(dto.getTipoProducto().getId())
-                .ifPresent(evento::setTipoProducto);
-        }
+        // Always force Organization of Scientific Events product type (id=15)
+        TipoProducto tipoProducto = tipoProductoRepository.findById(15L)
+            .orElseThrow(() -> new IllegalStateException("TipoProducto with id=15 (ORGANIZACION_EVENTOS_CIENTIFICOS) not found"));
+        evento.setTipoProducto(tipoProducto);
 
         if (dto.getEstadoProducto() != null && dto.getEstadoProducto().getId() != null) {
             estadoProductoRepository.findById(dto.getEstadoProducto().getId())
@@ -695,6 +694,33 @@ public class OrganizacionEventosCientificosController {
                 }
             })
             .collect(Collectors.joining(", "));
+    }
+
+    /** Unique RRHH per event with codigoGenero M or F (case-insensitive). */
+    private int countParticipantsByGender(List<ParticipacionProducto> participaciones, String genderCode) {
+        if (participaciones == null || participaciones.isEmpty() || genderCode == null || genderCode.isBlank()) {
+            return 0;
+        }
+        Set<Long> seenRrhhIds = new HashSet<>();
+        int count = 0;
+        for (ParticipacionProducto pp : participaciones) {
+            if (pp == null || pp.getRrhh() == null) {
+                continue;
+            }
+            RRHH rrhh = pp.getRrhh();
+            Long rrhhId = rrhh.getId();
+            if (rrhhId != null) {
+                if (seenRrhhIds.contains(rrhhId)) {
+                    continue;
+                }
+                seenRrhhIds.add(rrhhId);
+            }
+            String codigoGenero = rrhh.getCodigoGenero();
+            if (codigoGenero != null && genderCode.equalsIgnoreCase(codigoGenero.trim())) {
+                count++;
+            }
+        }
+        return count;
     }
 }
 

@@ -75,18 +75,6 @@
           <dt>Mode</dt>
           <dd>{{ getEventModeLabel() }}</dd>
         </div>
-        <div *ngIf="getDisplayOrganizer()">
-          <dt>Organizer</dt>
-          <dd>{{ getDisplayOrganizer() }}</dd>
-        </div>
-        <div *ngIf="getDisplaySpeaker()">
-          <dt>Speaker</dt>
-          <dd>{{ getDisplaySpeaker() }}</dd>
-        </div>
-        <div *ngIf="getDisplayAudience()">
-          <dt>Audience</dt>
-          <dd>{{ getDisplayAudience() }}</dd>
-        </div>
       </dl>
     </mat-card-content>
   </mat-card>
@@ -98,21 +86,13 @@
       class="hero-image"
       [alt]="getImageAlt()" />
 
-    <p class="article-lead" *ngIf="getDisplaySummary()?.trim()">{{ getDisplaySummary() }}</p>
-
     <div
       class="body-html agenda-body-content rich-text-content"
       *ngIf="hasDisplayDescription(); else emptyBodyTpl"
       [innerHTML]="getSanitizedDescriptionHtml()"></div>
     <ng-template #emptyBodyTpl>
-      <p class="content-empty" *ngIf="!getDisplaySummary()?.trim()">No content available in this language.</p>
+      <p class="content-empty">No content available in this language.</p>
     </ng-template>
-
-    <div class="cta-row" *ngIf="getCtaUrl()">
-      <a mat-raised-button color="primary" [href]="getCtaUrl()" target="_blank" rel="noopener">
-        {{ getCtaLabel() }}
-      </a>
-    </div>
   </article>
 </div>
 

@@ -12,6 +12,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { finalize } from 'rxjs/operators';
 
 import { MessageService } from '../../../core/services/message.service';
+import { formatLocalDate } from '../../../core/utils/date.util';
 import { AgendaService } from '../services/agenda.service';
 import {
   AgendaEvent,
@@ -95,9 +96,12 @@ export class AgendaViewComponent implements OnInit {
     return this.item.titleEs?.trim() || 'Event';
   }
 
-  getDisplaySummary(): string {
-    if (!this.item) return '';
-    return this.selectedLanguage === 'en' ? (this.item.summaryEn || '') : (this.item.summaryEs || '');
+  hasEnglishContent(): boolean {
+    if (!this.item) return false;
+    return Boolean(
+      this.item.titleEn?.trim() ||
+      this.item.descriptionEn?.trim()
+    );
   }
 
   getDisplayDescription(): string {
@@ -109,15 +113,6 @@ export class AgendaViewComponent implements OnInit {
     if (!this.item) return this.getDisplayTitle();
     const alt = this.selectedLanguage === 'en' ? this.item.mainImageAltEn : this.item.mainImageAltEs;
     return alt?.trim() || this.getDisplayTitle();
-  }
-
-  hasEnglishContent(): boolean {
-    if (!this.item) return false;
-    return Boolean(
-      this.item.titleEn?.trim() ||
-      this.item.summaryEn?.trim() ||
-      this.item.descriptionEn?.trim()
-    );
   }
 
   isEnglishValidated(): boolean {
@@ -184,32 +179,6 @@ export class AgendaViewComponent implements OnInit {
     return this.formatEditorialDate(date);
   }
 
-  getDisplayOrganizer(): string {
-    if (!this.item) return '';
-    return this.selectedLanguage === 'en' ? (this.item.organizerEn || '') : (this.item.organizerEs || '');
-  }
-
-  getDisplaySpeaker(): string {
-    if (!this.item) return '';
-    return this.selectedLanguage === 'en' ? (this.item.speakerEn || '') : (this.item.speakerEs || '');
-  }
-
-  getDisplayAudience(): string {
-    if (!this.item) return '';
-    return this.selectedLanguage === 'en' ? (this.item.audienceEn || '') : (this.item.audienceEs || '');
-  }
-
-  getCtaUrl(): string {
-    if (!this.item) return '';
-    return this.item.ctaUrl?.trim() || '';
-  }
-
-  getCtaLabel(): string {
-    if (!this.item) return 'Register';
-    const label = this.selectedLanguage === 'en' ? this.item.ctaLabelEn : this.item.ctaLabelEs;
-    return label?.trim() || 'Register';
-  }
-
   getImageUrl(): string | null {
     return this.item ? this.agendaService.resolveMediaUrl(this.item.mainImageUrl) : null;
   }
@@ -243,7 +212,6 @@ export class AgendaViewComponent implements OnInit {
     const mainImageKey = this.getImageUrlKey(this.getImageUrl());
     const mainImageRawKey = this.getImageUrlKey(this.item?.mainImageUrl ?? null);
     const title = this.getDisplayTitle().trim().toLowerCase();
-    const summary = this.getDisplaySummary().trim();
 
     doc.querySelectorAll('img').forEach(img => {
       const src = img.getAttribute('src') || '';
@@ -267,14 +235,6 @@ export class AgendaViewComponent implements OnInit {
         heading.remove();
       }
     });
-
-    const firstBlock = doc.body.firstElementChild;
-    if (summary && firstBlock?.tagName === 'P') {
-      const pText = firstBlock.textContent?.trim() || '';
-      if (pText === summary) {
-        firstBlock.remove();
-      }
-    }
 
     const sanitized = doc.body.innerHTML.trim();
     return this.agendaService.resolveBodyHtmlForDisplay(sanitized);
@@ -325,14 +285,7 @@ export class AgendaViewComponent implements OnInit {
   }
 
   private formatEditorialDate(date: string | null | undefined): string {
-    if (!date) return '';
-    const parsed = new Date(date);
-    if (Number.isNaN(parsed.getTime())) return date;
-    return parsed.toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
+    return formatLocalDate(date, 'd MMMM yyyy', 'en-GB');
   }
 
   private buildPreviewUrlFromSlug(): string | null {

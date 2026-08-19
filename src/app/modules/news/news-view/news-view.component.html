@@ -48,6 +48,9 @@
     <div class="tag-row" *ngIf="item.tags.length">
       <mat-chip *ngFor="let tag of item.tags">{{ tag.label }}</mat-chip>
     </div>
+    <p class="media-link-row" *ngIf="item.mediaLink?.trim()">
+      <a [href]="item.mediaLink" target="_blank" rel="noopener noreferrer">{{ item.mediaLink }}</a>
+    </p>
   </header>
 
   <article class="news-preview-article">

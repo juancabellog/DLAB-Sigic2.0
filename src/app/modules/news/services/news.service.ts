@@ -168,17 +168,35 @@ export class NewsService {
     );
   }
 
-  generateTranslation(item: NewsItem): Observable<NewsItem> {
-    return this.translationService.translateNewsContent({
+  generateTranslation(
+    item: NewsItem,
+    direction: 'es_to_en' | 'en_to_es' = 'es_to_en'
+  ): Observable<NewsItem> {
+    if (direction === 'en_to_es') {
+      return this.translationService.translateNewsContent(direction, {
+        titleEn: item.titleEn,
+        summaryEn: item.summaryEn,
+        bodyEn: item.bodyEn
+      }).pipe(
+        map(result => ({
+          ...item,
+          titleEs: result.titleEs ?? item.titleEs,
+          summaryEs: result.summaryEs ?? item.summaryEs,
+          bodyEs: result.bodyEs ?? item.bodyEs,
+          translationStatus: TRANSLATION_STATUS.AUTO_GENERATED as TranslationStatus
+        }))
+      );
+    }
+    return this.translationService.translateNewsContent(direction, {
       titleEs: item.titleEs,
       summaryEs: item.summaryEs,
       bodyEs: item.bodyEs
     }).pipe(
       map(result => ({
         ...item,
-        titleEn: result.titleEn,
-        summaryEn: result.summaryEn,
-        bodyEn: result.bodyEn,
+        titleEn: result.titleEn ?? item.titleEn,
+        summaryEn: result.summaryEn ?? item.summaryEn,
+        bodyEn: result.bodyEn ?? item.bodyEn,
         translationStatus: TRANSLATION_STATUS.AUTO_GENERATED as TranslationStatus
       }))
     );

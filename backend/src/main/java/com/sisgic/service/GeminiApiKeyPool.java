@@ -36,6 +36,9 @@ public class GeminiApiKeyPool {
                 .map(String::trim)
                 .forEach(resolved::add);
         }
+        if (resolved.isEmpty()) {
+            resolved.addAll(keysFromEnvList());
+        }
         if (resolved.isEmpty() && isUsableKey(properties.getApikey())) {
             resolved.add(properties.getApikey().trim());
         }
@@ -44,8 +47,22 @@ public class GeminiApiKeyPool {
             log.info("Gemini API key pool initialized with {} key(s), model={}",
                 keys.size(), properties.getModel());
         } else {
-            log.warn("Gemini API key pool is empty (set gemini.apikeys or gemini.apikey)");
+            log.warn("Gemini API key pool is empty (set GEMINI_APIKEYS, GEMINI_API_KEY, or gemini.apikey)");
         }
+    }
+
+    private List<String> keysFromEnvList() {
+        String raw = System.getenv("GEMINI_APIKEYS");
+        if (raw == null || raw.isBlank()) {
+            return List.of();
+        }
+        List<String> parsed = new ArrayList<>();
+        for (String part : raw.split(",")) {
+            if (isUsableKey(part)) {
+                parsed.add(part.trim());
+            }
+        }
+        return parsed;
     }
 
     public boolean isConfigured() {

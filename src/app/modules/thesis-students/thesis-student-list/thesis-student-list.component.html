@@ -81,7 +81,7 @@
               </div>
               <div class="detail-row" *ngIf="thesisItem.fechaInicio">
                 <span class="detail-label">QE Date:</span>
-                <span class="detail-value">{{ thesisItem.fechaInicio | date:'MMM yyyy' }}</span>
+                <span class="detail-value">{{ thesisItem.fechaInicio | localDate:'MMM yyyy' }}</span>
               </div>
               <div class="detail-row" *ngIf="thesisItem.estudiante">
                 <span class="detail-label">Student:</span>
@@ -213,7 +213,7 @@
             </mat-chip>
           </div>
           <div class="list-cell period-cell">{{ getProgressReport(thesisItem) }}</div>
-          <div class="list-cell date-cell">{{ thesisItem.fechaInicio | date:'MMM yyyy' }}</div>
+          <div class="list-cell date-cell">{{ thesisItem.fechaInicio | localDate:'MMM yyyy' }}</div>
           <div class="list-cell actions-cell">
             <button 
               mat-icon-button 

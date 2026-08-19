@@ -7,6 +7,10 @@
   </div>
 
   <mat-card>
+
+    <mat-card-header>
+      <mat-card-subtitle *ngIf="isEditMode">ID: {{ itemId }}</mat-card-subtitle>
+    </mat-card-header>
     <mat-card-content>
       <section class="general-section">
         <h2 class="section-title">General</h2>
@@ -68,12 +72,27 @@
           <p class="field-hint">Highlight this event on the website.</p>
         </div>
 
-        <app-news-category-select [(categories)]="item.categories"></app-news-category-select>
+        <app-agenda-category-select [(categories)]="item.categories"></app-agenda-category-select>
       </section>
 
-      <mat-tab-group [(selectedIndex)]="selectedTabIndex" animationDuration="0ms">
+      <mat-tab-group [selectedIndex]="selectedTabIndex" (selectedIndexChange)="onTabChange($event)" animationDuration="0ms">
         <mat-tab label="Spanish">
           <div class="tab-content">
+            <div class="translation-status-bar">
+              <button mat-stroked-button type="button" (click)="translateFromEnglish()" [disabled]="translating">
+                <mat-icon>translate</mat-icon>
+                Translate from English
+              </button>
+              <mat-spinner *ngIf="translating && selectedTabIndex === 0" diameter="24"></mat-spinner>
+            </div>
+
+            <div *ngIf="translating && selectedTabIndex === 0" class="translation-progress-hint" role="status">
+              <mat-icon>hourglass_top</mat-icon>
+              <p>
+                Translation in progress. This may take several minutes — please wait.
+              </p>
+            </div>
+
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Title</mat-label>
               <input matInput [(ngModel)]="item.titleEs" (ngModelChange)="onSpanishFieldChange()" required />
@@ -84,63 +103,26 @@
               <input matInput [(ngModel)]="item.mainImageAltEs" />
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Summary</mat-label>
-              <textarea matInput rows="3" [(ngModel)]="item.summaryEs" (ngModelChange)="onSpanishFieldChange()" required></textarea>
-            </mat-form-field>
-
             <label class="field-label">Description *</label>
             <app-rich-text-editor
               [(ngModel)]="item.descriptionEs"
               (ngModelChange)="onSpanishFieldChange()"
               placeholder="Write the event description in Spanish...">
             </app-rich-text-editor>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Organizer</mat-label>
-              <input matInput [(ngModel)]="item.organizerEs" (ngModelChange)="onSpanishFieldChange()" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Speaker / Lecturer</mat-label>
-              <input matInput [(ngModel)]="item.speakerEs" (ngModelChange)="onSpanishFieldChange()" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Audience</mat-label>
-              <input matInput [(ngModel)]="item.audienceEs" (ngModelChange)="onSpanishFieldChange()" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Call to action label</mat-label>
-              <input matInput [(ngModel)]="item.ctaLabelEs" placeholder="e.g. Register" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Call to action URL</mat-label>
-              <input matInput [(ngModel)]="item.ctaUrl" placeholder="https://..." />
-            </mat-form-field>
           </div>
         </mat-tab>
 
         <mat-tab label="English">
           <div class="tab-content">
             <div class="translation-status-bar">
-              <mat-chip selected>
-                {{ translationStatusLabels[item.translationStatus] }}
-              </mat-chip>
-              <button mat-stroked-button type="button" (click)="generateAutomaticTranslation()" [disabled]="translating">
-                <mat-icon>auto_awesome</mat-icon>
-                Generate automatic translation
+              <button mat-stroked-button type="button" (click)="translateFromSpanish()" [disabled]="translating">
+                <mat-icon>translate</mat-icon>
+                Translate from Spanish
               </button>
-              <button mat-stroked-button color="primary" type="button" (click)="validateTranslation()">
-                <mat-icon>verified</mat-icon>
-                Validate translation
-              </button>
-              <mat-spinner *ngIf="translating" diameter="24"></mat-spinner>
+              <mat-spinner *ngIf="translating && selectedTabIndex === 1" diameter="24"></mat-spinner>
             </div>
 
-            <div *ngIf="translating" class="translation-progress-hint" role="status">
+            <div *ngIf="translating && selectedTabIndex === 1" class="translation-progress-hint" role="status">
               <mat-icon>hourglass_top</mat-icon>
               <p>
                 Translation in progress. This may take several minutes — please wait.
@@ -151,7 +133,7 @@
               <mat-icon>warning</mat-icon>
               <p>
                 The Spanish content was modified after the English translation was validated.
-                Please review and validate the English version again.
+                Please review the English version again.
               </p>
             </div>
 
@@ -165,37 +147,12 @@
               <input matInput [(ngModel)]="item.mainImageAltEn" />
             </mat-form-field>
 
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Summary in English</mat-label>
-              <textarea matInput rows="3" [(ngModel)]="item.summaryEn" (ngModelChange)="onEnglishFieldChange()"></textarea>
-            </mat-form-field>
-
             <label class="field-label">Description in English</label>
             <app-rich-text-editor
               [(ngModel)]="item.descriptionEn"
               (ngModelChange)="onEnglishFieldChange()"
               placeholder="Write or edit the English description...">
             </app-rich-text-editor>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Organizer in English</mat-label>
-              <input matInput [(ngModel)]="item.organizerEn" (ngModelChange)="onEnglishFieldChange()" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Speaker / Lecturer in English</mat-label>
-              <input matInput [(ngModel)]="item.speakerEn" (ngModelChange)="onEnglishFieldChange()" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>Audience in English</mat-label>
-              <input matInput [(ngModel)]="item.audienceEn" (ngModelChange)="onEnglishFieldChange()" />
-            </mat-form-field>
-
-            <mat-form-field appearance="outline" class="full-width">
-              <mat-label>CTA label in English</mat-label>
-              <input matInput [(ngModel)]="item.ctaLabelEn" (ngModelChange)="onEnglishFieldChange()" />
-            </mat-form-field>
           </div>
         </mat-tab>
 
@@ -258,7 +215,7 @@
         type="button"
         (click)="saveDraft()"
         [disabled]="saving || !canSave"
-        [matTooltip]="!canSave ? 'Complete required fields to save' : ''"
+        [matTooltip]="saveBlockedReason"
         [matTooltipDisabled]="canSave">
         Save draft
       </button>
@@ -267,7 +224,7 @@
         type="button"
         (click)="saveChanges()"
         [disabled]="saving || !canSave"
-        [matTooltip]="!canSave ? 'Complete required fields to save' : ''"
+        [matTooltip]="saveBlockedReason"
         [matTooltipDisabled]="canSave">
         Save changes
       </button>
@@ -284,7 +241,7 @@
         type="button"
         (click)="publish()"
         [disabled]="saving || !canSave"
-        [matTooltip]="!canSave ? 'Complete required fields to publish' : ''"
+        [matTooltip]="saveBlockedReason"
         [matTooltipDisabled]="canSave">
         Publish
       </button>

@@ -64,7 +64,9 @@ export class CatalogService {
     // Mapeo de nombres de tipos de producto a sus IDs
     const productTypeMap: { [key: string]: number } = {
       'publications': 3,
-      'projects': 2,
+      'projects': 19, // PROYECTO
+      'books': 20, // BOOK
+      'awards': 21, // AWARD
       'outreach-activities': 1, // DIFUSION
       'scientific-collaborations': 12, // COLLABORATIONS - ID correcto según el usuario
       'postdoctoral-fellows': 14, // BECAPOSTDOCTO - ID correcto según el usuario

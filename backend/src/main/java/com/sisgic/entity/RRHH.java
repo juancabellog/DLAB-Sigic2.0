@@ -56,6 +56,9 @@ public class RRHH {
     
     @Column(name = "orcid", length = 19, columnDefinition = "CHAR(19)")
     private String orcid;
+
+    @Column(name = "urlImagen", columnDefinition = "LONGTEXT")
+    private String urlImagen;
     
     @Column(name = "codigoGenero", length = 1, columnDefinition = "CHAR(1)")
     private String codigoGenero; // M o F
@@ -166,6 +169,14 @@ public class RRHH {
     
     public void setOrcid(String orcid) {
         this.orcid = orcid;
+    }
+
+    public String getUrlImagen() {
+        return urlImagen;
+    }
+
+    public void setUrlImagen(String urlImagen) {
+        this.urlImagen = urlImagen;
     }
     
     public String getNumCelular() {

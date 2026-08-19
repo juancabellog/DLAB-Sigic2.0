@@ -1,0 +1,188 @@
+<div class="list-container">
+  <div class="list-header">
+    <div class="list-header-left">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to Dashboard">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>Books</h1>
+    </div>
+    <div class="list-header-right">
+      <button mat-raised-button color="primary" routerLink="/books/new" class="add-button">
+        <mat-icon>add</mat-icon>
+        Add Book
+      </button>
+    </div>
+  </div>
+
+  <app-list-controls
+    searchPlaceholder="Search books..."
+    [items]="books"
+    [showBasalFilter]="false"
+    [readonly]="false"
+    [showExportButton]="false"
+    [currentViewMode]="viewMode"
+    [finalFilteredCount]="finalFilteredCount"
+    itemType="book"
+    listType="books"
+    (searchResults)="onSearchResults($event)"
+    (searchTermChange)="onSearchTermChange($event)"
+    (viewModeChange)="onViewModeChange($event)">
+  </app-list-controls>
+
+  <div class="extra-filters">
+    <mat-form-field>
+      <mat-label>Work Type</mat-label>
+      <mat-select [(ngModel)]="filterBookTypeId" (selectionChange)="applyFilters()">
+        <mat-option [value]="null">All</mat-option>
+        <mat-option *ngFor="let t of bookTypes" [value]="t.id">{{ t.idDescripcion }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Year</mat-label>
+      <input matInput type="number" [(ngModel)]="filterYear" (change)="applyFilters()" placeholder="e.g. 2024">
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Cluster</mat-label>
+      <mat-select [(ngModel)]="filterCluster" (selectionChange)="applyFilters()">
+        <mat-option [value]="null">All</mat-option>
+        <mat-option *ngFor="let c of clusterOptions" [value]="c.id">{{ c.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>Progress Report</mat-label>
+      <mat-select [(ngModel)]="filterProgressReport" (selectionChange)="applyFilters()">
+        <mat-option [value]="null">All</mat-option>
+        <mat-option value="1">Period 1</mat-option>
+        <mat-option value="2">Period 2</mat-option>
+        <mat-option value="3">Period 3</mat-option>
+        <mat-option value="4">Period 4</mat-option>
+        <mat-option value="5">Period 5</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>From year</mat-label>
+      <input matInput type="number" [(ngModel)]="filterFromYear" (change)="applyFilters()">
+    </mat-form-field>
+
+    <mat-form-field>
+      <mat-label>To year</mat-label>
+      <input matInput type="number" [(ngModel)]="filterToYear" (change)="applyFilters()">
+    </mat-form-field>
+
+    <button mat-button type="button" (click)="clearFilters()">Clear filters</button>
+  </div>
+
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading books...</p>
+  </div>
+
+  <mat-card *ngIf="!loading">
+    <mat-card-content>
+      <div *ngIf="books.length === 0" class="empty-state">
+        <mat-icon>menu_book</mat-icon>
+        <h3>No books found</h3>
+        <p>Start by adding your first book.</p>
+        <button mat-raised-button color="primary" routerLink="/books/new">
+          <mat-icon>add</mat-icon>
+          Add Book
+        </button>
+      </div>
+
+      <div *ngIf="!loading && filteredBooks.length === 0 && books.length > 0" class="empty-state">
+        <mat-icon>search_off</mat-icon>
+        <h3>No matching books</h3>
+        <p>Try adjusting search or filters.</p>
+      </div>
+
+      <div *ngIf="filteredBooks.length > 0 && viewMode === 'card'" class="list-grid">
+        <mat-card *ngFor="let book of filteredBooks" class="list-card">
+          <mat-card-header>
+            <mat-card-title class="title-clamp">{{ getTitle(book) }}</mat-card-title>
+            <mat-card-subtitle>{{ getWorkTypeLabel(book) }} · {{ book.year || '—' }}</mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="list-details">
+              <div class="detail-row" *ngIf="isChapter(book) && book.chapterTitle">
+                <span class="detail-label">Chapter:</span>
+                <span class="detail-value">{{ book.chapterTitle }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Pages:</span>
+                <span class="detail-value">{{ getPages(book) }}</span>
+              </div>
+              <div class="detail-row" *ngIf="book.isbn">
+                <span class="detail-label">ISBN:</span>
+                <span class="detail-value">{{ book.isbn }}</span>
+              </div>
+              <div class="detail-row" *ngIf="book.participantesNombres">
+                <span class="detail-label">Participants:</span>
+                <span class="detail-value">{{ book.participantesNombres }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+          <mat-card-actions>
+            <button mat-button color="primary" (click)="viewBook(book)">
+              <mat-icon>visibility</mat-icon> View
+            </button>
+            <button mat-button (click)="editBook(book)">
+              <mat-icon>edit</mat-icon> Edit
+            </button>
+            <button mat-button color="warn" (click)="deleteBook(book)">
+              <mat-icon>delete</mat-icon> Delete
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+
+      <div *ngIf="filteredBooks.length > 0 && viewMode !== 'card'" class="table-wrapper">
+        <table class="books-table">
+          <thead>
+            <tr>
+              <th>Book Title</th>
+              <th>Work Type</th>
+              <th>Chapter Title</th>
+              <th>Year</th>
+              <th>ISBN</th>
+              <th>Pages</th>
+              <th>Editorial / City / Country</th>
+              <th>Participants</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let book of filteredBooks">
+              <td>
+                <div class="title-clamp">{{ getTitle(book) }}</div>
+              </td>
+              <td>{{ getWorkTypeLabel(book) }}</td>
+              <td class="wrap-cell">{{ isChapter(book) ? (book.chapterTitle || '—') : '—' }}</td>
+              <td>{{ book.year != null ? book.year : '—' }}</td>
+              <td>{{ book.isbn || '—' }}</td>
+              <td>{{ getPages(book) }}</td>
+              <td class="ellipsis-cell" [matTooltip]="book.editorialCityCountry || ''">
+                {{ book.editorialCityCountry || '—' }}
+              </td>
+              <td class="wrap-cell">{{ book.participantesNombres || '—' }}</td>
+              <td class="actions-cell">
+                <button mat-icon-button matTooltip="View" (click)="viewBook(book)">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+                <button mat-icon-button matTooltip="Edit" (click)="editBook(book)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button matTooltip="Delete" color="warn" (click)="deleteBook(book)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

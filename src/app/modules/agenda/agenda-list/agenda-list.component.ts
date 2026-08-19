@@ -16,6 +16,7 @@ import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 import { ListControlsComponent } from '../../../shared/components/list-controls/list-controls.component';
+import { formatLocalDate } from '../../../core/utils/date.util';
 import { AgendaRowActionsComponent } from './agenda-row-actions.component';
 import { MessageService } from '../../../core/services/message.service';
 import { ViewMode, ViewModeService } from '../../../core/services/view-mode.service';
@@ -178,8 +179,6 @@ export class AgendaListComponent implements OnInit, OnDestroy {
   }
 
   getEventMetaLine(item: AgendaEvent): string {
-    const organizer = item.organizerEs?.trim();
-    if (organizer) return organizer;
     const author = item.author?.trim();
     if (author) return author;
     const mode = item.eventMode ? this.eventModeLabels[item.eventMode] : '';
@@ -191,14 +190,7 @@ export class AgendaListComponent implements OnInit, OnDestroy {
   }
 
   formatDisplayDate(date: string | null | undefined): string {
-    if (!date) return '';
-    const parsed = new Date(date);
-    if (Number.isNaN(parsed.getTime())) return date;
-    return parsed.toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+    return formatLocalDate(date, 'dd MMM yyyy', 'en-GB');
   }
 
   formatTime(item: AgendaEvent): string {

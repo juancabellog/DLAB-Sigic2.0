@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { of } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ROLE_ANID_EXPORT_CENTER } from '../constants/roles';
+import { ROLE_ANID_EXPORT_CENTER, ROLE_COMMUNICATIONS } from '../constants/roles';
 
 export interface User {
   id: number;
@@ -84,6 +84,14 @@ export class AuthService {
 
   register(userData: any): Observable<any> {
     return this.http.post(`${this.API_URL}/register`, userData);
+  }
+
+  forgotPassword(identifier: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.API_URL}/forgot-password`, { identifier });
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.API_URL}/reset-password`, { token, newPassword });
   }
 
   logout(): void {
@@ -186,6 +194,13 @@ export class AuthService {
    */
   canAccessAnidExportCenter(): boolean {
     return this.hasRole(ROLE_ANID_EXPORT_CENTER);
+  }
+
+  /**
+   * News & Agenda — ROLE_COMMUNICATIONS only (roles_2_0.id = 5).
+   */
+  canAccessCommunications(): boolean {
+    return this.hasRole(ROLE_COMMUNICATIONS);
   }
 
   /**

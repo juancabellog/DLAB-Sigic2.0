@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LocalDatePipe } from '../../../shared/pipes/local-date.pipe';
 import { Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -25,6 +26,7 @@ import { ListControlsComponent } from '../../../shared/components/list-controls/
   standalone: true,
   imports: [
     CommonModule,
+    LocalDatePipe,
     RouterModule,
     MatCardModule,
     MatButtonModule,

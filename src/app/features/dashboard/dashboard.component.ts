@@ -10,6 +10,9 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
 import { PublicationService } from '../../core/services/publication.service';
+import { ProjectService } from '../../core/services/project.service';
+import { BookService } from '../../core/services/book.service';
+import { AwardService } from '../../core/services/award.service';
 import { ScientificEventsService } from '../../core/services/scientific-events.service';
 import { ParticipationScientificEventsService } from '../../core/services/participation-scientific-events.service';
 import { ThesisService } from '../../core/services/thesis.service';
@@ -39,7 +42,10 @@ import { AnidExportCenterComponent } from './anid-export-center/anid-export-cent
 })
 export class DashboardComponent implements OnInit {
   loadingStats: boolean = true;
+  projectCount: number = 0;
   publicationCount: number = 0;
+  bookCount: number = 0;
+  awardCount: number = 0;
   scientificEventsCount: number = 0;
   participationScientificEventsCount: number = 0;
   thesisStudentCount: number = 0;
@@ -51,6 +57,9 @@ export class DashboardComponent implements OnInit {
 
   constructor(
     private publicationService: PublicationService,
+    private projectService: ProjectService,
+    private bookService: BookService,
+    private awardService: AwardService,
     private scientificEventsService: ScientificEventsService,
     private participationScientificEventsService: ParticipationScientificEventsService,
     private thesisService: ThesisService,
@@ -85,7 +94,16 @@ export class DashboardComponent implements OnInit {
     
     // Cargar estadísticas de todos los módulos en paralelo
     forkJoin({
+      projects: this.projectService.getProjects({ page: 0, size: 1 }).pipe(
+        catchError(() => of({ totalElements: 0 } as any))
+      ),
       publications: this.publicationService.getPublications({ page: 0, size: 1 }).pipe(
+        catchError(() => of({ totalElements: 0 } as any))
+      ),
+      books: this.bookService.getBooks({ page: 0, size: 1 }).pipe(
+        catchError(() => of({ totalElements: 0 } as any))
+      ),
+      awards: this.awardService.getAwards({ page: 0, size: 1 }).pipe(
         catchError(() => of({ totalElements: 0 } as any))
       ),
       scientificEvents: this.scientificEventsService.getScientificEvents({ page: 0, size: 1 }).pipe(
@@ -112,7 +130,10 @@ export class DashboardComponent implements OnInit {
     }).subscribe({
       next: (stats) => {
         // Extraer totalElements de la respuesta paginada
+        this.projectCount = (stats.projects as any)?.totalElements || 0;
         this.publicationCount = (stats.publications as any)?.totalElements || 0;
+        this.bookCount = (stats.books as any)?.totalElements || 0;
+        this.awardCount = (stats.awards as any)?.totalElements || 0;
         this.scientificEventsCount = (stats.scientificEvents as any)?.totalElements || 0;
         this.participationScientificEventsCount = (stats.participationScientificEvents as any)?.totalElements || 0;
         this.thesisStudentCount = (stats.thesis as any)?.totalElements || 0;

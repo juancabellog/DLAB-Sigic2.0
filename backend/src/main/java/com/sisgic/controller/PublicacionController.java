@@ -36,6 +36,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.List;
@@ -203,6 +204,8 @@ public class PublicacionController {
             header.createCell(17).setCellValue("Funding");
             header.createCell(18).setCellValue("Clusters");
             header.createCell(19).setCellValue("Authors");
+            header.createCell(20).setCellValue("# Men");
+            header.createCell(21).setCellValue("# Women");
 
             for (Publicacion pub : publicaciones) {
                 PublicacionDTO dto = convertToDTOBase(pub, null);
@@ -253,9 +256,11 @@ public class PublicacionController {
                 row.createCell(17).setCellValue(resolvePublicationFundingLabel(dto.getFunding(), fundingLabels));
                 row.createCell(18).setCellValue(formatClustersAsRoman(dto.getCluster()));
                 row.createCell(19).setCellValue(buildAuthorsLabel(participaciones));
+                row.createCell(20).setCellValue(countParticipantsByGender(participaciones, "M"));
+                row.createCell(21).setCellValue(countParticipantsByGender(participaciones, "F"));
             }
 
-            for (int i = 0; i <= 19; i++) {
+            for (int i = 0; i <= 21; i++) {
                 sheet.autoSizeColumn(i);
             }
 
@@ -1794,6 +1799,33 @@ public class PublicacionController {
             values.add(tipo.isEmpty() ? fullname : fullname + " (" + tipo + ")");
         }
         return String.join("; ", values);
+    }
+
+    /** Unique RRHH per publication with codigoGenero M or F (case-insensitive). */
+    private int countParticipantsByGender(List<ParticipacionProducto> participaciones, String genderCode) {
+        if (participaciones == null || participaciones.isEmpty() || genderCode == null || genderCode.isBlank()) {
+            return 0;
+        }
+        Set<Long> seenRrhhIds = new HashSet<>();
+        int count = 0;
+        for (ParticipacionProducto pp : participaciones) {
+            if (pp == null || pp.getRrhh() == null) {
+                continue;
+            }
+            RRHH rrhh = pp.getRrhh();
+            Long rrhhId = rrhh.getId();
+            if (rrhhId != null) {
+                if (seenRrhhIds.contains(rrhhId)) {
+                    continue;
+                }
+                seenRrhhIds.add(rrhhId);
+            }
+            String codigoGenero = rrhh.getCodigoGenero();
+            if (codigoGenero != null && genderCode.equalsIgnoreCase(codigoGenero.trim())) {
+                count++;
+            }
+        }
+        return count;
     }
 }
 

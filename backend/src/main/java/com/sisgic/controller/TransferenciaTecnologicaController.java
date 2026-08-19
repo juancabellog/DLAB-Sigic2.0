@@ -18,13 +18,21 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import jakarta.servlet.http.HttpServletResponse;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -40,6 +48,9 @@ public class TransferenciaTecnologicaController {
 
     @Autowired
     private TipoTransferenciaRepository tipoTransferenciaRepository;
+
+    @Autowired
+    private CategoriaTransferenciaRepository categoriaTransferenciaRepository;
 
     @Autowired
     private PaisRepository paisRepository;
@@ -106,6 +117,150 @@ public class TransferenciaTecnologicaController {
         Page<TransferenciaTecnologicaDTO> transfersDTO = transfers.map(t -> convertToDTOWithoutParticipants(t, textosMap));
 
         return ResponseEntity.ok(transfersDTO);
+    }
+
+    /**
+     * Exporta las transferencias tecnológicas visibles a Excel.
+     */
+    @GetMapping("/export")
+    @Transactional(readOnly = true)
+    public void exportTechnologyTransfersToExcel(
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir,
+            HttpServletResponse response) {
+        try {
+            Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+            Long idRRHH = userService.getCurrentUserIdRRHH().orElse(null);
+            String userName = userService.getCurrentUsername().orElse(null);
+            List<TransferenciaTecnologica> transfers = transferenciaTecnologicaRepository
+                .findVisibleByUserIdRRHH(idRRHH, userName, Pageable.unpaged(sort))
+                .getContent();
+
+            Map<Long, String> categoriaTransferenciaCodeById = new HashMap<>();
+            for (CategoriaTransferencia c : categoriaTransferenciaRepository.findAllByOrderByIdAsc()) {
+                if (c.getId() != null) {
+                    categoriaTransferenciaCodeById.put(c.getId(), c.getIdDescripcion());
+                }
+            }
+
+            List<String> codigosTexto = new ArrayList<>();
+            for (TransferenciaTecnologica t : transfers) {
+                if (t.getDescripcion() != null && !t.getDescripcion().isEmpty()) {
+                    codigosTexto.add(t.getDescripcion());
+                }
+                if (t.getComentario() != null && !t.getComentario().isEmpty()) {
+                    codigosTexto.add(t.getComentario());
+                }
+                if (t.getTipoTransferencia() != null && t.getTipoTransferencia().getIdDescripcion() != null) {
+                    codigosTexto.add(t.getTipoTransferencia().getIdDescripcion());
+                }
+                if (t.getInstitucion() != null && t.getInstitucion().getIdDescripcion() != null) {
+                    codigosTexto.add(t.getInstitucion().getIdDescripcion());
+                }
+                if (t.getPais() != null && t.getPais().getIdDescripcion() != null) {
+                    codigosTexto.add(t.getPais().getIdDescripcion());
+                }
+                collectCategoryTextCodes(t.getCategoriaTransferencia(), categoriaTransferenciaCodeById, codigosTexto);
+            }
+            Map<String, String> textosMap = textosService.getTextValuesBatch(codigosTexto, 2, "us");
+
+            Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("Technology Transfer");
+
+            int rowIdx = 0;
+            Row header = sheet.createRow(rowIdx++);
+            header.createCell(0).setCellValue("Id");
+            header.createCell(1).setCellValue("Description");
+            header.createCell(2).setCellValue("Title");
+            header.createCell(3).setCellValue("Category of Transfer");
+            header.createCell(4).setCellValue("Type of Transfer");
+            header.createCell(5).setCellValue("Transfer Products");
+            header.createCell(6).setCellValue("Institution");
+            header.createCell(7).setCellValue("Country");
+            header.createCell(8).setCellValue("City");
+            header.createCell(9).setCellValue("Region");
+            header.createCell(10).setCellValue("Year");
+            header.createCell(11).setCellValue("Start Date");
+            header.createCell(12).setCellValue("End Date");
+            header.createCell(13).setCellValue("Progress Report");
+            header.createCell(14).setCellValue("ANID Code");
+            header.createCell(15).setCellValue("Clusters");
+            header.createCell(16).setCellValue("Participants");
+            header.createCell(17).setCellValue("# Men");
+            header.createCell(18).setCellValue("# Women");
+
+            for (TransferenciaTecnologica transfer : transfers) {
+                TransferenciaTecnologicaDTO dto = convertToDTOWithoutParticipants(transfer, textosMap);
+                List<ParticipacionProducto> participaciones =
+                    participacionProductoRepository.findByProductoId(transfer.getId());
+
+                String participants = participaciones.stream()
+                    .map(this::formatParticipantWithTipoRRHH)
+                    .filter(name -> name != null && !name.isBlank())
+                    .distinct()
+                    .collect(Collectors.joining("; "));
+
+                String institution = "";
+                if (transfer.getInstitucion() != null) {
+                    if (transfer.getInstitucion().getDescripcion() != null
+                            && !transfer.getInstitucion().getDescripcion().isBlank()) {
+                        institution = transfer.getInstitucion().getDescripcion().trim();
+                    } else {
+                        institution = resolveText(textosMap, transfer.getInstitucion().getIdDescripcion());
+                    }
+                }
+
+                String country = transfer.getPais() != null
+                    ? resolveText(textosMap, transfer.getPais().getIdDescripcion())
+                    : "";
+
+                String typeOfTransfer = transfer.getTipoTransferencia() != null
+                    ? resolveText(textosMap, transfer.getTipoTransferencia().getIdDescripcion())
+                    : "";
+
+                String categoryOfTransfer = resolveTransferCategoriesLabel(
+                    transfer.getCategoriaTransferencia(),
+                    categoriaTransferenciaCodeById,
+                    textosMap
+                );
+
+                Row row = sheet.createRow(rowIdx++);
+                row.createCell(0).setCellValue(dto.getId() != null ? dto.getId().toString() : "");
+                row.createCell(1).setCellValue(dto.getDescripcion() != null ? dto.getDescripcion() : "");
+                row.createCell(2).setCellValue(dto.getComentario() != null ? dto.getComentario() : "");
+                row.createCell(3).setCellValue(categoryOfTransfer);
+                row.createCell(4).setCellValue(typeOfTransfer);
+                row.createCell(5).setCellValue(dto.getProductos() != null ? dto.getProductos() : "");
+                row.createCell(6).setCellValue(institution);
+                row.createCell(7).setCellValue(country);
+                row.createCell(8).setCellValue(dto.getCiudad() != null ? dto.getCiudad() : "");
+                row.createCell(9).setCellValue(dto.getRegion() != null ? dto.getRegion() : "");
+                row.createCell(10).setCellValue(dto.getAgno() != null ? dto.getAgno() : 0);
+                row.createCell(11).setCellValue(dto.getFechaInicio() != null ? dto.getFechaInicio() : "");
+                row.createCell(12).setCellValue(dto.getFechaTermino() != null ? dto.getFechaTermino() : "");
+                row.createCell(13).setCellValue(dto.getProgressReport() != null ? dto.getProgressReport() : "");
+                row.createCell(14).setCellValue(dto.getCodigoANID() != null ? dto.getCodigoANID() : "");
+                row.createCell(15).setCellValue(formatClustersAsRoman(dto.getCluster()));
+                row.createCell(16).setCellValue(participants);
+                row.createCell(17).setCellValue(countParticipantsByGender(participaciones, "M"));
+                row.createCell(18).setCellValue(countParticipantsByGender(participaciones, "F"));
+            }
+
+            for (int i = 0; i <= 18; i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            response.setHeader("Content-Disposition", "attachment; filename=technology-transfer.xlsx");
+            workbook.write(response.getOutputStream());
+            workbook.close();
+            response.flushBuffer();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -585,6 +740,185 @@ public class TransferenciaTecnologicaController {
                 participacionProductoRepository.save(participacion);
             }
         }
+    }
+
+    private void collectCategoryTextCodes(
+            String rawCategories,
+            Map<Long, String> categoriaTransferenciaCodeById,
+            List<String> codigosTexto) {
+        if (rawCategories == null || rawCategories.trim().isEmpty()) {
+            return;
+        }
+        String raw = rawCategories.trim();
+        if (raw.startsWith("[")) {
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                List<?> arr = mapper.readValue(raw, List.class);
+                for (Object obj : arr) {
+                    Long id = null;
+                    if (obj instanceof Number) {
+                        id = ((Number) obj).longValue();
+                    } else if (obj instanceof Map) {
+                        Object idObj = ((Map<?, ?>) obj).get("id");
+                        if (idObj instanceof Number) {
+                            id = ((Number) idObj).longValue();
+                        }
+                    }
+                    if (id != null) {
+                        String code = categoriaTransferenciaCodeById.get(id);
+                        if (code != null) {
+                            codigosTexto.add(code);
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+                // fallback to comma parsing
+            }
+            return;
+        }
+        for (String part : raw.split(",")) {
+            String s = part.trim();
+            if (s.isEmpty()) {
+                continue;
+            }
+            try {
+                long id = Long.parseLong(s);
+                String code = categoriaTransferenciaCodeById.get(id);
+                if (code != null) {
+                    codigosTexto.add(code);
+                }
+            } catch (NumberFormatException ignored) {
+                // not an id
+            }
+        }
+    }
+
+    private String resolveTransferCategoriesLabel(
+            String rawCategories,
+            Map<Long, String> categoriaTransferenciaCodeById,
+            Map<String, String> textosMap) {
+        if (rawCategories == null || rawCategories.trim().isEmpty()) {
+            return "";
+        }
+        String raw = rawCategories.trim();
+        List<String> labels = new ArrayList<>();
+
+        if (raw.startsWith("[")) {
+            try {
+                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+                List<?> arr = mapper.readValue(raw, List.class);
+                for (Object obj : arr) {
+                    Long id = null;
+                    if (obj instanceof Number) {
+                        id = ((Number) obj).longValue();
+                    } else if (obj instanceof Map) {
+                        Object idObj = ((Map<?, ?>) obj).get("id");
+                        if (idObj instanceof Number) {
+                            id = ((Number) idObj).longValue();
+                        }
+                    }
+                    if (id != null) {
+                        String code = categoriaTransferenciaCodeById.get(id);
+                        labels.add(resolveText(textosMap, code));
+                    }
+                }
+                return String.join("; ", labels);
+            } catch (Exception ignored) {
+                // fallback to comma parsing
+            }
+        }
+
+        for (String part : raw.split(",")) {
+            String s = part.trim();
+            if (s.isEmpty()) {
+                continue;
+            }
+            try {
+                long id = Long.parseLong(s);
+                String code = categoriaTransferenciaCodeById.get(id);
+                labels.add(resolveText(textosMap, code));
+            } catch (NumberFormatException e) {
+                labels.add(s);
+            }
+        }
+        return String.join("; ", labels);
+    }
+
+    private String resolveText(Map<String, String> textosMap, String code) {
+        if (code == null || code.isBlank()) {
+            return "";
+        }
+        if (textosMap != null && textosMap.containsKey(code)) {
+            return textosMap.get(code);
+        }
+        return textosService.getTextValue(code, 2, "us").orElse(code);
+    }
+
+    private String formatParticipantWithTipoRRHH(ParticipacionProducto participacion) {
+        if (participacion == null || participacion.getRrhh() == null) {
+            return "";
+        }
+        RRHH rrhh = participacion.getRrhh();
+        String fullname = rrhh.getFullname() != null ? rrhh.getFullname().trim() : "";
+        if (fullname.isEmpty()) {
+            return "";
+        }
+        String tipoRRHH = "";
+        if (rrhh.getTipoRRHH() != null) {
+            if (rrhh.getTipoRRHH().getDescripcion() != null && !rrhh.getTipoRRHH().getDescripcion().trim().isEmpty()) {
+                tipoRRHH = rrhh.getTipoRRHH().getDescripcion().trim();
+            } else if (rrhh.getTipoRRHH().getCodigoDescripcion() != null) {
+                tipoRRHH = rrhh.getTipoRRHH().getCodigoDescripcion().trim();
+            }
+        }
+        return tipoRRHH.isEmpty() ? fullname : fullname + " (" + tipoRRHH + ")";
+    }
+
+    private String formatClustersAsRoman(String cluster) {
+        if (cluster == null || cluster.isEmpty()) {
+            return "";
+        }
+        return java.util.Arrays.stream(cluster.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .map(s -> {
+                switch (s) {
+                    case "1": return "I";
+                    case "2": return "II";
+                    case "3": return "III";
+                    case "4": return "IV";
+                    case "5": return "V";
+                    default: return s;
+                }
+            })
+            .collect(Collectors.joining(", "));
+    }
+
+    /** Unique RRHH per transfer with codigoGenero M or F (case-insensitive). */
+    private int countParticipantsByGender(List<ParticipacionProducto> participaciones, String genderCode) {
+        if (participaciones == null || participaciones.isEmpty() || genderCode == null || genderCode.isBlank()) {
+            return 0;
+        }
+        Set<Long> seenRrhhIds = new HashSet<>();
+        int count = 0;
+        for (ParticipacionProducto pp : participaciones) {
+            if (pp == null || pp.getRrhh() == null) {
+                continue;
+            }
+            RRHH rrhh = pp.getRrhh();
+            Long rrhhId = rrhh.getId();
+            if (rrhhId != null) {
+                if (seenRrhhIds.contains(rrhhId)) {
+                    continue;
+                }
+                seenRrhhIds.add(rrhhId);
+            }
+            String codigoGenero = rrhh.getCodigoGenero();
+            if (codigoGenero != null && genderCode.equalsIgnoreCase(codigoGenero.trim())) {
+                count++;
+            }
+        }
+        return count;
     }
 }
 

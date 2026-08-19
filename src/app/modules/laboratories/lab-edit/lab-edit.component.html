@@ -1,0 +1,410 @@
+<div class="form-container" *ngIf="!loading; else loadingTpl">
+  <div class="form-header">
+    <button mat-icon-button (click)="backToList()" matTooltip="Back to list">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <h1>{{ pageTitle }}</h1>
+  </div>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-subtitle *ngIf="isEditMode">ID: {{ itemId }}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <section class="general-section">
+        <h2 class="section-title">General</h2>
+
+        <div class="main-image-block">
+          <label class="image-label">Laboratory image</label>
+          <p class="field-hint">Shared across all languages.</p>
+          <div class="image-upload-row">
+            <input type="file" accept="image/*" (change)="onImageSelected($event)" [disabled]="uploadingImage" />
+            <mat-spinner *ngIf="uploadingImage" diameter="24"></mat-spinner>
+          </div>
+          <div *ngIf="getImagePreviewUrl() as src" class="lab-image-preview-wrapper">
+            <img [src]="src" class="lab-image-preview" [alt]="item.imageAltEs || 'Laboratory image'" />
+          </div>
+        </div>
+
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Cluster *</mat-label>
+          <mat-select [(ngModel)]="item.clusterId" required>
+            <mat-option *ngFor="let c of clusterOptions" [value]="c.id">{{ c.label }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <div class="active-toggle-block">
+          <mat-slide-toggle
+            [(ngModel)]="isLaboratoryActive"
+            color="primary"
+            aria-label="Active laboratory">
+            Active laboratory
+          </mat-slide-toggle>
+          <p class="field-hint">{{ laboratoryActiveHelperText }}</p>
+        </div>
+
+        <!-- Lab Director -->
+        <div class="people-section">
+          <h3 class="subsection-title">Lab Director</h3>
+
+          <div *ngIf="!hasDirector" class="empty-person-state">
+            <p>No lab director assigned yet.</p>
+            <button mat-stroked-button color="primary" type="button" (click)="openAssignDirector()">
+              <mat-icon>person_add</mat-icon>
+              Assign Lab Director
+            </button>
+          </div>
+
+          <div *ngIf="hasDirector" class="person-card">
+            <app-person-avatar
+              [name]="item.directorName || ''"
+              [iniciales]="item.directorIniciales || ''"
+              [imageUrl]="getPersonImageUrl(item.directorProfileImageUrl)"
+              size="lg">
+            </app-person-avatar>
+            <div class="person-card__body">
+              <div class="person-card__name">{{ item.directorName }}</div>
+              <div class="person-card__meta">Resource type: {{ directorResourceLabel }}</div>
+              <div class="person-card__meta" *ngIf="item.directorEmail">Email: {{ item.directorEmail }}</div>
+              <div class="person-card__meta" *ngIf="item.directorOrcid">ORCID: {{ item.directorOrcid }}</div>
+              <div class="person-card__meta" *ngIf="item.directorMobilePhone">Mobile: {{ item.directorMobilePhone }}</div>
+            </div>
+            <div class="person-card__actions">
+              <button mat-icon-button matTooltip="Edit" (click)="openEditDirector()">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="Change director" (click)="openChangeDirector()">
+                <mat-icon>swap_horiz</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="View researcher profile" (click)="viewResearcherProfile(item.directorId)">
+                <mat-icon>person</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Current Lab Manager -->
+        <div class="people-section">
+          <h3 class="subsection-title">Current Lab Manager</h3>
+
+          <div *ngIf="!currentLabManager" class="empty-person-state">
+            <p>No lab manager assigned yet.</p>
+            <button mat-stroked-button color="primary" type="button" (click)="openAssignLabManager()">
+              <mat-icon>person_add</mat-icon>
+              Assign Lab Manager
+            </button>
+          </div>
+
+          <div *ngIf="currentLabManager as manager" class="person-card">
+            <app-person-avatar
+              [name]="manager.personName || ''"
+              [iniciales]="manager.personIniciales || ''"
+              [imageUrl]="getPersonImageUrl(manager.profileImageUrl)"
+              size="lg">
+            </app-person-avatar>
+            <div class="person-card__body">
+              <div class="person-card__name">{{ manager.personName }}</div>
+              <mat-chip class="status-chip-active" selected>Active</mat-chip>
+              <div class="person-card__meta">Resource type: {{ getResourceTypeLabel(manager) }}</div>
+              <div class="person-card__meta" *ngIf="manager.email || manager.personEmail">Email: {{ manager.email || manager.personEmail }}</div>
+              <div class="person-card__meta" *ngIf="manager.orcid">ORCID: {{ manager.orcid }}</div>
+              <div class="person-card__meta" *ngIf="manager.mobilePhone">Mobile: {{ manager.mobilePhone }}</div>
+              <div class="person-card__meta">Start date: {{ formatDate(manager.startDate) }}</div>
+            </div>
+            <div class="person-card__actions">
+              <button mat-icon-button matTooltip="Edit" (click)="openEditLabManager(manager)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="Change manager" (click)="openChangeLabManager()">
+                <mat-icon>swap_horiz</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="End assignment" (click)="endLabManager(manager)">
+                <mat-icon>event_busy</mat-icon>
+              </button>
+              <button mat-icon-button matTooltip="View researcher profile" (click)="viewResearcherProfile(manager.personId)">
+                <mat-icon>person</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Former Lab Managers -->
+        <mat-expansion-panel class="former-panel" [(expanded)]="formerManagersExpanded" *ngIf="formerLabManagers.length > 0 || isEditMode">
+          <mat-expansion-panel-header>
+            <mat-panel-title>Former Lab Managers</mat-panel-title>
+            <mat-panel-description>{{ formerLabManagers.length }} record(s)</mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <p *ngIf="formerLabManagers.length === 0" class="empty-text">No former lab managers yet.</p>
+
+          <table mat-table [dataSource]="formerLabManagers" class="people-table former" *ngIf="formerLabManagers.length > 0">
+            <ng-container matColumnDef="person">
+              <th mat-header-cell *matHeaderCellDef>Person</th>
+              <td mat-cell *matCellDef="let m">
+                <div class="person-row">
+                  <app-person-avatar [name]="m.personName || ''" [iniciales]="m.personIniciales || ''" [imageUrl]="getPersonImageUrl(m.profileImageUrl)"></app-person-avatar>
+                  <span>{{ m.personName }}</span>
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="resourceType">
+              <th mat-header-cell *matHeaderCellDef>Resource type</th>
+              <td mat-cell *matCellDef="let m">{{ getResourceTypeLabel(m) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="email">
+              <th mat-header-cell *matHeaderCellDef>Email</th>
+              <td mat-cell *matCellDef="let m">{{ m.email || m.personEmail || '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="orcid">
+              <th mat-header-cell *matHeaderCellDef>ORCID</th>
+              <td mat-cell *matCellDef="let m">{{ m.orcid || '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="mobile">
+              <th mat-header-cell *matHeaderCellDef>Mobile</th>
+              <td mat-cell *matCellDef="let m">{{ m.mobilePhone || '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="period">
+              <th mat-header-cell *matHeaderCellDef>Period</th>
+              <td mat-cell *matCellDef="let m">{{ formatPeriod(m) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let m">
+                <button mat-icon-button matTooltip="Edit history" (click)="openEditLabManager(m)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button matTooltip="Restore / Reassign" (click)="restoreMembership(m)">
+                  <mat-icon>replay</mat-icon>
+                </button>
+                <button mat-icon-button matTooltip="Delete permanently" class="danger-action" (click)="deletePermanent(m, 'manager')">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="formerManagerColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: formerManagerColumns;"></tr>
+          </table>
+        </mat-expansion-panel>
+
+        <!-- Current Members -->
+        <div class="people-section">
+          <div class="subsection-header">
+            <h3 class="subsection-title">Current Members</h3>
+            <button mat-stroked-button type="button" (click)="openAddMember()">
+              <mat-icon>add</mat-icon>
+              Add Member
+            </button>
+          </div>
+
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search current members</mat-label>
+            <input matInput [(ngModel)]="currentMemberSearch" placeholder="Search by name, email, ORCID..." />
+            <mat-icon matPrefix>search</mat-icon>
+          </mat-form-field>
+
+          <p *ngIf="currentMembers.length === 0" class="empty-text">
+            No current members found.
+            <button mat-button color="primary" type="button" (click)="openAddMember()">Add Member</button>
+          </p>
+
+          <div class="members-table-wrapper" *ngIf="currentMembers.length > 0">
+            <table mat-table [dataSource]="currentMembers" class="people-table current-members-table">
+              <ng-container matColumnDef="person">
+                <th mat-header-cell *matHeaderCellDef class="col-person">Person</th>
+                <td mat-cell *matCellDef="let m" class="col-person">
+                  <div class="member-person">
+                    <app-person-avatar
+                      [name]="m.personName || ''"
+                      [iniciales]="m.personIniciales || ''"
+                      [imageUrl]="getPersonImageUrl(m.profileImageUrl)">
+                    </app-person-avatar>
+                    <span class="member-person__name">{{ m.personName }}</span>
+                  </div>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="resourceType">
+                <th mat-header-cell *matHeaderCellDef class="col-resource-type">Resource type</th>
+                <td mat-cell *matCellDef="let m" class="col-resource-type">
+                  <span class="member-resource-type">{{ getResourceTypeLabel(m) }}</span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="email">
+                <th mat-header-cell *matHeaderCellDef class="col-email">Email</th>
+                <td mat-cell *matCellDef="let m" class="col-email">
+                  <span class="member-email" [title]="m.email || m.personEmail || ''">
+                    {{ m.email || m.personEmail || '—' }}
+                  </span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="orcid">
+                <th mat-header-cell *matHeaderCellDef class="col-orcid">ORCID</th>
+                <td mat-cell *matCellDef="let m" class="col-orcid">
+                  <span class="member-orcid">{{ m.orcid || '—' }}</span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="startDate">
+                <th mat-header-cell *matHeaderCellDef class="col-start-date">Start date</th>
+                <td mat-cell *matCellDef="let m" class="col-start-date">
+                  <span class="member-start-date">{{ formatDate(m.startDate) }}</span>
+                </td>
+              </ng-container>
+              <ng-container matColumnDef="actions">
+                <th mat-header-cell *matHeaderCellDef class="col-actions actions-header mat-column-actions">Actions</th>
+                <td mat-cell *matCellDef="let m" class="col-actions actions-column mat-column-actions">
+                  <div class="member-actions">
+                    <button
+                      mat-icon-button
+                      type="button"
+                      class="member-action-button"
+                      matTooltip="Edit member"
+                      aria-label="Edit member"
+                      (click)="openEditMember(m)">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button
+                      mat-icon-button
+                      type="button"
+                      class="member-action-button"
+                      matTooltip="End membership"
+                      aria-label="End membership"
+                      (click)="endMembership(m, 'member')">
+                      <mat-icon>event_busy</mat-icon>
+                    </button>
+                  </div>
+                </td>
+              </ng-container>
+              <tr mat-header-row *matHeaderRowDef="currentMemberColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: currentMemberColumns;"></tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- Former Members -->
+        <mat-expansion-panel class="former-panel" [(expanded)]="formerMembersExpanded">
+          <mat-expansion-panel-header>
+            <mat-panel-title>Former Members</mat-panel-title>
+            <mat-panel-description>{{ formerMembers.length }} record(s)</mat-panel-description>
+          </mat-expansion-panel-header>
+
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Search former members</mat-label>
+            <input matInput [(ngModel)]="formerMemberSearch" placeholder="Search by name, email, ORCID..." />
+            <mat-icon matPrefix>search</mat-icon>
+          </mat-form-field>
+
+          <p *ngIf="formerMembers.length === 0" class="empty-text">No former members yet.</p>
+
+          <table mat-table [dataSource]="formerMembers" class="people-table former" *ngIf="formerMembers.length > 0">
+            <ng-container matColumnDef="person">
+              <th mat-header-cell *matHeaderCellDef>Person</th>
+              <td mat-cell *matCellDef="let m">
+                <div class="person-row">
+                  <app-person-avatar [name]="m.personName || ''" [iniciales]="m.personIniciales || ''" [imageUrl]="getPersonImageUrl(m.profileImageUrl)"></app-person-avatar>
+                  <span>{{ m.personName }}</span>
+                </div>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="resourceType">
+              <th mat-header-cell *matHeaderCellDef>Resource type</th>
+              <td mat-cell *matCellDef="let m">{{ getResourceTypeLabel(m) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="email">
+              <th mat-header-cell *matHeaderCellDef>Email</th>
+              <td mat-cell *matCellDef="let m">{{ m.email || m.personEmail || '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="orcid">
+              <th mat-header-cell *matHeaderCellDef>ORCID</th>
+              <td mat-cell *matCellDef="let m">{{ m.orcid || '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="mobile">
+              <th mat-header-cell *matHeaderCellDef>Mobile</th>
+              <td mat-cell *matCellDef="let m">{{ m.mobilePhone || '—' }}</td>
+            </ng-container>
+            <ng-container matColumnDef="period">
+              <th mat-header-cell *matHeaderCellDef>Period</th>
+              <td mat-cell *matCellDef="let m">{{ formatPeriod(m) }}</td>
+            </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let m">
+                <button mat-icon-button matTooltip="Edit history" (click)="openEditMember(m)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button matTooltip="Restore / Reassign" (click)="restoreMembership(m)">
+                  <mat-icon>replay</mat-icon>
+                </button>
+                <button mat-icon-button matTooltip="Delete permanently" class="danger-action" (click)="deletePermanent(m, 'member')">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="formerMemberColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: formerMemberColumns;"></tr>
+          </table>
+        </mat-expansion-panel>
+      </section>
+
+      <mat-tab-group [selectedIndex]="selectedTabIndex" (selectedIndexChange)="onTabChange($event)" animationDuration="0ms">
+        <mat-tab label="Spanish">
+          <div class="tab-content">
+            <div class="translation-status-bar">
+              <button mat-stroked-button type="button" (click)="translateFromEnglish()" [disabled]="translating">
+                <mat-icon>translate</mat-icon>
+                Translate from English
+              </button>
+              <mat-spinner *ngIf="translating && selectedTabIndex === 0" diameter="24"></mat-spinner>
+            </div>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Laboratory name *</mat-label>
+              <input matInput [(ngModel)]="item.nameEs" (ngModelChange)="onSpanishFieldChange()" required />
+            </mat-form-field>
+            <label class="field-label">Long description *</label>
+            <app-rich-text-editor
+              [(ngModel)]="item.descriptionEs"
+              (ngModelChange)="onSpanishFieldChange()"
+              placeholder="Write the laboratory description in Spanish...">
+            </app-rich-text-editor>
+          </div>
+        </mat-tab>
+        <mat-tab label="English">
+          <div class="tab-content">
+            <div class="translation-status-bar">
+              <button mat-stroked-button type="button" (click)="translateFromSpanish()" [disabled]="translating">
+                <mat-icon>translate</mat-icon>
+                Translate from Spanish
+              </button>
+              <mat-spinner *ngIf="translating && selectedTabIndex === 1" diameter="24"></mat-spinner>
+            </div>
+            <div *ngIf="translationReviewWarning" class="review-warning" role="alert">
+              <mat-icon>warning</mat-icon>
+              <p>Spanish content changed after validation. Please review the English version.</p>
+            </div>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Laboratory name in English</mat-label>
+              <input matInput [(ngModel)]="item.nameEn" (ngModelChange)="onEnglishFieldChange()" />
+            </mat-form-field>
+            <label class="field-label">Long description in English</label>
+            <app-rich-text-editor
+              [(ngModel)]="item.descriptionEn"
+              (ngModelChange)="onEnglishFieldChange()"
+              placeholder="Write or edit the English description...">
+            </app-rich-text-editor>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
+    </mat-card-content>
+
+    <mat-card-actions class="form-actions">
+      <button mat-button type="button" (click)="backToList()">Cancel</button>
+      <button mat-raised-button color="primary" type="button" (click)="save()" [disabled]="saving || !canSave">Save</button>
+      <button mat-stroked-button color="primary" type="button" (click)="saveAndView()" [disabled]="saving || !canSave">Save &amp; View</button>
+    </mat-card-actions>
+  </mat-card>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading laboratory...</p>
+  </div>
+</ng-template>

@@ -1,0 +1,31 @@
+<div class="avatar-upload-block">
+  <div
+    class="person-avatar-upload"
+    [class.person-avatar-upload--disabled]="disabled"
+    role="button"
+    tabindex="0"
+    aria-label="Upload profile image"
+    (click)="onAvatarClick()"
+    (keydown)="onAvatarKeydown($event)">
+    <img *ngIf="hasImage; else initialsTpl" [src]="displayImageUrl!" [alt]="name || 'Profile image'" />
+    <ng-template #initialsTpl>
+      <span class="person-avatar-upload__initials">{{ initials }}</span>
+    </ng-template>
+    <div class="person-avatar-upload-overlay" aria-hidden="true">
+      <mat-icon>photo_camera</mat-icon>
+    </div>
+  </div>
+
+  <input
+    #fileInput
+    type="file"
+    class="sr-only"
+    accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+    aria-label="Choose profile image file"
+    [disabled]="disabled"
+    (change)="onFileSelected($event)" />
+
+  <p class="avatar-upload-hint">Click the photo to upload or replace the profile image.</p>
+  <p class="avatar-upload-hint avatar-upload-hint--secondary">Profile image is stored in the person profile.</p>
+  <p *ngIf="validationError" class="avatar-upload-error" role="alert">{{ validationError }}</p>
+</div>

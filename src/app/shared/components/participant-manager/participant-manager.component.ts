@@ -117,16 +117,55 @@ export interface InstitutionSummaryItem {
 export class ParticipantManagerComponent implements OnInit, OnChanges, OnDestroy {
   @Input() participants: ParticipantDTO[] = [];
   @Input() productType: string = '';
+  /** For books: Work Type id (2 = Chapter). Used to show Chapter Author (32) only for chapters. */
+  @Input() bookTypeId: number | null = null;
   @Input() publicationId?: number; // Solo para publicaciones (afiliaciones)
   @Input() previewAuthors?: import('../../../core/models/backend-dtos').AuthorPreviewDTO[]; // Datos del preview desde DOI
   @Input() doiLoading: boolean = false; // Indica si se está cargando desde DOI
   @Output() participantsChange = new EventEmitter<ParticipantDTO[]>();
   @Output() hasIncompleteChange = new EventEmitter<boolean>();
+
+  private static readonly CHAPTER_AUTHOR_TYPE_ID = 32;
+  private static readonly BOOK_TYPE_CHAPTER_ID = 2;
+
+  get summaryTitle(): string {
+    return this.usesParticipantLabels() ? 'Participant Summary' : 'Authors Summary';
+  }
+
+  get detailsTitle(): string {
+    return this.usesParticipantLabels() ? 'Participant Details' : 'Author Details';
+  }
+
+  get personSingularLabel(): string {
+    return this.usesParticipantLabels() ? 'participant' : 'author';
+  }
+
+  get personPluralLabel(): string {
+    return this.usesParticipantLabels() ? 'participants' : 'authors';
+  }
+
+  get contributionHint(): string {
+    return this.usesParticipantLabels() ? "Participant's contribution" : "Author's contribution";
+  }
+
+  /** Projects, awards (and similar products) use "Participant" wording instead of "Author". */
+  private usesParticipantLabels(): boolean {
+    const type = (this.productType || '').toLowerCase().trim();
+    return type === 'projects' || type === 'project' || type === 'proyecto'
+      || type === 'awards' || type === 'award' || type === 'premio' || type === 'premios';
+  }
+
+  private isBooksProductType(): boolean {
+    const type = (this.productType || '').toLowerCase().trim();
+    return type === 'books' || type === 'book';
+  }
   
   @ViewChild('searchSection', { static: false }) searchSection!: ElementRef;
   @ViewChildren('participantPanel') participantPanels!: QueryList<ElementRef>;
   
   participationTypes: TipoParticipacionDTO[] = [];
+  /** Full catalog for current product (before book-type filter). */
+  private allParticipationTypes: TipoParticipacionDTO[] = [];
   loadingParticipationTypes = false;
   participationTypesError = false;
   
@@ -179,24 +218,9 @@ export class ParticipantManagerComponent implements OnInit, OnChanges, OnDestroy
     this.catalogService.getParticipationTypes(this.productType).subscribe({
       next: (types) => {
         console.log('Participation types loaded:', types);
-        this.participationTypes = types;
+        this.allParticipationTypes = types || [];
+        this.applyParticipationTypeFilter(true);
         this.loadingParticipationTypes = false;
-        
-        // Actualizar participationTypeName para participantes que ya tienen participationTypeId
-        // pero no tienen participationTypeName (por ejemplo, cuando vienen del preview)
-        this.participants.forEach(participant => {
-          if (participant.participationTypeId && participant.participationTypeId > 0 && !participant.participationTypeName) {
-            const type = this.participationTypes.find(t => t.id === participant.participationTypeId);
-            if (type) {
-              participant.participationTypeName = type.descripcion || type.nombre;
-            }
-          }
-        });
-        
-        // Emitir cambios si se actualizaron nombres
-        if (this.participants.some(p => p.participationTypeId && p.participationTypeId > 0 && !p.participationTypeName)) {
-          this.participantsChange.emit([...this.participants]);
-        }
       },
       error: (error) => {
         console.error('Error loading participation types:', error);
@@ -205,6 +229,52 @@ export class ParticipantManagerComponent implements OnInit, OnChanges, OnDestroy
         this.loadingParticipationTypes = false;
       }
     });
+  }
+
+  /**
+   * For books, hide Chapter Author (id 32) unless Work Type is Chapter (idBookType = 2).
+   */
+  private applyParticipationTypeFilter(updateNames = false): void {
+    let types = [...this.allParticipationTypes];
+    if (this.isBooksProductType()
+        && this.bookTypeId !== ParticipantManagerComponent.BOOK_TYPE_CHAPTER_ID) {
+      types = types.filter(
+        t => t.id !== ParticipantManagerComponent.CHAPTER_AUTHOR_TYPE_ID
+      );
+    }
+    this.participationTypes = types;
+
+    if (updateNames) {
+      this.participants.forEach(participant => {
+        if (participant.participationTypeId && participant.participationTypeId > 0 && !participant.participationTypeName) {
+          const type = this.allParticipationTypes.find(t => t.id === participant.participationTypeId)
+            || this.participationTypes.find(t => t.id === participant.participationTypeId);
+          if (type) {
+            participant.participationTypeName = type.descripcion || type.nombre;
+          }
+        }
+      });
+    }
+
+    this.clearInvalidChapterAuthorRoles();
+  }
+
+  private clearInvalidChapterAuthorRoles(): void {
+    if (!this.isBooksProductType()
+        || this.bookTypeId === ParticipantManagerComponent.BOOK_TYPE_CHAPTER_ID) {
+      return;
+    }
+    let changed = false;
+    this.participants.forEach(p => {
+      if (p.participationTypeId === ParticipantManagerComponent.CHAPTER_AUTHOR_TYPE_ID) {
+        p.participationTypeId = 0;
+        p.participationTypeName = undefined;
+        changed = true;
+      }
+    });
+    if (changed) {
+      this.participantsChange.emit([...this.participants]);
+    }
   }
   
   refreshTypes(): void {
@@ -639,7 +709,10 @@ export class ParticipantManagerComponent implements OnInit, OnChanges, OnDestroy
       'OUTREACH_ACTIVITIES': ['OUTREACH_ACTIVITIES', 'ACTIVITIES', 'ACTIVITY'],
       'POSTDOCTORAL_FELLOWS': ['POSTDOCTORAL_FELLOWS', 'FELLOWS', 'FELLOW'],
       'TECHNOLOGY_TRANSFER': ['TECHNOLOGY_TRANSFER', 'TECHNOLOGY_TRANSFERS', 'TRANSFERS', 'TRANSFER'],
-      'SCIENTIFIC_EVENTS': ['SCIENTIFIC_EVENTS', 'EVENTS', 'EVENT']
+      'SCIENTIFIC_EVENTS': ['SCIENTIFIC_EVENTS', 'EVENTS', 'EVENT'],
+      'PROJECTS': ['PROJECTS', 'PROJECT', 'PROYECTO', 'PROYECTOS'],
+      'BOOKS': ['BOOKS', 'BOOK', 'LIBROS', 'LIBRO'],
+      'AWARDS': ['AWARDS', 'AWARD', 'PREMIOS', 'PREMIO']
     };
     
     // Obtener variantes posibles del productType del frontend
@@ -1033,6 +1106,9 @@ export class ParticipantManagerComponent implements OnInit, OnChanges, OnDestroy
       if (changes['productType'].currentValue) {
         this.loadParticipationTypes();
       }
+    }
+    if (changes['bookTypeId'] && !changes['bookTypeId'].firstChange) {
+      this.applyParticipationTypeFilter(false);
     }
     // Si doiLoading cambió de true a false, actualizar el resumen una vez más
     if (changes['doiLoading'] && changes['doiLoading'].previousValue === true && changes['doiLoading'].currentValue === false) {

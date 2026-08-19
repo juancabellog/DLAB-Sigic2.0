@@ -259,6 +259,10 @@ public class NoticiaService {
             noticia.setImage(dto.getImage());
         }
 
+        if (dto.getLinkVisualizacion() != null) {
+            noticia.setLinkVisualizacion(dto.getLinkVisualizacion().isBlank() ? null : dto.getLinkVisualizacion().trim());
+        }
+
         applyPublicationDates(noticia, dto, isCreate);
 
         if (dto.getTags() != null) {
@@ -408,6 +412,7 @@ public class NoticiaService {
         dto.setNumVisitas(noticia.getNumVisitas());
         dto.setNumLikes(noticia.getNumLikes());
         dto.setImage(noticia.getImage());
+        dto.setLinkVisualizacion(noticia.getLinkVisualizacion());
         dto.setFirstPublishedDate(formatDate(noticia.getFechaInicio()));
         dto.setLastPublishedDate(formatDate(noticia.getFechaTermino()));
         dto.setCreatedAt(noticia.getCreatedAt() != null ? noticia.getCreatedAt().toString() : null);

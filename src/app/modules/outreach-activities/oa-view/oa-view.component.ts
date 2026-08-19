@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LocalDatePipe } from '../../../shared/pipes/local-date.pipe';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
@@ -23,6 +24,7 @@ import { DifusionDTO, RRHHDTO, PublicoObjetivoDTO } from '../../../core/models/b
   standalone: true,
   imports: [
     CommonModule,
+    LocalDatePipe,
     RouterModule,
     MatCardModule,
     MatButtonModule,

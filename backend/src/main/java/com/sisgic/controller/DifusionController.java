@@ -37,8 +37,10 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
@@ -181,6 +183,8 @@ public class DifusionController {
                 "creationDate",
                 "Main Responsible",
                 "Participants",
+                "# Men",
+                "# Women",
                 "Link",
                 "PDF Document"
             };
@@ -271,8 +275,10 @@ public class DifusionController {
                 row.createCell(14).setCellValue(excelCellValue(dto.getCreatedAt(), activityId, "creationDate"));
                 row.createCell(15).setCellValue(excelCellValue(mainResponsible, activityId, "mainResponsible"));
                 row.createCell(16).setCellValue(excelCellValue(participants, activityId, "participants"));
+                row.createCell(17).setCellValue(countParticipantsByGender(participaciones, "M"));
+                row.createCell(18).setCellValue(countParticipantsByGender(participaciones, "F"));
 
-                Cell linkCell = row.createCell(17);
+                Cell linkCell = row.createCell(19);
                 String activityLink = dto.getLink() != null ? dto.getLink().trim() : "";
                 if (!activityLink.isEmpty()) {
                     String linkUrl = normalizeExternalUrl(activityLink);
@@ -286,7 +292,7 @@ public class DifusionController {
                     linkCell.setCellValue("");
                 }
 
-                Cell pdfCell = row.createCell(18);
+                Cell pdfCell = row.createCell(20);
                 String pdfUrl = pdfFileService.buildPublicPdfUrl(request, activity.getLinkPDF());
                 if (pdfUrl != null) {
                     applyExcelUrlHyperlink(pdfCell, creationHelper, pdfLinkStyle, pdfUrl, "PDF Document", activityId, "pdf");
@@ -827,6 +833,33 @@ public class DifusionController {
                 participacionProductoRepository.save(participacion);
             }
         }
+    }
+
+    /** Unique RRHH per activity with codigoGenero M or F (case-insensitive). */
+    private int countParticipantsByGender(List<ParticipacionProducto> participaciones, String genderCode) {
+        if (participaciones == null || participaciones.isEmpty() || genderCode == null || genderCode.isBlank()) {
+            return 0;
+        }
+        Set<Long> seenRrhhIds = new HashSet<>();
+        int count = 0;
+        for (ParticipacionProducto pp : participaciones) {
+            if (pp == null || pp.getRrhh() == null) {
+                continue;
+            }
+            RRHH rrhh = pp.getRrhh();
+            Long rrhhId = rrhh.getId();
+            if (rrhhId != null) {
+                if (seenRrhhIds.contains(rrhhId)) {
+                    continue;
+                }
+                seenRrhhIds.add(rrhhId);
+            }
+            String codigoGenero = rrhh.getCodigoGenero();
+            if (codigoGenero != null && genderCode.equalsIgnoreCase(codigoGenero.trim())) {
+                count++;
+            }
+        }
+        return count;
     }
 }
 

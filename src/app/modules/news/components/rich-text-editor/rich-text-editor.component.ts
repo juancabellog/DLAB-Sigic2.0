@@ -169,6 +169,7 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
   }
 
   ngOnDestroy(): void {
+    this.flushToModel();
     this.clearImageSelection(false);
     this.clearLinkSelection(false);
     this.clearVideoSelection(false);
@@ -211,8 +212,35 @@ export class RichTextEditorComponent implements ControlValueAccessor, AfterViewI
       }
       this.clearLinkSelection(false);
       this.clearVideoSelection(false);
+      this.flushToModel();
       this.onTouched();
     }, 0);
+  }
+
+  /** Persists the current editor HTML into the parent ngModel binding. */
+  flushToModel(): void {
+    if (this.sourceMode) {
+      this.value = this.newsService.normalizeBodyHtmlForStorage(this.sourceHtml);
+      this.onChange(this.value);
+      return;
+    }
+    const el = this.editableRef?.nativeElement;
+    if (!el) {
+      return;
+    }
+    const domHtml = this.newsService.normalizeBodyHtmlForStorage(el.innerHTML);
+    if (!this.htmlHasText(domHtml) && this.htmlHasText(this.value)) {
+      // Hidden tab or programmatic parent update: keep model value, do not wipe with empty DOM.
+      return;
+    }
+    this.syncValue();
+  }
+
+  private htmlHasText(html: string | null | undefined): boolean {
+    if (!html?.trim()) {
+      return false;
+    }
+    return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').trim().length > 0;
   }
 
   onSourceHtmlChange(html: string): void {

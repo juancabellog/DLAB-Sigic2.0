@@ -26,6 +26,7 @@ export const MOCK_NEWS_ITEMS: NewsItem[] = [
     ogDescription: 'Resumen de los principales hallazgos del último trimestre.',
     ogImageUrl: '',
     publicUrl: 'https://example.org/news/avances-investigacion-marina',
+    mediaLink: 'https://example.org/news/avances-investigacion-marina',
     featured: true,
     publishedAt: '2025-03-15',
     translationValidatedAt: '2025-03-10T10:00:00',
@@ -57,6 +58,7 @@ export const MOCK_NEWS_ITEMS: NewsItem[] = [
     ogDescription: '',
     ogImageUrl: '',
     publicUrl: '',
+    mediaLink: '',
     featured: false
   }
 ];

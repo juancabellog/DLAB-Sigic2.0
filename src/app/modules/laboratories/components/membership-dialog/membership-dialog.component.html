@@ -1,0 +1,44 @@
+<h2 mat-dialog-title>{{ title }}</h2>
+<mat-dialog-content>
+  <div class="dialog-form">
+    <div *ngIf="!isEditMode" class="field-block">
+      <label class="field-label">Researcher / Person *</label>
+      <app-researcher-search
+        [selectedResearcher]="selectedResearcher"
+        [clearOnSelect]="false"
+        (researcherSelected)="onResearcherSelected($event)">
+      </app-researcher-search>
+    </div>
+
+    <div *ngIf="isEditMode" class="field-block">
+      <label class="field-label">Person</label>
+      <p class="person-readonly">{{ data.membership?.personName || '—' }}</p>
+    </div>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Resource type *</mat-label>
+      <mat-select [(ngModel)]="resourceType" required>
+        <mat-option *ngFor="let tipo of researcherTypes" [value]="resourceTypeValue(tipo)">
+          {{ tipo.descripcion || tipo.idDescripcion }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Start date *</mat-label>
+      <input matInput type="date" [(ngModel)]="startDate" required />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>End date</mat-label>
+      <input matInput type="date" [(ngModel)]="endDate" />
+      <mat-hint>Leave empty for active membership</mat-hint>
+    </mat-form-field>
+
+    <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()">Cancel</button>
+  <button mat-raised-button color="primary" type="button" (click)="save()">Save</button>
+</mat-dialog-actions>

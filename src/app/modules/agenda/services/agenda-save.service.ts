@@ -18,9 +18,14 @@ export class AgendaSaveService {
    * Aborts the whole operation if any taxonomy creation fails.
    */
   saveAgendaEvent(item: AgendaEvent, agendaId?: number | null): Observable<AgendaEvent> {
-    return this.resolvePendingCategories(item.categories || []).pipe(
+    const normalized: AgendaEvent = {
+      ...item,
+      descriptionEs: this.agendaService.normalizeBodyHtmlForStorage(item.descriptionEs || ''),
+      descriptionEn: this.agendaService.normalizeBodyHtmlForStorage(item.descriptionEn || '')
+    };
+    return this.resolvePendingCategories(normalized.categories || []).pipe(
       switchMap(categories => {
-        const resolved = { ...item, categories };
+        const resolved = { ...normalized, categories };
         const save$ = agendaId
           ? this.agendaService.updateAgenda(agendaId, resolved)
           : this.agendaService.createAgenda(resolved);

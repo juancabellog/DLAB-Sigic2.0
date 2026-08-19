@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { BaseHttpService } from './base-http.service';
-import { RRHHDTO, SearchFiltersDTO, PaginatedResponseDTO } from '../models/backend-dtos';
+import { RRHHDTO, SearchFiltersDTO, PaginatedResponseDTO, TipoRRHHDTO } from '../models/backend-dtos';
 
 @Injectable({
   providedIn: 'root'
@@ -34,8 +34,8 @@ export class ResearcherService {
   /**
    * Obtiene los tipos de investigadores disponibles
    */
-  getResearcherTypes(): Observable<any[]> {
-    return this.baseHttp.get<any[]>('/researchers/types');
+  getResearcherTypes(): Observable<TipoRRHHDTO[]> {
+    return this.baseHttp.get<TipoRRHHDTO[]>('/researchers/types');
   }
 
   /**
@@ -72,5 +72,12 @@ export class ResearcherService {
    */
   getResearcherStats(): Observable<any> {
     return this.baseHttp.get<any>('/researchers/stats');
+  }
+
+  /**
+   * Upload or replace the profile image for a researcher (RRHH record).
+   */
+  uploadProfileImage(id: number, file: File): Observable<RRHHDTO> {
+    return this.baseHttp.uploadFile<RRHHDTO>(`/researchers/${id}/profile-image`, file);
   }
 }

@@ -17,7 +17,6 @@ export interface LocalizedTextApi {
 export interface AgendaApiDTO {
   id?: number;
   title?: LocalizedTextApi;
-  summary?: LocalizedTextApi;
   description?: LocalizedTextApi;
   estado?: { id?: number; code?: string; label?: string };
   image?: string;
@@ -27,11 +26,6 @@ export interface AgendaApiDTO {
   location?: string;
   eventMode?: string;
   onlineUrl?: string;
-  organizer?: LocalizedTextApi;
-  speaker?: LocalizedTextApi;
-  audience?: LocalizedTextApi;
-  ctaLabel?: LocalizedTextApi;
-  ctaUrl?: string;
   feature?: string;
   categories?: { id: string; label?: string; slug?: string }[];
   username?: string;
@@ -102,7 +96,7 @@ export function mergeApiWithMetadata(dto: AgendaApiDTO, meta: AgendaEditorialMet
   }));
 
   const hasEn = Boolean(
-    (dto.title?.us?.trim()) || (dto.summary?.us?.trim()) || (dto.description?.us?.trim())
+    (dto.title?.us?.trim()) || (dto.description?.us?.trim())
   );
 
   let translationStatus = meta.translationStatus;
@@ -116,14 +110,12 @@ export function mergeApiWithMetadata(dto: AgendaApiDTO, meta: AgendaEditorialMet
     id: dto.id,
     titleEs: dto.title?.es || '',
     titleEn: dto.title?.us || '',
-    summaryEs: dto.summary?.es || '',
-    summaryEn: dto.summary?.us || '',
     descriptionEs: dto.description?.es || '',
     descriptionEn: dto.description?.us || '',
     mainImageUrl: dto.image || '',
     mainImageAltEs: meta.mainImageAltEs,
     mainImageAltEn: meta.mainImageAltEn,
-    categories: categories.length ? categories : (meta.categories || []),
+    categories,
     author: dto.username || '',
     publicationStatus: mapEstadoToPublicationStatus(dto.estado),
     translationStatus,
@@ -133,15 +125,6 @@ export function mergeApiWithMetadata(dto: AgendaApiDTO, meta: AgendaEditorialMet
     location: dto.location || '',
     eventMode: mapEventMode(dto.eventMode, meta.eventMode),
     onlineUrl: dto.onlineUrl || meta.onlineUrl || '',
-    organizerEs: dto.organizer?.es || meta.organizerEs || '',
-    organizerEn: dto.organizer?.us || meta.organizerEn || '',
-    speakerEs: dto.speaker?.es || meta.speakerEs || '',
-    speakerEn: dto.speaker?.us || meta.speakerEn || '',
-    audienceEs: dto.audience?.es || meta.audienceEs || '',
-    audienceEn: dto.audience?.us || meta.audienceEn || '',
-    ctaLabelEs: dto.ctaLabel?.es || meta.ctaLabelEs || '',
-    ctaLabelEn: dto.ctaLabel?.us || meta.ctaLabelEn || '',
-    ctaUrl: dto.ctaUrl || meta.ctaUrl || '',
     slug: meta.slug,
     metaTitle: meta.metaTitle,
     metaDescription: meta.metaDescription,
@@ -161,7 +144,6 @@ export function mergeApiWithMetadata(dto: AgendaApiDTO, meta: AgendaEditorialMet
 export function mapAgendaEventToApiPayload(item: AgendaEvent): AgendaApiDTO {
   return {
     title: { es: item.titleEs, us: item.titleEn },
-    summary: { es: item.summaryEs, us: item.summaryEn },
     description: { es: item.descriptionEs, us: item.descriptionEn },
     image: item.mainImageUrl,
     eventDate: item.eventDate || undefined,
@@ -170,17 +152,12 @@ export function mapAgendaEventToApiPayload(item: AgendaEvent): AgendaApiDTO {
     location: item.location || undefined,
     eventMode: item.eventMode || undefined,
     onlineUrl: item.onlineUrl || undefined,
-    organizer: { es: item.organizerEs, us: item.organizerEn },
-    speaker: { es: item.speakerEs, us: item.speakerEn },
-    audience: { es: item.audienceEs, us: item.audienceEn },
-    ctaLabel: { es: item.ctaLabelEs, us: item.ctaLabelEn },
-    ctaUrl: item.ctaUrl || undefined,
     estado: {
       id: mapPublicationStatusToEstadoId(item.publicationStatus ?? PUBLICATION_STATUS.DRAFT)
     },
     categories: (item.categories || []).map(c => ({ id: c.id, label: c.label, slug: c.slug })),
     feature: item.featured ? 'S' : 'N',
-    basal: item.basal ?? 'N'
+    basal: (item.basal?.trim() || 'N')
   };
 }
 
@@ -203,15 +180,6 @@ export function extractMetadataFromAgendaEvent(item: AgendaEvent): AgendaEditori
         : undefined,
     eventMode: item.eventMode || undefined,
     onlineUrl: item.onlineUrl,
-    endTime: item.endTime,
-    organizerEs: item.organizerEs,
-    organizerEn: item.organizerEn,
-    speakerEs: item.speakerEs,
-    speakerEn: item.speakerEn,
-    audienceEs: item.audienceEs,
-    audienceEn: item.audienceEn,
-    ctaLabelEs: item.ctaLabelEs,
-    ctaLabelEn: item.ctaLabelEn,
-    ctaUrl: item.ctaUrl
+    endTime: item.endTime
   };
 }

@@ -12,18 +12,24 @@
   <mat-icon matSuffix>search</mat-icon>
   <mat-spinner *ngIf="loading" matSuffix diameter="20" style="margin-left: 8px;"></mat-spinner>
   <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayWith" (optionSelected)="onInstitutionSelected($event.option.value)">
-    <!-- Search results -->
-    <mat-option 
-      *ngFor="let institution of filteredInstitutions$ | async" 
-      [value]="institution">
-      <div class="institution-option">
-        <div class="name">{{ institution.descripcion || institution.idDescripcion }}</div>
-        <div class="details" *ngIf="institution.idDescripcion && institution.descripcion !== institution.idDescripcion">
-          {{ institution.idDescripcion }}
-        </div>
+    <!-- Always show "Add Institution" at the top (same pattern as Add Researchers) -->
+    <mat-option class="add-new-option" (click)="openCreateInstitutionDialog(); $event.stopPropagation()">
+      <div class="add-new-institution">
+        <mat-icon>add</mat-icon>
+        <span>Add Institution</span>
       </div>
     </mat-option>
-    <mat-option *ngIf="(filteredInstitutions$ | async)?.length === 0 && searchTerm.length >= 2" class="no-results-option" [value]="null" disabled>
+
+    <!-- Search results -->
+    <mat-option 
+      *ngFor="let institution of filteredInstitutions$ | async; let first = first" 
+      [value]="institution"
+      [class.first-result]="first">
+      <div class="institution-option">
+        <div class="name">{{ getOptionLabel(institution) }}</div>
+      </div>
+    </mat-option>
+    <mat-option *ngIf="(filteredInstitutions$ | async)?.length === 0 && searchTerm.length >= 2" class="no-results-option first-result" [value]="null" disabled>
       <div class="no-results">
         <mat-icon>search_off</mat-icon>
         <span>No institutions found</span>

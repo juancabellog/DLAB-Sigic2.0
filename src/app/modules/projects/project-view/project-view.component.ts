@@ -1,88 +1,89 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LocalDatePipe } from '../../../shared/pipes/local-date.pipe';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { catchError, finalize } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 import { MessageService } from '../../../core/services/message.service';
 import { ProjectService } from '../../../core/services/project.service';
-import { ProyectoDTO } from '../../../core/models/backend-dtos';
+import { ResearcherService } from '../../../core/services/researcher.service';
+import { ProjectProductDTO } from '../../../core/models/backend-dtos';
 
 @Component({
   selector: 'app-project-view',
   standalone: true,
   imports: [
     CommonModule,
+    LocalDatePipe,
     RouterModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
-    MatChipsModule,
     MatDividerModule,
-    MatProgressSpinnerModule
+    MatChipsModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule
   ],
   templateUrl: './project-view.component.html',
   styleUrls: ['./project-view.component.scss']
 })
 export class ProjectViewComponent implements OnInit {
-  project: ProyectoDTO | null = null;
-  loading: boolean = false;
+  project: ProjectProductDTO | null = null;
+  loading = false;
+  participants: Array<{ rrhhId?: number; fullName?: string }> = [];
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
+    private projectService: ProjectService,
     private messageService: MessageService,
-    private projectService: ProjectService
+    private researcherService: ResearcherService
   ) {}
 
   ngOnInit(): void {
-    const codigo = this.route.snapshot.paramMap.get('id');
-    if (codigo) {
-      this.loadProject(codigo);
+    const id = Number(this.route.snapshot.paramMap.get('id'));
+    if (!id) {
+      this.router.navigate(['/projects']);
+      return;
     }
+    this.loadProject(id);
   }
 
-  loadProject(codigo: string): void {
+  loadProject(id: number): void {
     this.loading = true;
-    this.projectService.getProject(codigo).subscribe({
-      next: (project) => {
-        this.project = project;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading project:', error);
-        this.messageService.error('Project not found');
-        this.loading = false;
-        this.goBack();
+    this.projectService.getProject(id).pipe(
+      catchError(() => {
+        this.messageService.error('Project not found.');
+        this.router.navigate(['/projects']);
+        return of(null);
+      }),
+      finalize(() => this.loading = false)
+    ).subscribe(data => {
+      this.project = data;
+      if (data?.participantes?.length) {
+        this.participants = data.participantes.map(p => ({ rrhhId: p.rrhhId, fullName: '' }));
+        this.participants.forEach(p => {
+          if (p.rrhhId) {
+            this.researcherService.getResearcher(p.rrhhId).subscribe({
+              next: r => {
+                p.fullName = r.fullname || `RRHH #${p.rrhhId}`;
+              },
+              error: () => {
+                p.fullName = `RRHH #${p.rrhhId}`;
+              }
+            });
+          }
+        });
       }
     });
-  }
-
-  getStatusColor(project: ProyectoDTO): 'primary' | 'accent' | 'warn' {
-    // Determinar estado basado en fechas
-    if (!project.fechaTermino) return 'primary'; // Sin fecha de término = activo
-    const endDate = new Date(project.fechaTermino);
-    const today = new Date();
-    return endDate > today ? 'primary' : 'accent';
-  }
-
-  formatDate(dateString: string | undefined): string {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('es-CL');
-  }
-
-  getFinancingTypes(tipoFinanciamiento: string | undefined): string[] {
-    if (!tipoFinanciamiento) return [];
-    return tipoFinanciamiento.split(',').map(t => t.trim());
-  }
-
-  getCollaborationTypes(realizaCon: string | undefined): string[] {
-    if (!realizaCon) return [];
-    return realizaCon.split(',').map(t => t.trim());
   }
 
   goBack(): void {
@@ -90,31 +91,43 @@ export class ProjectViewComponent implements OnInit {
   }
 
   editProject(): void {
-    if (this.project) {
-      this.router.navigate(['/projects', this.project.codigo, 'edit']);
+    if (this.project?.id != null) {
+      this.router.navigate(['/projects', this.project.id, 'edit']);
     }
   }
 
-  deleteProject(): void {
-    if (this.project) {
-      this.messageService.confirm(
-        `Are you sure you want to delete "${this.project.descripcion}"?`,
-        (accepted: boolean) => {
-          if (accepted) {
-            this.projectService.deleteProject(this.project!.codigo).subscribe({
-              next: () => {
-                this.messageService.success('Project deleted successfully');
-                this.goBack();
-              },
-              error: (error) => {
-                console.error('Error deleting project:', error);
-                this.messageService.error('Error deleting project');
-              }
-            });
-          }
-        },
-        'Delete Project'
-      );
+  getClusters(): string {
+    if (!this.project?.cluster) {
+      return '';
     }
+    const labels: Record<string, string> = {
+      '1': 'Cluster I',
+      '2': 'Cluster II',
+      '3': 'Cluster III',
+      '4': 'Cluster IV',
+      '5': 'Cluster V'
+    };
+    return this.project.cluster.split(',')
+      .map(s => s.trim())
+      .filter(Boolean)
+      .map(id => labels[id] || id)
+      .join(', ');
+  }
+
+  getBasalLabel(): string {
+    const v = (this.project?.basal || 'N').toUpperCase();
+    return v === 'S' ? 'Yes' : 'No';
+  }
+
+  getFundingLabel(): string {
+    if (!this.project) {
+      return '';
+    }
+    if (this.project.otherFundingType) {
+      return this.project.otherFundingType;
+    }
+    return this.project.fundingTypeLabel
+      || this.project.fundingType?.idDescripcion
+      || '—';
   }
 }

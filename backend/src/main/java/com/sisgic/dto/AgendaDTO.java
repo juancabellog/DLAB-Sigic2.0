@@ -7,7 +7,6 @@ public class AgendaDTO {
 
     private Long id;
     private LocalizedTextDTO title;
-    private LocalizedTextDTO summary;
     private LocalizedTextDTO description;
     private EstadoNoticiaDTO estado;
     private String image;
@@ -18,11 +17,6 @@ public class AgendaDTO {
     /** in_person | online | hybrid */
     private String eventMode;
     private String onlineUrl;
-    private LocalizedTextDTO organizer;
-    private LocalizedTextDTO speaker;
-    private LocalizedTextDTO audience;
-    private LocalizedTextDTO ctaLabel;
-    private String ctaUrl;
     /** S / N */
     private String feature;
     private List<CategoryDTO> categories = new ArrayList<>();
@@ -47,14 +41,6 @@ public class AgendaDTO {
 
     public void setTitle(LocalizedTextDTO title) {
         this.title = title;
-    }
-
-    public LocalizedTextDTO getSummary() {
-        return summary;
-    }
-
-    public void setSummary(LocalizedTextDTO summary) {
-        this.summary = summary;
     }
 
     public LocalizedTextDTO getDescription() {
@@ -127,46 +113,6 @@ public class AgendaDTO {
 
     public void setOnlineUrl(String onlineUrl) {
         this.onlineUrl = onlineUrl;
-    }
-
-    public LocalizedTextDTO getOrganizer() {
-        return organizer;
-    }
-
-    public void setOrganizer(LocalizedTextDTO organizer) {
-        this.organizer = organizer;
-    }
-
-    public LocalizedTextDTO getSpeaker() {
-        return speaker;
-    }
-
-    public void setSpeaker(LocalizedTextDTO speaker) {
-        this.speaker = speaker;
-    }
-
-    public LocalizedTextDTO getAudience() {
-        return audience;
-    }
-
-    public void setAudience(LocalizedTextDTO audience) {
-        this.audience = audience;
-    }
-
-    public LocalizedTextDTO getCtaLabel() {
-        return ctaLabel;
-    }
-
-    public void setCtaLabel(LocalizedTextDTO ctaLabel) {
-        this.ctaLabel = ctaLabel;
-    }
-
-    public String getCtaUrl() {
-        return ctaUrl;
-    }
-
-    public void setCtaUrl(String ctaUrl) {
-        this.ctaUrl = ctaUrl;
     }
 
     public String getFeature() {

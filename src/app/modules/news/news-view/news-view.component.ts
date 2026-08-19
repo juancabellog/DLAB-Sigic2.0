@@ -11,6 +11,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { finalize } from 'rxjs/operators';
 
 import { MessageService } from '../../../core/services/message.service';
+import { formatLocalDate } from '../../../core/utils/date.util';
 import { NewsService } from '../services/news.service';
 import {
   NewsItem,
@@ -186,11 +187,11 @@ export class NewsViewComponent implements OnInit {
   }
 
   preview(): void {
-    const url = this.item?.publicUrl || this.buildPreviewUrlFromSlug();
+    const url = this.item?.mediaLink?.trim() || this.item?.publicUrl || this.buildPreviewUrlFromSlug();
     if (url) {
       window.open(url, '_blank');
     } else {
-      this.messageService.info('No public URL configured for this news item.');
+      this.messageService.info('No Media Link configured for this news item.');
     }
   }
 
@@ -297,14 +298,7 @@ export class NewsViewComponent implements OnInit {
   }
 
   private formatEditorialDate(date: string | null | undefined): string {
-    if (!date) return '';
-    const parsed = new Date(date);
-    if (Number.isNaN(parsed.getTime())) return date;
-    return parsed.toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
+    return formatLocalDate(date, 'd MMMM yyyy', 'en-GB');
   }
 
   private buildPreviewUrlFromSlug(): string | null {

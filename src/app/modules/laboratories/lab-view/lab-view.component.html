@@ -1,0 +1,114 @@
+<div class="view-container" *ngIf="!loading && item; else loadingTpl">
+  <div class="view-toolbar">
+    <button mat-icon-button (click)="backToList()" matTooltip="Back to list">
+      <mat-icon>arrow_back</mat-icon>
+    </button>
+    <span class="spacer"></span>
+    <mat-button-toggle-group [(ngModel)]="viewLanguage" name="language">
+      <mat-button-toggle value="es">Spanish</mat-button-toggle>
+      <mat-button-toggle value="en">English</mat-button-toggle>
+    </mat-button-toggle-group>
+    <button mat-raised-button color="primary" (click)="editLab()">
+      <mat-icon>edit</mat-icon>
+      Edit
+    </button>
+  </div>
+
+  <mat-card class="view-card">
+    <mat-card-content>
+      <div class="view-header">
+        <h1>{{ name }}</h1>
+        <div class="view-chips">
+          <mat-chip>{{ clusterLabel }}</mat-chip>
+          <mat-chip [color]="item.status === 'active' ? 'primary' : 'warn'" selected>
+            {{ labStatusLabels[item.status] }}
+          </mat-chip>
+        </div>
+      </div>
+
+      <div *ngIf="imageUrl as img" class="view-image-wrapper">
+        <img [src]="img" [alt]="name" class="view-image" />
+      </div>
+
+      <section class="view-section">
+        <h2>Description</h2>
+        <div class="rich-content" [innerHTML]="descriptionHtml"></div>
+      </section>
+
+      <section class="view-section leadership-card">
+        <h2>Leadership</h2>
+        <div class="leadership-row">
+          <span class="label">Lab Director</span>
+          <span>{{ item.directorName || '—' }}<ng-container *ngIf="item.directorName"> — {{ directorResourceLabel }}</ng-container></span>
+        </div>
+        <div class="leadership-row">
+          <span class="label">Active Lab Manager(s)</span>
+          <span *ngIf="activeManagers.length === 0">—</span>
+          <ul *ngIf="activeManagers.length > 0">
+            <li *ngFor="let m of activeManagers">
+              {{ m.personName }} — {{ getResourceTypeLabel(m) }}
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="view-section">
+        <h2>Active members</h2>
+        <table mat-table [dataSource]="activeMembers" class="members-table" *ngIf="activeMembers.length > 0">
+          <ng-container matColumnDef="person">
+            <th mat-header-cell *matHeaderCellDef>Person</th>
+            <td mat-cell *matCellDef="let m">{{ m.personName }}</td>
+          </ng-container>
+          <ng-container matColumnDef="resourceType">
+            <th mat-header-cell *matHeaderCellDef>Resource type</th>
+            <td mat-cell *matCellDef="let m">{{ getResourceTypeLabel(m) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="startDate">
+            <th mat-header-cell *matHeaderCellDef>Start date</th>
+            <td mat-cell *matCellDef="let m">{{ formatDate(m.startDate) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="endDate">
+            <th mat-header-cell *matHeaderCellDef>End date</th>
+            <td mat-cell *matCellDef="let m">—</td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="memberColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: memberColumns;"></tr>
+        </table>
+        <p *ngIf="activeMembers.length === 0" class="empty-text">No active members.</p>
+      </section>
+
+      <mat-expansion-panel *ngIf="historicalMembers.length > 0" class="historical-panel">
+        <mat-expansion-panel-header>
+          <mat-panel-title>Historical members ({{ historicalMembers.length }})</mat-panel-title>
+        </mat-expansion-panel-header>
+        <table mat-table [dataSource]="historicalMembers" class="members-table historical">
+          <ng-container matColumnDef="person">
+            <th mat-header-cell *matHeaderCellDef>Person</th>
+            <td mat-cell *matCellDef="let m">{{ m.personName }}</td>
+          </ng-container>
+          <ng-container matColumnDef="resourceType">
+            <th mat-header-cell *matHeaderCellDef>Resource type</th>
+            <td mat-cell *matCellDef="let m">{{ getResourceTypeLabel(m) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="startDate">
+            <th mat-header-cell *matHeaderCellDef>Start date</th>
+            <td mat-cell *matCellDef="let m">{{ formatDate(m.startDate) }}</td>
+          </ng-container>
+          <ng-container matColumnDef="endDate">
+            <th mat-header-cell *matHeaderCellDef>End date</th>
+            <td mat-cell *matCellDef="let m">{{ formatDate(m.endDate) }}</td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="memberColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: memberColumns;"></tr>
+        </table>
+      </mat-expansion-panel>
+    </mat-card-content>
+  </mat-card>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading-container">
+    <mat-spinner></mat-spinner>
+    <p>Loading laboratory...</p>
+  </div>
+</ng-template>

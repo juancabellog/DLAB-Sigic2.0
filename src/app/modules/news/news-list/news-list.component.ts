@@ -16,6 +16,7 @@ import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 import { ListControlsComponent } from '../../../shared/components/list-controls/list-controls.component';
+import { formatLocalDate } from '../../../core/utils/date.util';
 import { NewsRowActionsComponent } from './news-row-actions.component';
 import { MessageService } from '../../../core/services/message.service';
 import { ViewMode, ViewModeService } from '../../../core/services/view-mode.service';
@@ -176,14 +177,7 @@ export class NewsListComponent implements OnInit, OnDestroy {
   }
 
   formatDisplayDate(date: string | null | undefined): string {
-    if (!date) return '';
-    const parsed = new Date(date);
-    if (Number.isNaN(parsed.getTime())) return date;
-    return parsed.toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
+    return formatLocalDate(date, 'dd MMM yyyy', 'en-GB');
   }
 
   hasTags(item: NewsItem): boolean {
@@ -236,7 +230,7 @@ export class NewsListComponent implements OnInit, OnDestroy {
   }
 
   previewOnWebsite(item: NewsItem): void {
-    const url = item.publicUrl || (item.slug ? `https://example.org/news/${item.slug}` : null);
+    const url = item.mediaLink?.trim() || item.publicUrl || (item.slug ? `https://example.org/news/${item.slug}` : null);
     if (url) {
       window.open(url, '_blank');
     } else {

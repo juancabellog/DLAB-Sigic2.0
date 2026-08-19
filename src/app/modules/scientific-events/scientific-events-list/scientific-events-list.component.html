@@ -89,7 +89,7 @@
               </div>
               <div class="detail-row" *ngIf="event.fechaInicio">
                 <span class="detail-label">Start Date:</span>
-                <span class="detail-value">{{ event.fechaInicio | date:'MMM yyyy' }}</span>
+                <span class="detail-value">{{ event.fechaInicio | localDate:'MMM yyyy' }}</span>
               </div>
           <div class="detail-row" *ngIf="event.comentario">
             <span class="detail-label">Title:</span>
@@ -252,7 +252,7 @@
           <div class="list-cell location-cell">{{ getEventLocation(event) }}</div>
           <div class="list-cell organizer-cell">{{ event.organizer || 'N/A' }}</div>
           <div class="list-cell period-cell">{{ event.progressReport || 'N/A' }}</div>
-          <div class="list-cell date-cell">{{ event.fechaInicio | date:'MMM yyyy' }}</div>
+          <div class="list-cell date-cell">{{ event.fechaInicio | localDate:'MMM yyyy' }}</div>
           <div class="list-cell status-cell">
             <mat-chip [color]="getStatusColor(event.estadoProducto?.codigo || event.estadoProducto?.codigoDescripcion)" selected>
               {{ event.estadoProducto?.codigo || event.estadoProducto?.codigoDescripcion || event.estadoProducto?.nombre || 'N/A' }}

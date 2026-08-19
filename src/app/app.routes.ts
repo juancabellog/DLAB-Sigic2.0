@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
 import { analysisGuard } from './core/guards/analysis.guard';
+import { communicationsGuard } from './core/guards/communications.guard';
 
 export const routes: Routes = [
   {
@@ -11,6 +12,14 @@ export const routes: Routes = [
   {
     path: 'login',
     loadComponent: () => import('./features/auth/login/login.component').then(m => m.LoginComponent)
+  },
+  {
+    path: 'forgot-password',
+    loadComponent: () => import('./features/auth/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent)
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () => import('./features/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent)
   },
   {
     path: 'register',
@@ -24,42 +33,42 @@ export const routes: Routes = [
   {
     path: 'news',
     loadComponent: () => import('./modules/news/news-list/news-list.component').then(m => m.NewsListComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, communicationsGuard]
   },
   {
     path: 'news/new',
     loadComponent: () => import('./modules/news/news-edit/news-edit.component').then(m => m.NewsEditComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, communicationsGuard]
   },
   {
     path: 'news/:id/view',
     loadComponent: () => import('./modules/news/news-view/news-view.component').then(m => m.NewsViewComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, communicationsGuard]
   },
   {
     path: 'news/:id/edit',
     loadComponent: () => import('./modules/news/news-edit/news-edit.component').then(m => m.NewsEditComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, communicationsGuard]
   },
   {
     path: 'agenda',
     loadComponent: () => import('./modules/agenda/agenda-list/agenda-list.component').then(m => m.AgendaListComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, communicationsGuard]
   },
   {
     path: 'agenda/new',
     loadComponent: () => import('./modules/agenda/agenda-edit/agenda-edit.component').then(m => m.AgendaEditComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, communicationsGuard]
   },
   {
     path: 'agenda/:id/view',
     loadComponent: () => import('./modules/agenda/agenda-view/agenda-view.component').then(m => m.AgendaViewComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, communicationsGuard]
   },
   {
     path: 'agenda/:id/edit',
     loadComponent: () => import('./modules/agenda/agenda-edit/agenda-edit.component').then(m => m.AgendaEditComponent),
-    canActivate: [authGuard]
+    canActivate: [authGuard, communicationsGuard]
   },
       {
         path: 'publications',
@@ -227,6 +236,26 @@ export const routes: Routes = [
         canActivate: [authGuard]
       },
       {
+        path: 'laboratories',
+        loadComponent: () => import('./modules/laboratories/lab-list/lab-list.component').then(m => m.LabListComponent),
+        canActivate: [authGuard]
+      },
+      {
+        path: 'laboratories/new',
+        loadComponent: () => import('./modules/laboratories/lab-edit/lab-edit.component').then(m => m.LabEditComponent),
+        canActivate: [authGuard]
+      },
+      {
+        path: 'laboratories/:id/view',
+        loadComponent: () => import('./modules/laboratories/lab-view/lab-view.component').then(m => m.LabViewComponent),
+        canActivate: [authGuard]
+      },
+      {
+        path: 'laboratories/:id/edit',
+        loadComponent: () => import('./modules/laboratories/lab-edit/lab-edit.component').then(m => m.LabEditComponent),
+        canActivate: [authGuard]
+      },
+      {
         path: 'researchers/new',
         loadComponent: () => import('./modules/researchers/researcher-edit/researcher-edit.component').then(m => m.ResearcherEditComponent),
         canActivate: [authGuard]
@@ -252,13 +281,68 @@ export const routes: Routes = [
     canActivate: [authGuard]
   },
   {
-    path: 'projects/:id',
+    path: 'projects/:id/view',
     loadComponent: () => import('./modules/projects/project-view/project-view.component').then(m => m.ProjectViewComponent),
     canActivate: [authGuard]
   },
   {
     path: 'projects/:id/edit',
     loadComponent: () => import('./modules/projects/project-edit/project-edit.component').then(m => m.ProjectEditComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'projects/:id',
+    loadComponent: () => import('./modules/projects/project-view/project-view.component').then(m => m.ProjectViewComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'books',
+    loadComponent: () => import('./modules/books/book-list/book-list.component').then(m => m.BookListComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'books/new',
+    loadComponent: () => import('./modules/books/book-edit/book-edit.component').then(m => m.BookEditComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'books/:id/view',
+    loadComponent: () => import('./modules/books/book-view/book-view.component').then(m => m.BookViewComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'books/:id/edit',
+    loadComponent: () => import('./modules/books/book-edit/book-edit.component').then(m => m.BookEditComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'books/:id',
+    loadComponent: () => import('./modules/books/book-view/book-view.component').then(m => m.BookViewComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'awards',
+    loadComponent: () => import('./modules/awards/award-list/award-list.component').then(m => m.AwardListComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'awards/new',
+    loadComponent: () => import('./modules/awards/award-edit/award-edit.component').then(m => m.AwardEditComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'awards/:id/view',
+    loadComponent: () => import('./modules/awards/award-view/award-view.component').then(m => m.AwardViewComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'awards/:id/edit',
+    loadComponent: () => import('./modules/awards/award-edit/award-edit.component').then(m => m.AwardEditComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'awards/:id',
+    loadComponent: () => import('./modules/awards/award-view/award-view.component').then(m => m.AwardViewComponent),
     canActivate: [authGuard]
   },
   // Analysis routes

@@ -86,7 +86,7 @@
               </div>
               <div class="detail-row" *ngIf="item.fechaInicio">
                 <span class="detail-label">Start Date:</span>
-                <span class="detail-value">{{ item.fechaInicio | date:'MMM yyyy' }}</span>
+                <span class="detail-value">{{ item.fechaInicio | localDate:'MMM yyyy' }}</span>
               </div>
             </div>
           </mat-card-content>
@@ -158,7 +158,7 @@
           <div class="list-cell type-cell">{{ getParticipationType(item) }}</div>
           <div class="list-cell location-cell">{{ getLocation(item) }}</div>
           <div class="list-cell period-cell">{{ item.progressReport || 'N/A' }}</div>
-          <div class="list-cell date-cell">{{ item.fechaInicio | date:'MMM yyyy' }}</div>
+          <div class="list-cell date-cell">{{ item.fechaInicio | localDate:'MMM yyyy' }}</div>
           <div class="list-cell actions-cell">
             <button
               *ngIf="getPdfUrl(item)"

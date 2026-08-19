@@ -1,0 +1,6 @@
+# Copia a gemini-local.yml y pon tus API keys (gemini-local.yml no se sube a git).
+# Spring Boot carga este archivo automáticamente al arrancar.
+gemini:
+  apikeys:
+    - "your-gemini-api-key-1"
+    - "your-gemini-api-key-2"

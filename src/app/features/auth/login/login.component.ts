@@ -58,6 +58,10 @@ import { ConnectionService } from '../../../core/services/connection.service';
               </mat-error>
             </mat-form-field>
 
+            <div class="forgot-password-row">
+              <a routerLink="/forgot-password" class="forgot-password-link">Forgot your password?</a>
+            </div>
+
             <div class="login-actions">
               <button mat-raised-button color="primary" type="submit" 
                       [disabled]="loginForm.invalid || loading" class="full-width">
@@ -96,6 +100,23 @@ import { ConnectionService } from '../../../core/services/connection.service';
 
     .login-actions {
       margin-top: 20px;
+    }
+
+    .forgot-password-row {
+      display: flex;
+      justify-content: flex-end;
+      margin: -4px 0 4px;
+    }
+
+    .forgot-password-link {
+      font-size: 13px;
+      color: #1976d2;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .forgot-password-link:hover {
+      text-decoration: underline;
     }
 
     mat-card-header {

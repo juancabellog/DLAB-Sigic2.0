@@ -34,23 +34,40 @@
 
           <div class="sidebar-nav-divider" role="separator"></div>
 
-          <a mat-list-item routerLink="/news" routerLinkActive="active" (click)="navigateTo('/news')">
-            <mat-icon matListItemIcon>article</mat-icon>
-            <span matListItemTitle>News</span>
-          </a>
+          <ng-container *ngIf="authService.canAccessCommunications()">
+            <a mat-list-item routerLink="/news" routerLinkActive="active" (click)="navigateTo('/news')">
+              <mat-icon matListItemIcon>article</mat-icon>
+              <span matListItemTitle>News</span>
+            </a>
 
-          <a mat-list-item routerLink="/agenda" routerLinkActive="active" (click)="navigateTo('/agenda')">
-            <mat-icon matListItemIcon>event</mat-icon>
-            <span matListItemTitle>Agenda</span>
-          </a>
+            <a mat-list-item routerLink="/agenda" routerLinkActive="active" (click)="navigateTo('/agenda')">
+              <mat-icon matListItemIcon>event</mat-icon>
+              <span matListItemTitle>Agenda</span>
+            </a>
 
-          <div class="sidebar-nav-divider" role="separator"></div>
+            <div class="sidebar-nav-divider" role="separator"></div>
+          </ng-container>
+
+          <a mat-list-item routerLink="/projects" routerLinkActive="active" (click)="navigateTo('/projects')">
+            <mat-icon matListItemIcon>folder</mat-icon>
+            <span matListItemTitle>Projects</span>
+          </a>
           
           <a mat-list-item routerLink="/publications" routerLinkActive="active" (click)="navigateTo('/publications')">
-            <mat-icon matListItemIcon>menu_book</mat-icon>
+            <mat-icon matListItemIcon>library_books</mat-icon>
             <span matListItemTitle>Publications</span>
           </a>
-          
+
+          <a mat-list-item routerLink="/books" routerLinkActive="active" (click)="navigateTo('/books')">
+            <mat-icon matListItemIcon>menu_book</mat-icon>
+            <span matListItemTitle>Books</span>
+          </a>
+
+          <a mat-list-item routerLink="/awards" routerLinkActive="active" (click)="navigateTo('/awards')">
+            <mat-icon matListItemIcon>emoji_events</mat-icon>
+            <span matListItemTitle>Awards</span>
+          </a>
+
           <a mat-list-item routerLink="/scientific-events" routerLinkActive="active" (click)="navigateTo('/scientific-events')">
             <mat-icon matListItemIcon>event_note</mat-icon>
             <span matListItemTitle>Organization of Scientific Events</span>
@@ -88,14 +105,14 @@
           
           <div class="sidebar-nav-divider" role="separator"></div>
           
+          <a mat-list-item routerLink="/laboratories" routerLinkActive="active" (click)="navigateTo('/laboratories')">
+            <mat-icon matListItemIcon>science</mat-icon>
+            <span matListItemTitle>Laboratories</span>
+          </a>
+          
           <a mat-list-item routerLink="/researchers" routerLinkActive="active" (click)="navigateTo('/researchers')">
             <mat-icon matListItemIcon>people</mat-icon>
             <span matListItemTitle>Researchers</span>
-          </a>
-          
-          <a mat-list-item routerLink="/projects" routerLinkActive="active" (click)="navigateTo('/projects')">
-            <mat-icon matListItemIcon>folder</mat-icon>
-            <span matListItemTitle>Projects</span>
           </a>
           
           <a *ngIf="authService.canAccessAnalysis()" mat-list-item routerLink="/analysis" routerLinkActive="active" (click)="navigateTo('/analysis')">

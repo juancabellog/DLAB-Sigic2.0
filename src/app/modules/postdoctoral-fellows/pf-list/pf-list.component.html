@@ -83,11 +83,11 @@
               </div>
               <div class="detail-row" *ngIf="fellow.fechaInicio">
                 <span class="detail-label">Start Date:</span>
-                <span class="detail-value">{{ fellow.fechaInicio | date:'MMM yyyy' }}</span>
+                <span class="detail-value">{{ fellow.fechaInicio | localDate:'MMM yyyy' }}</span>
               </div>
               <div class="detail-row" *ngIf="fellow.fechaTermino">
                 <span class="detail-label">End Date:</span>
-                <span class="detail-value">{{ fellow.fechaTermino | date:'MMM yyyy' }}</span>
+                <span class="detail-value">{{ fellow.fechaTermino | localDate:'MMM yyyy' }}</span>
               </div>
             </div>
           </mat-card-content>
@@ -207,8 +207,8 @@
           <div class="list-cell sector-cell">{{ getSector(fellow) }}</div>
           <div class="list-cell fellow-cell">{{ fellow.postdoctoralFellowName || 'N/A' }}</div>
           <div class="list-cell period-cell">{{ fellow.progressReport || 'N/A' }}</div>
-          <div class="list-cell date-cell">{{ fellow.fechaInicio | date:'MMM yyyy' }}</div>
-          <div class="list-cell end-date-cell">{{ fellow.fechaTermino | date:'MMM yyyy' }}</div>
+          <div class="list-cell date-cell">{{ fellow.fechaInicio | localDate:'MMM yyyy' }}</div>
+          <div class="list-cell end-date-cell">{{ fellow.fechaTermino | localDate:'MMM yyyy' }}</div>
           <div class="list-cell actions-cell">
             <button 
               mat-icon-button 

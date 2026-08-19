@@ -5,6 +5,7 @@ import {
   PublicationStatus,
   TRANSLATION_STATUS
 } from '../models/news.models';
+import { formatLocalDate } from '../../../core/utils/date.util';
 import { termContains } from './news-taxonomy.util';
 
 export type RelatedPostStatusFilter =
@@ -85,14 +86,7 @@ export function mapNewsItemToRelatedPost(item: NewsItem): NewsRelatedPost {
 }
 
 export function formatRelatedPostDate(date?: string | null): string {
-  if (!date) return '';
-  const parsed = new Date(date);
-  if (Number.isNaN(parsed.getTime())) return date;
-  return parsed.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  });
+  return formatLocalDate(date, 'MMM dd, yyyy', 'en-US');
 }
 
 export function buildRelatedPostMetadataLine(

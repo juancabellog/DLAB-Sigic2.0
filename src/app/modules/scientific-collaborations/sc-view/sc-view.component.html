@@ -81,11 +81,11 @@
             </div>
             <div class="detail-item" *ngIf="collaboration.fechaInicio">
               <strong>Start Date:</strong>
-              <span>{{ collaboration.fechaInicio | date:'MMM dd, yyyy' }}</span>
+              <span>{{ collaboration.fechaInicio | localDate:'MMM dd, yyyy' }}</span>
             </div>
             <div class="detail-item" *ngIf="collaboration.fechaTermino">
               <strong>End Date:</strong>
-              <span>{{ collaboration.fechaTermino | date:'MMM dd, yyyy' }}</span>
+              <span>{{ collaboration.fechaTermino | localDate:'MMM dd, yyyy' }}</span>
             </div>
           </div>
         </div>

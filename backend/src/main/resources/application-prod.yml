@@ -40,6 +40,19 @@ spring:
       name: admin
       password: admin
 
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: false
+
 jwt:
   secret: myVerySecretKeyForJWTTokenGenerationThatIsLongEnoughForSecurityRequirements123456789
   expiration: 86400000 # 24 hours
@@ -75,7 +88,6 @@ cache:
     ttl-minutes: 60
 
 gemini:
-  apikeys: []
   apikey: ${GEMINI_API_KEY:}
   model: ${GEMINI_MODEL:gemini-flash-lite-latest}
   timeout-ms: ${GEMINI_TIMEOUT_MS:300000}
@@ -83,3 +95,13 @@ gemini:
 app:
   version: ${APP_VERSION:2026.06.04-01}
   public-base-url: https://apps.cienciavida.org/sigic2.0
+  frontend-base-url: ${FRONTEND_BASE_URL:https://apps.cienciavida.org}
+  mail:
+    from: ${MAIL_FROM:noreply@cienciavida.org}
+    from-name: ${MAIL_FROM_NAME:Monitoreo Datacenter}
+  password-reset:
+    token-expiration-minutes: ${PASSWORD_RESET_TOKEN_EXPIRATION_MINUTES:60}
+    min-request-interval-seconds: ${PASSWORD_RESET_MIN_INTERVAL_SECONDS:60}
+    ip-min-interval-seconds: ${PASSWORD_RESET_IP_MIN_INTERVAL_SECONDS:10}
+    write-link-file: ${PASSWORD_RESET_WRITE_LINK_FILE:false}
+    min-password-length: ${PASSWORD_RESET_MIN_PASSWORD_LENGTH:8}

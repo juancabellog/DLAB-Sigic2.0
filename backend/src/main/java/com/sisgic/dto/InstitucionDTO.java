@@ -4,6 +4,8 @@ public class InstitucionDTO {
     private Long id;
     private String idDescripcion; // Mantener por compatibilidad
     private String descripcion; // Texto traducido desde la vista
+    private String codigoPais;
+    private String countryLabel;
 
     public InstitucionDTO() {}
 
@@ -40,6 +42,22 @@ public class InstitucionDTO {
 
     public void setDescripcion(String descripcion) {
         this.descripcion = descripcion;
+    }
+
+    public String getCodigoPais() {
+        return codigoPais;
+    }
+
+    public void setCodigoPais(String codigoPais) {
+        this.codigoPais = codigoPais;
+    }
+
+    public String getCountryLabel() {
+        return countryLabel;
+    }
+
+    public void setCountryLabel(String countryLabel) {
+        this.countryLabel = countryLabel;
     }
 }
 

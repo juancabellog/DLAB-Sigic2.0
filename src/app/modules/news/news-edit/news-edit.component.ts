@@ -11,7 +11,6 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { finalize } from 'rxjs/operators';
@@ -32,12 +31,11 @@ import {
   PUBLICATION_STATUS_LABELS,
   PublicationStatus,
   TRANSLATION_STATUS,
-  TRANSLATION_STATUS_LABELS,
-  TranslationStatus,
   buildSpanishSnapshot,
   createEmptyNewsItem,
   hasRequiredSpanishContent,
   hasSpanishContent,
+  hasRichTextContent,
   slugify
 } from '../models/news.models';
 
@@ -57,7 +55,6 @@ import {
     MatSelectModule,
     MatCheckboxModule,
     MatProgressSpinnerModule,
-    MatChipsModule,
     MatTooltipModule,
     MatSlideToggleModule,
     RichTextEditorComponent,
@@ -87,7 +84,6 @@ export class NewsEditComponent implements OnInit {
     { value: PUBLICATION_STATUS.PUBLISHED, label: PUBLICATION_STATUS_LABELS.published },
     { value: PUBLICATION_STATUS.UNPUBLISHED, label: PUBLICATION_STATUS_LABELS.unpublished }
   ];
-  readonly translationStatusLabels = TRANSLATION_STATUS_LABELS;
 
   constructor(
     private route: ActivatedRoute,
@@ -179,10 +175,46 @@ export class NewsEditComponent implements OnInit {
   }
 
   generateAutomaticTranslation(): void {
-    if (!this.item.titleEs && !this.item.summaryEs && !this.item.bodyEs) {
+    this.translateFromSpanish();
+  }
+
+  translateFromSpanish(): void {
+    if (!this.item.titleEs?.trim() && !this.item.summaryEs?.trim() && !hasRichTextContent(this.item.bodyEs)) {
       this.messageService.warn('Add Spanish content before generating a translation.');
       return;
     }
+    this.confirmOverwriteIfNeeded(
+      !!this.item.titleEn?.trim() || !!this.item.summaryEn?.trim() || hasRichTextContent(this.item.bodyEn),
+      'Existing English title, summary and/or body will be overwritten. Do you want to continue?',
+      () => this.runTranslation('es_to_en')
+    );
+  }
+
+  translateFromEnglish(): void {
+    if (!this.item.titleEn?.trim() && !this.item.summaryEn?.trim() && !hasRichTextContent(this.item.bodyEn)) {
+      this.messageService.warn('Add English content before generating a translation.');
+      return;
+    }
+    this.confirmOverwriteIfNeeded(
+      !!this.item.titleEs?.trim() || !!this.item.summaryEs?.trim() || hasRichTextContent(this.item.bodyEs),
+      'Existing Spanish title, summary and/or body will be overwritten. Do you want to continue?',
+      () => this.runTranslation('en_to_es')
+    );
+  }
+
+  private confirmOverwriteIfNeeded(hasContent: boolean, message: string, onConfirm: () => void): void {
+    if (!hasContent) {
+      onConfirm();
+      return;
+    }
+    this.messageService.confirm(message, (accepted: boolean) => {
+      if (accepted) {
+        onConfirm();
+      }
+    }, 'Overwrite content?');
+  }
+
+  private runTranslation(direction: 'es_to_en' | 'en_to_es'): void {
     this.translating = true;
     this.messageService.show(
       'This process may take several minutes. Please keep this page open until it completes.',
@@ -190,17 +222,23 @@ export class NewsEditComponent implements OnInit {
       'info',
       10_000
     );
-    this.newsService.generateTranslation(this.item).pipe(
+    this.newsService.generateTranslation(this.item, direction).pipe(
       finalize(() => { this.translating = false; })
     ).subscribe({
       next: updated => {
-        this.item.titleEn = updated.titleEn;
-        this.item.summaryEn = updated.summaryEn;
-        this.item.bodyEn = updated.bodyEn;
+        if (direction === 'en_to_es') {
+          this.item.titleEs = updated.titleEs;
+          this.item.summaryEs = updated.summaryEs;
+          this.item.bodyEs = updated.bodyEs;
+          this.messageService.success('Spanish translation generated.');
+        } else {
+          this.item.titleEn = updated.titleEn;
+          this.item.summaryEn = updated.summaryEn;
+          this.item.bodyEn = updated.bodyEn;
+          this.messageService.success('English translation generated.');
+        }
         this.item.translationStatus = TRANSLATION_STATUS.AUTO_GENERATED;
         this.translationReviewWarning = false;
-        this.messageService.success('Translation generated', 'Review and validate the English content.');
-        this.selectedTabIndex = 1;
       },
       error: () => this.messageService.error('Translation could not be generated.')
     });
@@ -294,9 +332,9 @@ export class NewsEditComponent implements OnInit {
   }
 
   preview(): void {
-    const url = this.item.publicUrl || (this.item.slug ? `https://example.org/news/${this.item.slug}` : null);
+    const url = this.item.mediaLink?.trim() || this.item.publicUrl || (this.item.slug ? `https://example.org/news/${this.item.slug}` : null);
     if (url) window.open(url, '_blank');
-    else this.messageService.info('Set a public URL or slug to preview.');
+    else this.messageService.info('Set a Media Link to preview.');
   }
 
   private doPublish(): void {

@@ -65,9 +65,20 @@ public class GeminiTranslationService {
         return apiKeyPool.size();
     }
 
+    public enum TranslationDirection {
+        ES_TO_EN,
+        EN_TO_ES
+    }
+
+    /** Field names keep *En suffix for compatibility; values are target-language text. */
     public record TranslationResult(String titleEn, String excerptEn, String bodyEn) {}
 
     public TranslationResult translate(String titleEs, String excerptEs, String bodyEs)
+            throws IOException, InterruptedException {
+        return translate(titleEs, excerptEs, bodyEs, TranslationDirection.ES_TO_EN);
+    }
+
+    public TranslationResult translate(String title, String excerpt, String body, TranslationDirection direction)
             throws IOException, InterruptedException {
         if (!isConfigured()) {
             log.error("Gemini translate called but API key pool is empty (configured keys: {}). "
@@ -76,22 +87,24 @@ public class GeminiTranslationService {
             throw new IllegalStateException("Gemini API key is not configured (gemini.apikeys)");
         }
 
-        int titleLen = safe(titleEs).length();
-        int excerptLen = safe(excerptEs).length();
-        int bodyLen = safe(bodyEs).length();
-        log.info("Gemini translate started: title={} chars, summary={} chars, body={} chars, model={}, keys={}",
-            titleLen, excerptLen, bodyLen, geminiProperties.requireModel(), getConfiguredKeyCount());
+        TranslationDirection dir = direction != null ? direction : TranslationDirection.ES_TO_EN;
+        int titleLen = safe(title).length();
+        int excerptLen = safe(excerpt).length();
+        int bodyLen = safe(body).length();
+        log.info("Gemini translate started: direction={}, title={} chars, summary={} chars, body={} chars, model={}, keys={}",
+            dir, titleLen, excerptLen, bodyLen, geminiProperties.requireModel(), getConfiguredKeyCount());
 
         try {
-            return doTranslate(titleEs, excerptEs, bodyEs, bodyLen);
+            return doTranslate(title, excerpt, body, bodyLen, dir);
         } catch (IOException | InterruptedException e) {
-            log.error("Gemini translate failed: title={} chars, summary={} chars, body={} chars — {}",
-                titleLen, excerptLen, bodyLen, e.getMessage(), e);
+            log.error("Gemini translate failed: direction={}, title={} chars, summary={} chars, body={} chars — {}",
+                dir, titleLen, excerptLen, bodyLen, e.getMessage(), e);
             throw e;
         }
     }
 
-    private TranslationResult doTranslate(String titleEs, String excerptEs, String bodyEs, int bodyLen)
+    private TranslationResult doTranslate(String title, String excerpt, String body, int bodyLen,
+                                          TranslationDirection direction)
             throws IOException, InterruptedException {
 
         Map<String, String> translated;
@@ -101,21 +114,21 @@ public class GeminiTranslationService {
             log.info("Body is long ({} chars), splitting into two Gemini calls", bodyLen);
             translated = new LinkedHashMap<>();
             translated.putAll(translateBatch(List.of(
-                    new Task("title", safe(titleEs)),
-                    new Task("excerpt", safe(excerptEs))
-            )));
+                    new Task("title", safe(title)),
+                    new Task("excerpt", safe(excerpt))
+            ), direction));
             translated.putAll(translateBatch(List.of(
-                    new Task("richText", safe(bodyEs))
-            )));
+                    new Task("richText", safe(body))
+            ), direction));
         } else {
             translated = translateBatch(List.of(
-                    new Task("title", safe(titleEs)),
-                    new Task("excerpt", safe(excerptEs)),
-                    new Task("richText", safe(bodyEs))
-            ));
+                    new Task("title", safe(title)),
+                    new Task("excerpt", safe(excerpt)),
+                    new Task("richText", safe(body))
+            ), direction);
         }
 
-        log.info("Gemini translate completed successfully");
+        log.info("Gemini translate completed successfully (direction={})", direction);
         return new TranslationResult(
                 normalizeInstitutionalNames(translated.getOrDefault("title", "")),
                 normalizeInstitutionalNames(translated.getOrDefault("excerpt", "")),
@@ -125,8 +138,9 @@ public class GeminiTranslationService {
 
     private record Task(String id, String text) {}
 
-    private Map<String, String> translateBatch(List<Task> tasks) throws IOException, InterruptedException {
-        String prompt = buildPrompt();
+    private Map<String, String> translateBatch(List<Task> tasks, TranslationDirection direction)
+            throws IOException, InterruptedException {
+        String prompt = buildPrompt(direction);
         String requestBody = buildRequestBody(prompt, tasks);
         String responseJson = postWithKeyPool(requestBody);
         Map<String, String> byId = parseResponse(responseJson);
@@ -142,10 +156,13 @@ public class GeminiTranslationService {
         return out;
     }
 
-    private String buildPrompt() {
+    private String buildPrompt(TranslationDirection direction) {
+        String directionLine = direction == TranslationDirection.EN_TO_ES
+                ? "Translate from English to Spanish with high semantic fidelity."
+                : "Translate from Spanish to English with high semantic fidelity.";
         return """
                 You are a senior translator for a Chilean life-sciences web platform.
-                Translate from Spanish to English with high semantic fidelity.
+                %s
                 Rules:
                 - Keep HTML tags as-is, including class attributes, and preserve their positions.
                 - Translate only human-readable text nodes inside HTML; do not translate tag names, attribute names, or attribute values such as href URLs, src URLs, ids, or classes.
@@ -157,7 +174,7 @@ public class GeminiTranslationService {
                 - Output strictly JSON with this shape:
                 [{ "id": "task_id", "text": "translated text" }].
                 Translate these fields in a single JSON array in the same order as provided:
-                """;
+                """.formatted(directionLine);
     }
 
     private String buildRequestBody(String prompt, List<Task> tasks) throws IOException {

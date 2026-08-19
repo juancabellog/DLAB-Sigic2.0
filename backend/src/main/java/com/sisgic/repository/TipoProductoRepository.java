@@ -6,12 +6,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TipoProductoRepository extends JpaRepository<TipoProducto, Long> {
     
     // Buscar todos ordenados por ID
     List<TipoProducto> findAllByOrderByIdAsc();
+
+    Optional<TipoProducto> findByIdDescripcionIgnoreCase(String idDescripcion);
     
     // Query personalizada para obtener descripciones con JOIN a textos
     @Query("SELECT tp.id, tp.idDescripcion, t.valor as descripcion " +

@@ -44,6 +44,14 @@ export class ScientificCollaborationsService {
   deleteScientificCollaboration(id: number): Observable<boolean> {
     return this.baseHttp.delete<boolean>(`/scientific-collaborations/${id}`);
   }
+
+  /**
+   * Exporta las colaboraciones científicas visibles a Excel
+   */
+  exportScientificCollaborationsToExcel(params: { sort: string; direction: 'ASC' | 'DESC' }): Observable<Blob> {
+    const { sort, direction } = params;
+    return this.baseHttp.getFile(`/scientific-collaborations/export?sortBy=${sort}&sortDir=${direction}`);
+  }
 }
 
 

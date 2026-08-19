@@ -1,7 +1,7 @@
 <div class="participant-manager">
   <!-- Header -->
   <div class="header">
-    <h3>Authors Summary</h3>
+    <h3>{{ summaryTitle }}</h3>
     <button 
       mat-icon-button 
       (click)="refreshTypes()" 
@@ -100,12 +100,12 @@
       [hideToggle]="false">
       <mat-expansion-panel-header>
         <mat-panel-title>
-          <h4 id="authors-label" class="authors-title">Author Details</h4>
+          <h4 id="authors-label" class="authors-title">{{ detailsTitle }}</h4>
         </mat-panel-title>
         <mat-panel-description>
           <div class="details-header">
             <span class="panel-description-text">
-              {{ participants.length }} {{ participants.length === 1 ? 'author' : 'authors' }}
+              {{ participants.length }} {{ participants.length === 1 ? personSingularLabel : personPluralLabel }}
             </span>
             <span class="spacer"></span>
             <div class="details-header-right">
@@ -115,7 +115,7 @@
                 mat-stroked-button
                 (click)="toggleExpandAll(); $event.stopPropagation()"
                 class="expand-all-button-header"
-                [attr.aria-label]="allExpanded ? 'Collapse all authors' : 'Expand all authors'">
+                [attr.aria-label]="allExpanded ? ('Collapse all ' + personPluralLabel) : ('Expand all ' + personPluralLabel)">
                 <mat-icon>{{ allExpanded ? 'unfold_less' : 'unfold_more' }}</mat-icon>
                 <span>{{ allExpanded ? 'Collapse All' : 'Expand All' }}</span>
               </button>
@@ -186,7 +186,7 @@
                       <mat-icon 
                         *ngIf="participant.orcidSyncStatus === 'conflict'" 
                         class="orcid-conflict-icon"
-                        matTooltip="ORCID mismatch – review in Author Details"
+                        matTooltip="ORCID mismatch – review in {{ detailsTitle }}"
                         [style.color]="'#ff9800'">warning</mat-icon>
                       <!-- Warning icon si hay instituciones incompletas -->
                       <mat-icon 
@@ -266,7 +266,7 @@
                     <!-- Si elige "This is not the same person", resetear el match -->
                     <div *ngIf="participant.orcidChangeAction === 'unlink'" class="unlink-warning">
                       <mat-icon>info</mat-icon>
-                      <span>This will mark the author as unmatched. Please select or create a new researcher.</span>
+                      <span>This will mark the {{ personSingularLabel }} as unmatched. Please select or create a new researcher.</span>
                     </div>
                   </div>
                 </div>
@@ -380,7 +380,7 @@
                         {{ capitalizeText(type.descripcion || type.nombre) }}
                       </mat-option>
                     </mat-select>
-                    <mat-hint>Author's contribution</mat-hint>
+                    <mat-hint>{{ contributionHint }}</mat-hint>
                     <mat-error *ngIf="loadingParticipationTypes">Loading roles...</mat-error>
                     <mat-error *ngIf="!loadingParticipationTypes && participationTypes.length === 0">No roles available</mat-error>
                   </mat-form-field>

@@ -1,0 +1,188 @@
+<div class="list-container">
+  <div class="list-header">
+    <div class="list-header-left">
+      <button mat-icon-button routerLink="/dashboard" matTooltip="Back to Dashboard">
+        <mat-icon>arrow_back</mat-icon>
+      </button>
+      <h1>Laboratories</h1>
+    </div>
+    <div class="list-header-right">
+      <button mat-raised-button color="primary" routerLink="/laboratories/new" class="add-button">
+        <mat-icon>add</mat-icon>
+        Add Laboratory
+      </button>
+    </div>
+  </div>
+
+  <app-list-controls
+    searchPlaceholder="Search laboratories..."
+    [items]="laboratories"
+    [readonly]="true"
+    [showExportButton]="false"
+    [currentViewMode]="viewMode"
+    [finalFilteredCount]="finalFilteredCount"
+    itemType="laboratory"
+    listType="laboratories"
+    (searchResults)="onSearchResults($event)"
+    (searchTermChange)="onSearchTermChange($event)"
+    (viewModeChange)="onViewModeChange($event)">
+  </app-list-controls>
+
+  <div class="lab-filters">
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Cluster</mat-label>
+      <mat-select [(ngModel)]="filterClusterId" (selectionChange)="onFiltersChange()">
+        <mat-option value="">All</mat-option>
+        <mat-option *ngFor="let c of clusterOptions" [value]="c.id">{{ c.label }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Status</mat-label>
+      <mat-select [(ngModel)]="filterStatus" (selectionChange)="onFiltersChange()">
+        <mat-option value="">Active only</mat-option>
+        <mat-option value="all">All</mat-option>
+        <mat-option *ngFor="let s of labStatuses" [value]="s">{{ labStatusLabels[s] }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Director</mat-label>
+      <mat-select [(ngModel)]="filterDirectorId" (selectionChange)="onFiltersChange()">
+        <mat-option value="">All</mat-option>
+        <mat-option *ngFor="let r of researchers" [value]="r.id">{{ r.fullname }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Has active members</mat-label>
+      <mat-select [(ngModel)]="filterHasActiveMembers" (selectionChange)="onFiltersChange()">
+        <mat-option value="all">All</mat-option>
+        <mat-option value="yes">Yes</mat-option>
+        <mat-option value="no">No</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <button mat-stroked-button type="button" (click)="clearFilters()">Clear filters</button>
+  </div>
+
+  <mat-card>
+    <mat-card-content>
+      <div *ngIf="loading" class="loading-container">
+        <mat-spinner></mat-spinner>
+        <p>Loading laboratories...</p>
+      </div>
+
+      <div *ngIf="!loading && filteredLabs.length === 0 && !isSearching" class="empty-state">
+        <mat-icon>science</mat-icon>
+        <h3>No laboratories found</h3>
+        <p>Start by creating your first laboratory.</p>
+        <button mat-raised-button color="primary" routerLink="/laboratories/new">
+          <mat-icon>add</mat-icon>
+          Add Laboratory
+        </button>
+      </div>
+
+      <div *ngIf="!loading && filteredLabs.length === 0 && isSearching" class="empty-state">
+        <mat-icon>search_off</mat-icon>
+        <h3>No results found</h3>
+        <p>Try adjusting your search or filters.</p>
+      </div>
+
+      <!-- Table view -->
+      <div *ngIf="!loading && filteredLabs.length > 0 && viewMode === 'list'" class="list-table-wrapper">
+        <table class="list-table">
+          <thead>
+            <tr>
+              <th>Laboratory</th>
+              <th>Cluster</th>
+              <th>Director</th>
+              <th>Lab Manager</th>
+              <th>Active members</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of filteredLabs">
+              <td>
+                <div class="lab-cell">
+                  <div class="lab-thumb" *ngIf="getImageUrl(item) as img; else thumbPlaceholder">
+                    <img [src]="img" [alt]="getName(item)" />
+                  </div>
+                  <ng-template #thumbPlaceholder>
+                    <div class="lab-thumb lab-thumb--empty">
+                      <mat-icon>science</mat-icon>
+                    </div>
+                  </ng-template>
+                  <div class="lab-copy">
+                    <div class="lab-title">{{ getName(item) }}</div>
+                    <div class="lab-desc" *ngIf="getShortDescription(item)">{{ getShortDescription(item) }}</div>
+                  </div>
+                </div>
+              </td>
+              <td>{{ getClusterLabel(item) }}</td>
+              <td>{{ item.directorName || '—' }}</td>
+              <td>{{ item.labManagerName || '—' }}</td>
+              <td>{{ item.activeMemberCount ?? 0 }}</td>
+              <td>
+                <mat-chip [color]="getStatusColor(item.status)" selected>
+                  {{ labStatusLabels[item.status] }}
+                </mat-chip>
+              </td>
+              <td>
+                <app-lab-row-actions
+                  [item]="item"
+                  [canDelete]="canDelete(item)"
+                  (view)="viewLab(item)"
+                  (edit)="editLab(item)"
+                  (duplicate)="duplicateLab(item)"
+                  (activate)="activateLab(item)"
+                  (deactivate)="deactivateLab(item)"
+                  (delete)="deleteLab(item)">
+                </app-lab-row-actions>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Card view -->
+      <div *ngIf="!loading && filteredLabs.length > 0 && viewMode === 'card'" class="list-grid">
+        <mat-card *ngFor="let item of filteredLabs" class="list-card lab-card">
+          <mat-card-content class="lab-card-body">
+            <div class="lab-cell">
+              <div class="lab-thumb" *ngIf="getImageUrl(item) as img; else cardThumbPlaceholder">
+                <img [src]="img" [alt]="getName(item)" />
+              </div>
+              <ng-template #cardThumbPlaceholder>
+                <div class="lab-thumb lab-thumb--empty">
+                  <mat-icon>science</mat-icon>
+                </div>
+              </ng-template>
+              <div class="lab-copy">
+                <div class="lab-title">{{ getName(item) }}</div>
+                <div class="lab-desc" *ngIf="getShortDescription(item)">{{ getShortDescription(item) }}</div>
+              </div>
+            </div>
+            <div class="lab-card-meta">
+              <span>{{ getClusterLabel(item) }}</span>
+              <span>{{ item.directorName || 'No director' }}</span>
+            </div>
+            <div class="lab-card-footer">
+              <mat-chip [color]="getStatusColor(item.status)" selected>
+                {{ labStatusLabels[item.status] }}
+              </mat-chip>
+              <app-lab-row-actions
+                [item]="item"
+                [canDelete]="canDelete(item)"
+                (view)="viewLab(item)"
+                (edit)="editLab(item)"
+                (duplicate)="duplicateLab(item)"
+                (activate)="activateLab(item)"
+                (deactivate)="deactivateLab(item)"
+                (delete)="deleteLab(item)">
+              </app-lab-row-actions>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

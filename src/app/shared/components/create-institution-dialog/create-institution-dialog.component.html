@@ -1,0 +1,58 @@
+<h2 mat-dialog-title>Add Institution</h2>
+
+<mat-dialog-content>
+  <form [formGroup]="createForm" (ngSubmit)="onSubmit()">
+    <mat-form-field class="full-width">
+      <mat-label>Institution Name</mat-label>
+      <input matInput formControlName="name" required maxlength="100" placeholder="Enter institution name">
+      <mat-error *ngIf="createForm.get('name')?.hasError('required')">
+        Institution name is required
+      </mat-error>
+      <mat-error *ngIf="createForm.get('name')?.hasError('maxlength')">
+        Maximum 100 characters
+      </mat-error>
+    </mat-form-field>
+
+    <mat-form-field class="full-width">
+      <mat-label>Country</mat-label>
+      <mat-select formControlName="codigoPais" required>
+        <mat-option [value]="null">-- Select country --</mat-option>
+        <mat-option *ngFor="let country of countries" [value]="country.codigo">
+          {{ getCountryLabel(country) }}
+        </mat-option>
+      </mat-select>
+      <mat-spinner *ngIf="loadingCountries" diameter="20" matSuffix></mat-spinner>
+      <mat-error *ngIf="createForm.get('codigoPais')?.hasError('required')">
+        Country is required
+      </mat-error>
+    </mat-form-field>
+
+    <div *ngIf="duplicateError" class="duplicate-warning">
+      <mat-icon>warning</mat-icon>
+      <div class="warning-content">
+        <p>{{ duplicateError }}</p>
+        <div *ngIf="existingInstitution" class="existing-info">
+          <p>
+            <strong>Existing institution:</strong>
+            {{ existingInstitution.descripcion || existingInstitution.idDescripcion }}
+            <span *ngIf="existingInstitution.countryLabel"> — {{ existingInstitution.countryLabel }}</span>
+          </p>
+          <button mat-stroked-button type="button" (click)="useExistingInstitution()" color="primary">
+            Use Existing Institution
+          </button>
+        </div>
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="onCancel()" [disabled]="loading">Cancel</button>
+  <button mat-raised-button color="primary" type="button"
+          (click)="onSubmit()"
+          [disabled]="loading || createForm.invalid || !!duplicateError">
+    <mat-spinner *ngIf="loading" diameter="20" style="display: inline-block; margin-right: 8px;"></mat-spinner>
+    <span *ngIf="!loading">Create</span>
+    <span *ngIf="loading">Creating...</span>
+  </button>
+</mat-dialog-actions>

@@ -7,6 +7,9 @@
   </div>
 
   <mat-card>
+    <mat-card-header>
+      <mat-card-subtitle *ngIf="isEditMode">ID: {{ itemId }}</mat-card-subtitle>
+    </mat-card-header>
     <mat-card-content>
       <section class="general-section">
         <h2 class="section-title">General</h2>
@@ -32,6 +35,12 @@
           <mat-hint>Stored as start date (fecha de inicio). Editable before publishing.</mat-hint>
         </mat-form-field>
 
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Media Link</mat-label>
+          <input matInput type="url" [(ngModel)]="item.mediaLink" placeholder="https://..." />
+          <mat-hint>Public URL for this news item on the website.</mat-hint>
+        </mat-form-field>
+
         <div class="featured-toggle-block">
           <mat-slide-toggle [(ngModel)]="item.featured" color="primary">
             Feature this post
@@ -53,6 +62,21 @@
         <!-- Spanish -->
         <mat-tab label="Spanish">
           <div class="tab-content">
+            <div class="translation-status-bar">
+              <button mat-stroked-button type="button" (click)="translateFromEnglish()" [disabled]="translating">
+                <mat-icon>translate</mat-icon>
+                Translate from English
+              </button>
+              <mat-spinner *ngIf="translating && selectedTabIndex === 0" diameter="24"></mat-spinner>
+            </div>
+
+            <div *ngIf="translating && selectedTabIndex === 0" class="translation-progress-hint" role="status">
+              <mat-icon>hourglass_top</mat-icon>
+              <p>
+                Translation in progress. This may take several minutes — please wait.
+              </p>
+            </div>
+
             <mat-form-field appearance="outline" class="full-width">
               <mat-label>Title</mat-label>
               <input matInput [(ngModel)]="item.titleEs" (ngModelChange)="onSpanishFieldChange()" required />
@@ -81,21 +105,14 @@
         <mat-tab label="English">
           <div class="tab-content">
             <div class="translation-status-bar">
-              <mat-chip selected>
-                {{ translationStatusLabels[item.translationStatus] }}
-              </mat-chip>
-              <button mat-stroked-button type="button" (click)="generateAutomaticTranslation()" [disabled]="translating">
-                <mat-icon>auto_awesome</mat-icon>
-                Generate automatic translation
+              <button mat-stroked-button type="button" (click)="translateFromSpanish()" [disabled]="translating">
+                <mat-icon>translate</mat-icon>
+                Translate from Spanish
               </button>
-              <button mat-stroked-button color="primary" type="button" (click)="validateTranslation()">
-                <mat-icon>verified</mat-icon>
-                Validate translation
-              </button>
-              <mat-spinner *ngIf="translating" diameter="24"></mat-spinner>
+              <mat-spinner *ngIf="translating && selectedTabIndex === 1" diameter="24"></mat-spinner>
             </div>
 
-            <div *ngIf="translating" class="translation-progress-hint" role="status">
+            <div *ngIf="translating && selectedTabIndex === 1" class="translation-progress-hint" role="status">
               <mat-icon>hourglass_top</mat-icon>
               <p>
                 Translation in progress. This may take several minutes — please wait.
@@ -106,7 +123,7 @@
               <mat-icon>warning</mat-icon>
               <p>
                 The Spanish content was modified after the English translation was validated.
-                Please review and validate the English version again.
+                Please review the English version again.
               </p>
             </div>
 
